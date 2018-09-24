@@ -1,0 +1,55 @@
+{
+    "name": "advpl-sintax",
+    "displayName": "advpl-sintax",
+    "description": "Extensão com Snippets advpl e analisador de comentários e de código.",
+    "version": "0.0.1",
+    "publisher": "robsonrosilva",
+    "icon": "images/icon.png",
+    "engines": {
+        "vscode": "^1.9.1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/robsonrosilva/advpl-sintax.git"
+    },
+    "bugs": {
+        "url": "https://github.com/robsonrosilva/advpl-sintax/issues"
+    },
+    "galleryBanner": {
+        "color": "#1E81C1",
+        "theme": "light"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "*"
+    ],
+    "main": "./out/extension",
+    "contributes": {
+        "commands": [
+            {
+                "command": "extension.sayHello",
+                "title": "Hello World"
+            }
+        ],
+        "snippets": []
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "test": "npm run compile && node ./node_modules/vscode/bin/test"
+    },
+    "devDependencies": {
+        "typescript": "^2.6.1",
+        "vscode": "^1.1.21",
+        "tslint": "^5.8.0",
+        "@types/node": "^8.10.25",
+        "@types/mocha": "^2.2.42"
+    },
+    "dependencies": {
+        "spawn-command": "0.0.2-1"
+    }
+}
