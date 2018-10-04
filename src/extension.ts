@@ -86,6 +86,10 @@ function validaADVPL(e: any) {
                     aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
                         'Uso NÃO PERMITIDO de SELECT com asterisco "*".! ', vscode.DiagnosticSeverity.Error));
                 }
+                if (linha.toUpperCase().search("CHR\\(13\\)") !== -1 && linha.toUpperCase().search("CHR\\(10\\)") !== -1) {
+                    aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                        'É recomendado o uso da expressão CRLF.', vscode.DiagnosticSeverity.Warning));
+                }
                 if (linha.toUpperCase().search("FROM") !== -1) {
                     FromQuery = true;
                 }
