@@ -2,6 +2,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import * as fileSystem from 'fs';
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 
@@ -48,6 +49,18 @@ export function activate(context: vscode.ExtensionContext) {
         merge(repository, branchAtual, branchTeste, true, true);
     });
     context.subscriptions.push(disposable);
+    //percorre todos os fontes do Workspace e valida se for ADVPL
+    let advplExtensions = ['**/*.prw','**/*.prx','**/*.prg','**/*.apw','**/*.aph','**/*.apl','**/*.tlpp'];
+    advplExtensions.forEach(extension => {
+        let busca = vscode.workspace.findFiles(extension);
+        busca.then((files : vscode.Uri[]) =>{
+            files.forEach(file => {
+                fileSystem.readFile(file.fsPath,"windows1252",(err, data) => {
+                    vscode.window.showErrorMessage('Problema na validação de arquivos!');
+                });
+            });
+        });
+    });
 }
 
 function validaADVPL(e: any) {
