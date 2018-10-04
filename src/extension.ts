@@ -80,7 +80,8 @@ function validaADVPL(e: any) {
                 }
                 if (!cBeginSql && linha.toUpperCase()().search("SELECT") !== -1) {
                     aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                        'Uso INDEVIDO de Query sem o Embedded SQL.! => Utilizar: BeginSQL … EndSQL.',vscode.DiagnosticSeverity.Warning));
+                        'Uso INDEVIDO de Query sem o Embedded SQL.! => Utilizar: BeginSQL … EndSQL.', vscode.DiagnosticSeverity.Warning));
+                }
                 if (linha.toUpperCase().search("SELECT") !== -1 && linha.toUpperCase().search(" * ") !== -1) {
                     aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
                         'Uso NÃO PERMITIDO de SELECT com asterisco "*".! '));
@@ -133,36 +134,36 @@ function merge(repository: any, branchAtual: any, branchdestino: any, enviaHomol
                         let oComando;
                         //Se a branch destino for a master precisa criar tag
                         if (branchdestino === branchProdu) {
-                            let aUltimaTag = [0,0,0];
+                            let aUltimaTag = [0, 0, 0];
                             let commit;
                             //Verifica ultima tag
-                            repository.refs.forEach((item:any) => {
+                            repository.refs.forEach((item: any) => {
                                 //verifica se é TAG
-                                if(item.type === 2){
+                                if (item.type === 2) {
                                     //Verifica se é padrão de numeração
                                     let aNiveis = item.name.split('.');
-                                    if(aNiveis.length === 3){
-                                        let aTag = [Number(aNiveis[0]),Number(aNiveis[1]),Number(aNiveis[2])] ;
-                                        if(aTag[0] >= aUltimaTag[0]){
-                                            if(aTag[1] >= aUltimaTag[1]){
-                                                if(aTag[2] >= aUltimaTag[2]){
+                                    if (aNiveis.length === 3) {
+                                        let aTag = [Number(aNiveis[0]), Number(aNiveis[1]), Number(aNiveis[2])];
+                                        if (aTag[0] >= aUltimaTag[0]) {
+                                            if (aTag[1] >= aUltimaTag[1]) {
+                                                if (aTag[2] >= aUltimaTag[2]) {
                                                     aUltimaTag = aTag;
                                                     commit = item.commit;
                                                 }
-                                            }    
+                                            }
                                         }
-                                    }  
+                                    }
                                 }
                             });
-                            if(aUltimaTag[2] === 9){
+                            if (aUltimaTag[2] === 9) {
                                 aUltimaTag[2] = 0;
                                 aUltimaTag[1]++;
-                            }else{
+                            } else {
                                 aUltimaTag[2]++;
                             }
-                            if(commit !== repository.HEAD.commit){
-                                oComando = repository.tag(String(aUltimaTag[0]) + "." + String(aUltimaTag[1]) + "." + String(aUltimaTag[2]) , '');
-                            }else{
+                            if (commit !== repository.HEAD.commit) {
+                                oComando = repository.tag(String(aUltimaTag[0]) + "." + String(aUltimaTag[1]) + "." + String(aUltimaTag[2]), '');
+                            } else {
                                 oComando = repository.push();
                             }
                         } else {
