@@ -82,7 +82,7 @@ function validaADVPL(e: any) {
                     aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
                         'Uso INDEVIDO de Query sem o Embedded SQL.! => Utilizar: BeginSQL … EndSQL.', vscode.DiagnosticSeverity.Error));
                 }
-                if (linha.toUpperCase().search("SELECT") !== -1 && linha.toUpperCase().search(" * ") !== -1) {
+                if (linha.toUpperCase().search("SELECT") !== -1 && linha.toUpperCase().search(" \\* ") !== -1) {
                     aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
                         'Uso NÃO PERMITIDO de SELECT com asterisco "*".! ', vscode.DiagnosticSeverity.Error));
                 }
