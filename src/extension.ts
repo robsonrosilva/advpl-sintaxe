@@ -7,23 +7,45 @@ import * as vscode from 'vscode';
 
 //Cria um colection para os erros ADVPL
 const collection = vscode.languages.createDiagnosticCollection('advpl');
+const branchTeste = 'V11_Validacao';
+const branchHomol = 'V11_Release';
+const branchProdu = 'master';
 export function activate(context: vscode.ExtensionContext) {
     vscode.window.showInformationMessage('Validação ADVPL Ativa!');
     vscode.workspace.onDidChangeTextDocument(validaADVPL);
 
     //Adiciona comando de envia para Validação
     let disposableVal = vscode.commands.registerCommand('advpl-sintax.gitValidacao', () => {
-        gitValidacao();
+        let repository = getRepository();
+        if (!repository) {
+            return;
+        }
+
+        let branchAtual = repository.headLabel;
+        merge(repository, branchAtual, branchTeste, false, false);
     });
     context.subscriptions.push(disposableVal);
-    //Adiciona comando de envia para Validação
+    //Adiciona comando de envia para Release
     let disposableRel = vscode.commands.registerCommand('advpl-sintax.gitRelease', () => {
-        gitRelease();
+        let repository = getRepository();
+        if (!repository) {
+            return;
+        }
+
+        let branchAtual = repository.headLabel;
+        merge(repository, branchAtual, branchTeste, true, false);
     });
     context.subscriptions.push(disposableRel);
-    //Adiciona comando de envia para Validação
+    //Adiciona comando de envia para master
     let disposable = vscode.commands.registerCommand('advpl-sintax.gitMaster', () => {
-        gitMaster();
+        //Faz o merge para master
+        let repository = getRepository();
+        if (!repository) {
+            return;
+        }
+
+        let branchAtual = repository.headLabel;
+        merge(repository, branchAtual, branchTeste, true, true);
     });
     context.subscriptions.push(disposable);
 }
@@ -50,27 +72,27 @@ function validaADVPL(e: any) {
             for (var key in linhas) {
                 let linha = linhas[key];
                 //Verifica se adicionou o include TOTVS.CH
-                if (linha.toUpperCase().search("#INCLUDE") !== -1 && linha.toUpperCase().search("TOTVS.CH") !== -1) {
+                if (linha.toUpperCase()().search("#INCLUDE") !== -1 && linha.toUpperCase()().search("TOTVS.CH") !== -1) {
                     includeTotvs = true;
                 }
-                if (linha.toUpperCase().search("BEGINSQL") !== -1) {
+                if (linha.toUpperCase()().search("BEGINSQL") !== -1) {
                     cBeginSql = true;
                 }
-                if (!cBeginSql && linha.toUpperCase().search("SELECT") !== -1) {
+                if (!cBeginSql && linha.toUpperCase()().search("SELECT") !== -1) {
                     aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
                         'Uso INDEVIDO de Query sem o Embedded SQL.! => Utilizar: BeginSQL … EndSQL.'));
                 }
-                if (linha.toUpperCase().search("FROM") !== -1) {
+                if (linha.toUpperCase()().search("FROM") !== -1) {
                     FromQuery = true;
                 }
-                if (linha.toUpperCase().search("ENDSQL") !== -1) {
+                if (linha.toUpperCase()().search("ENDSQL") !== -1) {
                     FromQuery = false;
                 }
-                if (FromQuery && linha.toUpperCase().search("PROTHEUS") !== -1) {
+                if (FromQuery && linha.toUpperCase()().search("PROTHEUS") !== -1) {
                     aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
                         'Uso NÃO PERMITIDO do SHEMA PROTHEUS em Query. '));
                 }
-                if (linha.toUpperCase().search("CONOUT") !== -1) {
+                if (linha.toUpperCase()().search("CONOUT") !== -1) {
                     aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
                         'Uso NÃO PERMITIDO do Conout. => Utilizar a API de Log padrão (FWLogMsg).'));
                 }
@@ -84,47 +106,95 @@ function validaADVPL(e: any) {
     }
 
 }
-function gitValidacao() {
-    let repository = getRepository();
-    if (!repository) {
-        return;
-    }
-
-    let branchAtual = repository.headLabel;
-    merge(repository, branchAtual, 'V11_Validacao', false);
-}
-function gitRelease() {
-    let repository = getRepository();
-    if (!repository) {
-        return;
-    }
-
-    let branchAtual = repository.headLabel;
-    merge(repository, branchAtual, 'V11_Validacao', true);
-}
-function merge(repository: any, branchAtual: any, branchdestino: any, enviaRelease: boolean) {
-    let branchesControladas = ['V11_RELEASE', 'V11_VALIDACAO', 'MASTER'];
+function merge(repository: any, branchAtual: any, branchdestino: any, enviaHomolog: boolean, enviaMaster: boolean) {
+    let branchesControladas = [branchHomol.toLocaleUpperCase, branchTeste.toLocaleUpperCase, branchProdu.toLocaleUpperCase];
 
     //verifica se não está numa branch controlada
-    if (branchesControladas.indexOf(branchAtual.toUpperCase) === 0) {
+    if (branchesControladas.indexOf(branchAtual.toUpperCase()) === 0) {
         vscode.window.showErrorMessage(
             'Essa branch não pode ser utilizada para para Merge!'
         );
         return;
-    }
-
-    repository.checkout(branchdestino).then((value: any) => {
-        repository.pull().then((value: any) => {
-            repository.merge(branchAtual, "").then((value: any) => {
-                repository.push().then((value: any) => {
-                    if (enviaRelease) {
+    } else {
+        //Trata quando a branche ainda não subiu para o GIT
+        if (!repository.HEAD.upstream) {
+            vscode.window.showErrorMessage(
+                'Publique sua branche antes de mergeá-la!'
+            );
+            return;
+        }
+        repository.push().then((value: any) => {
+            repository.checkout(branchdestino).then((value: any) => {
+                repository.pull().then((value: any) => {
+                    repository.merge(branchAtual, "").then((value: any) => {
+                        let oComando;
+                        //Se a branch destino for a master precisa criar tag
+                        if (branchdestino === branchProdu) {
+                            let aUltimaTag = [0,0,0];
+                            let commit;
+                            //Verifica ultima tag
+                            repository.refs.forEach((item:any) => {
+                                //verifica se é TAG
+                                if(item.type === 2){
+                                    //Verifica se é padrão de numeração
+                                    let aNiveis = item.name.split('.');
+                                    if(aNiveis.length === 3){
+                                        let aTag = [Number(aNiveis[0]),Number(aNiveis[1]),Number(aNiveis[2])] ;
+                                        if(aTag[0] >= aUltimaTag[0]){
+                                            if(aTag[1] >= aUltimaTag[1]){
+                                                if(aTag[2] >= aUltimaTag[2]){
+                                                    aUltimaTag = aTag;
+                                                    commit = item.commit;
+                                                }
+                                            }    
+                                        }
+                                    }  
+                                }
+                            });
+                            if(aUltimaTag[2] === 9){
+                                aUltimaTag[2] = 0;
+                                aUltimaTag[1]++;
+                            }else{
+                                aUltimaTag[2]++;
+                            }
+                            if(commit !== repository.HEAD.commit){
+                                oComando = repository.tag(String(aUltimaTag[0]) + "." + String(aUltimaTag[1]) + "." + String(aUltimaTag[2]) , '');
+                            }else{
+                                oComando = repository.push();
+                            }
+                        } else {
+                            oComando = repository.push();
+                        }
+                        oComando.then((value: any) => {
+                            repository.push().then((value: any) => {
+                                repository.checkout(branchAtual).then((value: any) => {
+                                    if (enviaHomolog) {
+                                        merge(repository, branchAtual, branchHomol, false, enviaMaster);
+                                    } else {
+                                        if (enviaMaster) {
+                                            merge(repository, branchAtual, branchProdu, false, false);
+                                        } else {
+                                            repository.pushTags();
+                                            sucesso("", "Merge de finalizado " + repository.headLabel + " -> " + branchdestino + ".");
+                                        }
+                                    }
+                                    return;
+                                });
+                            }).catch(function () {
+                                falha(repository.headLabel + " " + arguments[0]);
+                                repository.checkout(branchAtual);
+                                return;
+                            });
+                        }).catch(function () {
+                            falha(repository.headLabel + " " + arguments[0]);
+                            repository.checkout(branchAtual);
+                            return;
+                        });
+                    }).catch(function () {
+                        falha(repository.headLabel + " " + arguments[0]);
                         repository.checkout(branchAtual);
-                        merge(repository, branchAtual, 'V11_Release', false);
-                    } else {
-                        repository.checkout(branchAtual);
-                        sucesso("", "Merge de finalizado " + repository.headLabel);
-                    }
-                    return;
+                        return;
+                    });
                 }).catch(function () {
                     falha(repository.headLabel + " " + arguments[0]);
                     repository.checkout(branchAtual);
@@ -140,14 +210,7 @@ function merge(repository: any, branchAtual: any, branchdestino: any, enviaRelea
             repository.checkout(branchAtual);
             return;
         });
-    }).catch(function () {
-        falha(repository.headLabel + " " + arguments[0]);
-        repository.checkout(branchAtual);
-        return;
-    });
-}
-
-function gitMaster() {
+    }
 }
 function getRepository() {
     if (vscode) {
