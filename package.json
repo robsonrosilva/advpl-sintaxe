@@ -1,10 +1,9 @@
 {
-    "name": "advpl-sintax",
+    "name": "advpl-sintax-poupex",
     "displayName": "advpl-sintax",
-    "description": "Extensão com Snippets advpl e analisador de comentários e de código.",
+    "description": "Extensão para POUPEX que faz os merges e análise de códigos ADVPL.",
     "version": "0.0.1",
     "publisher": "robsonrosilva",
-    "icon": "images/icon.png",
     "engines": {
         "vscode": "^1.9.1"
     },
