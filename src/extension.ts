@@ -72,37 +72,37 @@ function validaADVPL(e: any) {
             for (var key in linhas) {
                 let linha = linhas[key];
                 //Verifica se adicionou o include TOTVS.CH
-                if (linha.toUpperCase()().search("#INCLUDE") !== -1 && linha.toUpperCase()().search("TOTVS.CH") !== -1) {
+                if (linha.toUpperCase().search("#INCLUDE") !== -1 && linha.toUpperCase().search("TOTVS.CH") !== -1) {
                     includeTotvs = true;
                 }
-                if (linha.toUpperCase()().search("BEGINSQL") !== -1) {
+                if (linha.toUpperCase().search("BEGINSQL") !== -1) {
                     cBeginSql = true;
                 }
-                if (!cBeginSql && linha.toUpperCase()().search("SELECT") !== -1) {
+                if (!cBeginSql && linha.toUpperCase().search("SELECT") !== -1) {
                     aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                        'Uso INDEVIDO de Query sem o Embedded SQL.! => Utilizar: BeginSQL … EndSQL.', vscode.DiagnosticSeverity.Warning));
+                        'Uso INDEVIDO de Query sem o Embedded SQL.! => Utilizar: BeginSQL … EndSQL.', vscode.DiagnosticSeverity.Error));
                 }
                 if (linha.toUpperCase().search("SELECT") !== -1 && linha.toUpperCase().search(" * ") !== -1) {
                     aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                        'Uso NÃO PERMITIDO de SELECT com asterisco "*".! '));
+                        'Uso NÃO PERMITIDO de SELECT com asterisco "*".! ', vscode.DiagnosticSeverity.Error));
                 }
-                if (linha.toUpperCase()().search("FROM") !== -1) {
+                if (linha.toUpperCase().search("FROM") !== -1) {
                     FromQuery = true;
                 }
-                if (linha.toUpperCase()().search("ENDSQL") !== -1) {
+                if (linha.toUpperCase().search("ENDSQL") !== -1) {
                     FromQuery = false;
                 }
-                if (FromQuery && linha.toUpperCase()().search("PROTHEUS") !== -1) {
+                if (FromQuery && linha.toUpperCase().search("PROTHEUS") !== -1) {
                     aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                        'Uso NÃO PERMITIDO do SHEMA PROTHEUS em Query. '));
+                        'Uso NÃO PERMITIDO do SHEMA PROTHEUS em Query. ', vscode.DiagnosticSeverity.Error));
                 }
-                if (linha.toUpperCase()().search("CONOUT") !== -1) {
+                if (linha.toUpperCase().search("CONOUT") !== -1) {
                     aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                        'Uso NÃO PERMITIDO do Conout. => Utilizar a API de Log padrão (FWLogMsg).'));
+                        'Uso NÃO PERMITIDO do Conout. => Utilizar a API de Log padrão (FWLogMsg).', vscode.DiagnosticSeverity.Error));
                 }
             }
             if (!includeTotvs) {
-                aErros.push(new vscode.Diagnostic(new vscode.Range(0, 0, 0, 0), 'Falta o include TOTVS.CH !'));
+                aErros.push(new vscode.Diagnostic(new vscode.Range(0, 0, 0, 0), 'Falta o include TOTVS.CH !', vscode.DiagnosticSeverity.Error));
             }
 
             collection.set(e.document.uri, aErros);
