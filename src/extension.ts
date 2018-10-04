@@ -91,6 +91,7 @@ function validacao(texto: String, uri: vscode.Uri) {
     let includeTotvs = false;
     let cBeginSql = false;
     let FromQuery = false;
+    let cSelect = false;
     //Percorre todas as linhas
     for (var key in linhas) {
         let linha = linhas[key];
@@ -100,6 +101,9 @@ function validacao(texto: String, uri: vscode.Uri) {
         }
         if (linha.toUpperCase().search("BEGINSQL") !== -1) {
             cBeginSql = true;
+        }
+        if (linha.toUpperCase().search("SELECT") !== -1) {
+            cSelect = true;
         }
         if (!cBeginSql && linha.toUpperCase().search("SELECT") !== -1) {
             aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
@@ -113,13 +117,14 @@ function validacao(texto: String, uri: vscode.Uri) {
             aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
                 'É recomendado o uso da expressão CRLF.', vscode.DiagnosticSeverity.Warning));
         }
-        if (linha.toUpperCase().search("FROM") !== -1) {
+        if (cSelect && linha.toUpperCase().search("FROM") !== -1) {
             FromQuery = true;
         }
         if (linha.toUpperCase().search("ENDSQL") !== -1) {
             FromQuery = false;
+            cSelect = false;
         }
-        if (FromQuery && linha.toUpperCase().search("PROTHEUS") !== -1) {
+        if (cSelect && FromQuery && linha.toUpperCase().search("PROTHEUS") !== -1) {
             aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
                 'Uso NÃO PERMITIDO do SHEMA PROTHEUS em Query. ', vscode.DiagnosticSeverity.Error));
         }
