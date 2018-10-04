@@ -2,6 +2,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import * as fileSystem from 'fs';
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 
@@ -48,72 +49,95 @@ export function activate(context: vscode.ExtensionContext) {
         merge(repository, branchAtual, branchTeste, true, true);
     });
     context.subscriptions.push(disposable);
+    //percorre todos os fontes do Workspace e valida se for ADVPL
+    let advplExtensions = ['**/*.prw', '**/*.prx', '**/*.prg', '**/*.apw', '**/*.aph', '**/*.apl', '**/*.tlpp'];
+    advplExtensions.forEach(extension => {
+        let busca = vscode.workspace.findFiles(extension);
+        busca.then((files: vscode.Uri[]) => {
+            files.forEach(file => {
+                fileSystem.readFile(file.fsPath, "latin1", (err, data) => {
+                    if (err) {
+                        vscode.window.showErrorMessage('Problema na validação de arquivos!');
+                    } else {
+                        validacao(data, file);
+                    }
+                });
+            });
+        });
+    });
 }
 
 function validaADVPL(e: any) {
     if (e) {
         //verifica se a linguagem é ADVPL
         if (e.document.languageId === "advpl") {
-            let aErros = Array();
-            //Pega as linhas do documento ativo e separa o array por linha
-            let linhas = e.document.getText().split("\n");
-            //Limpa as mensagens do colection
-            collection.delete(e.document.uri);
-            collection.clear();
-
-            //let comentariosFonte = false;
-            //let comentariosFuncao = false;
-            //let selectTcQuery = false;
-            //let comentAlteracao = false;
-            let includeTotvs = false;
-            let cBeginSql = false;
-            let FromQuery = false;
-            //Percorre todas as linhas
-            for (var key in linhas) {
-                let linha = linhas[key];
-                //Verifica se adicionou o include TOTVS.CH
-                if (linha.toUpperCase().search("#INCLUDE") !== -1 && linha.toUpperCase().search("TOTVS.CH") !== -1) {
-                    includeTotvs = true;
-                }
-                if (linha.toUpperCase().search("BEGINSQL") !== -1) {
-                    cBeginSql = true;
-                }
-                if (!cBeginSql && linha.toUpperCase().search("SELECT") !== -1) {
-                    aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                        'Uso INDEVIDO de Query sem o Embedded SQL.! => Utilizar: BeginSQL … EndSQL.', vscode.DiagnosticSeverity.Error));
-                }
-                if (linha.toUpperCase().search("SELECT") !== -1 && linha.toUpperCase().search(" \\* ") !== -1) {
-                    aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                        'Uso NÃO PERMITIDO de SELECT com asterisco "*".! ', vscode.DiagnosticSeverity.Error));
-                }
-                if (linha.toUpperCase().search("CHR\\(13\\)") !== -1 && linha.toUpperCase().search("CHR\\(10\\)") !== -1) {
-                    aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                        'É recomendado o uso da expressão CRLF.', vscode.DiagnosticSeverity.Warning));
-                }
-                if (linha.toUpperCase().search("FROM") !== -1) {
-                    FromQuery = true;
-                }
-                if (linha.toUpperCase().search("ENDSQL") !== -1) {
-                    FromQuery = false;
-                }
-                if (FromQuery && linha.toUpperCase().search("PROTHEUS") !== -1) {
-                    aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                        'Uso NÃO PERMITIDO do SHEMA PROTHEUS em Query. ', vscode.DiagnosticSeverity.Error));
-                }
-                if (linha.toUpperCase().search("CONOUT") !== -1) {
-                    aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                        'Uso NÃO PERMITIDO do Conout. => Utilizar a API de Log padrão (FWLogMsg).', vscode.DiagnosticSeverity.Error));
-                }
-            }
-            if (!includeTotvs) {
-                aErros.push(new vscode.Diagnostic(new vscode.Range(0, 0, 0, 0), 'Falta o include TOTVS.CH !', vscode.DiagnosticSeverity.Error));
-            }
-
-            collection.set(e.document.uri, aErros);
+            validacao(e.document.getText(), e.document.uri);
         }
     }
 
 }
+
+function validacao(texto: String, uri: vscode.Uri) {
+    let linhas = texto.split("\n");
+    let aErros = Array();
+    //Pega as linhas do documento ativo e separa o array por linha
+    //Limpa as mensagens do colection
+    collection.delete(uri);
+
+    //let comentariosFonte = false;
+    //let comentariosFuncao = false;
+    //let selectTcQuery = false;
+    //let comentAlteracao = false;
+    let includeTotvs = false;
+    let cBeginSql = false;
+    let FromQuery = false;
+    //Percorre todas as linhas
+    for (var key in linhas) {
+        let linha = linhas[key];
+        //Verifica se adicionou o include TOTVS.CH
+        if (linha.toUpperCase().search("#INCLUDE") !== -1 && linha.toUpperCase().search("TOTVS.CH") !== -1) {
+            includeTotvs = true;
+        }
+        if (linha.toUpperCase().search("BEGINSQL") !== -1) {
+            cBeginSql = true;
+        }
+        if (!cBeginSql && linha.toUpperCase().search("SELECT") !== -1) {
+            aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                'Uso INDEVIDO de Query sem o Embedded SQL.! => Utilizar: BeginSQL … EndSQL.', vscode.DiagnosticSeverity.Error));
+        }
+        if (linha.toUpperCase().search("SELECT") !== -1 && linha.toUpperCase().search(" \\* ") !== -1) {
+            aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                'Uso NÃO PERMITIDO de SELECT com asterisco "*".! ', vscode.DiagnosticSeverity.Error));
+        }
+        if (linha.toUpperCase().search("CHR\\(13\\)") !== -1 && linha.toUpperCase().search("CHR\\(10\\)") !== -1) {
+            aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                'É recomendado o uso da expressão CRLF.', vscode.DiagnosticSeverity.Warning));
+        }
+        if (linha.toUpperCase().search("FROM") !== -1) {
+            FromQuery = true;
+        }
+        if (linha.toUpperCase().search("ENDSQL") !== -1) {
+            FromQuery = false;
+        }
+        if (FromQuery && linha.toUpperCase().search("PROTHEUS") !== -1) {
+            aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                'Uso NÃO PERMITIDO do SHEMA PROTHEUS em Query. ', vscode.DiagnosticSeverity.Error));
+        }
+        if (linha.toUpperCase().search("CONOUT") !== -1) {
+            aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                'Uso NÃO PERMITIDO do Conout. => Utilizar a API de Log padrão (FWLogMsg).', vscode.DiagnosticSeverity.Error));
+        }
+    }
+    if (!includeTotvs) {
+        aErros.push(new vscode.Diagnostic(new vscode.Range(0, 0, 0, 0), 'Falta o include TOTVS.CH !', vscode.DiagnosticSeverity.Error));
+    }
+
+    collection.set(uri, aErros);
+}
+
+
+
+
 function merge(repository: any, branchAtual: any, branchdestino: any, enviaHomolog: boolean, enviaMaster: boolean) {
     let branchesControladas = [branchHomol.toLocaleUpperCase, branchTeste.toLocaleUpperCase, branchProdu.toLocaleUpperCase];
 
