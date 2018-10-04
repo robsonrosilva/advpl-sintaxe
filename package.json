@@ -29,8 +29,16 @@
     "contributes": {
         "commands": [
             {
-                "command": "extension.sayHello",
-                "title": "Hello World"
+                "command": "advpl-sintax.gitValidacao",
+                "title": "POUPEX - Envia os commits para a branche VALIDAÇÃO!"
+            },
+            {
+                "command": "advpl-sintax.gitRelease",
+                "title": "POUPEX - Envia os commits para a branche RELEASE!"
+            },
+            {
+                "command": "advpl-sintax.gitMaster",
+                "title": "POUPEX - Envia os commits para a branche MASTER!"
             }
         ],
         "snippets": []
@@ -50,6 +58,8 @@
         "@types/mocha": "^2.2.42"
     },
     "dependencies": {
+        "git": "^0.1.5",
+        "regex": "^0.1.1",
         "spawn-command": "0.0.2-1"
     }
 }
