@@ -8,9 +8,22 @@ import * as fileSystem from 'fs';
 
 //Cria um colection para os erros ADVPL
 const collection = vscode.languages.createDiagnosticCollection('advpl');
-const branchTeste = 'V11_Validacao';
-const branchHomol = 'V11_Release';
-const branchProdu = 'master';
+let branchTeste = vscode.workspace.getConfiguration("advpl-sintax").get("branchTeste") as string;
+if (! branchTeste) {
+    branchTeste = 'V11_Validacao';
+}
+let branchHomol = vscode.workspace.getConfiguration("advpl-sintax").get("branchHomologacao") as string;
+if (! branchHomol) {
+    branchHomol = 'V11_Release';
+}
+let branchProdu = vscode.workspace.getConfiguration("advpl-sintax").get("branchProducao") as string;
+if (! branchProdu) {
+    branchProdu = 'master';
+}
+let ownerDb = vscode.workspace.getConfiguration("advpl-sintax").get("ownerDb") as string;
+if (! ownerDb) {
+    ownerDb = 'PROTHEUS'; 
+}
 export function activate(context: vscode.ExtensionContext) {
     vscode.window.showInformationMessage('Validação ADVPL Ativa!');
     vscode.workspace.onDidChangeTextDocument(validaADVPL);
@@ -99,17 +112,17 @@ function validacao(texto: String, uri: vscode.Uri) {
         if (linha.toUpperCase().search("#INCLUDE") !== -1 && linha.toUpperCase().search("TOTVS.CH") !== -1) {
             includeTotvs = true;
         }
-        if (linha.toUpperCase().search("BEGINSQL") !== -1) {
+        if (linha.toUpperCase().search("BEGINSQL\\ ") !== -1) {
             cBeginSql = true;
         }
-        if (linha.toUpperCase().search("SELECT") !== -1) {
+        if (linha.toUpperCase().search("SELECT\\ ") !== -1) {
             cSelect = true;
         }
-        if (!cBeginSql && linha.toUpperCase().search("SELECT") !== -1) {
+        if (!cBeginSql && linha.toUpperCase().search("SELECT\\ ") !== -1) {
             aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
                 'Uso INDEVIDO de Query sem o Embedded SQL.! => Utilizar: BeginSQL … EndSQL.', vscode.DiagnosticSeverity.Error));
         }
-        if (linha.toUpperCase().search("SELECT") !== -1 && linha.toUpperCase().search(" \\* ") !== -1) {
+        if (linha.toUpperCase().search("SELECT\\ ") !== -1 && linha.toUpperCase().search("\\ \\*\\ ") !== -1) {
             aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
                 'Uso NÃO PERMITIDO de SELECT com asterisco "*".! ', vscode.DiagnosticSeverity.Error));
         }
@@ -120,13 +133,15 @@ function validacao(texto: String, uri: vscode.Uri) {
         if (cSelect && linha.toUpperCase().search("FROM") !== -1) {
             FromQuery = true;
         }
-        if (linha.toUpperCase().search("ENDSQL") !== -1) {
+        if (linha.toUpperCase().search("ENDSQL") !== -1 ||
+            linha.toUpperCase().search("WHERE") !== -1 ||
+            linha.toUpperCase().search("TCQUERY") !== -1) {
             FromQuery = false;
             cSelect = false;
         }
-        if (cSelect && FromQuery && linha.toUpperCase().search("PROTHEUS") !== -1) {
+        if (cSelect && FromQuery && linha.toUpperCase().search(ownerDb) !== -1) {
             aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                'Uso NÃO PERMITIDO do SHEMA PROTHEUS em Query. ', vscode.DiagnosticSeverity.Error));
+                'Uso NÃO PERMITIDO do SHEMA ' + ownerDb + ' em Query. ', vscode.DiagnosticSeverity.Error));
         }
         if (linha.toUpperCase().search("CONOUT") !== -1) {
             aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
