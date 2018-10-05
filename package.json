@@ -2,7 +2,7 @@
     "name": "advpl-sintax-poupex",
     "displayName": "advpl-sintax",
     "description": "Extensão para POUPEX que faz os merges e análise de códigos ADVPL.",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "publisher": "robsonrosilva",
     "engines": {
         "vscode": "^1.9.1"

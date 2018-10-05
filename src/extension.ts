@@ -117,62 +117,118 @@ function validacao(texto: String, uri: vscode.Uri) {
     let includeTotvs = false;
     let cBeginSql = false;
     let FromQuery = false;
+    let JoinQuery = false;
     let cSelect = false;
+    let ProtheusDoc = false;
     //Percorre todas as linhas
     for (var key in linhas) {
-        let linha = linhas[key].toLocaleUpperCase();
-        //Verifica se adicionou o include TOTVS.CH
-        if (linha.search("#INCLUDE") !== -1 && linha.search("TOTVS.CH") !== -1) {
-            includeTotvs = true;
+        //seta linha atual em caixa alta e ignorando comentários e linha
+        let linha = linhas[key].toLocaleUpperCase().split("//")[0];
+        //se estiver no PotheusDoc vê se está fechando
+        if (ProtheusDoc && linha.search("\\/\\*\\/") !== -1) {
+            ProtheusDoc = false;
         }
-        if (linha.search("BEGINSQL\\ ") !== -1) {
-            cBeginSql = true;
-        }
-        if (linha.search("SELECT\\ ") !== -1) {
-            cSelect = true;
-        }
-        if (!cBeginSql && linha.search("SELECT\\ ") !== -1) {
-            aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                'Uso INDEVIDO de Query sem o Embedded SQL.! => Utilizar: BeginSQL … EndSQL.',
-                vscode.DiagnosticSeverity.Error));
-        }
-        if (linha.search("SELECT\\ ") !== -1 && linha.search("\\ \\*\\ ") !== -1) {
-            aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                'Uso NÃO PERMITIDO de SELECT com asterisco "*".! ',
-                vscode.DiagnosticSeverity.Error));
-        }
-        if (linha.search("CHR\\(13\\)") !== -1 && linha.search("CHR\\(10\\)") !== -1) {
-            aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                'É recomendado o uso da expressão CRLF.',
-                vscode.DiagnosticSeverity.Warning));
-        }
-        if (cSelect && linha.search("FROM") !== -1) {
-            FromQuery = true;
-        }
-        if (linha.search("ENDSQL") !== -1 ||
-            linha.search("WHERE") !== -1 ||
-            linha.search("TCQUERY") !== -1) {
-            FromQuery = false;
-            cSelect = false;
-        }
-        if (cSelect && FromQuery && linha.search(ownerDb) !== -1) {
-            aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                'Uso NÃO PERMITIDO do SHEMA ' + ownerDb + ' em Query. ',
-                vscode.DiagnosticSeverity.Error));
-        }
-        if (linha.search("CONOUT") !== -1) {
-            aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                'Uso NÃO PERMITIDO do Conout. => Utilizar a API de Log padrão (FWLogMsg).',
-                vscode.DiagnosticSeverity.Error));
-        }
-        //verifica se é um comentário de função e adiciona no array
+        //verifica se é protheusDoc
         if (linha.search("\\/\\*\\/\\{PROTHEUS\\.DOC\\}") !== -1) {
-            comentFuncoes.push([linha.trim().replace("/*/{PROTHEUS.DOC}", "").trim().toLocaleUpperCase(), key]);
+            ProtheusDoc = true;
+            //reseta todas as ariáveis de controle pois se entrou em ProtheusDoc está fora de qualquer função
+            cBeginSql = false;
+            FromQuery = false;
+            JoinQuery = false;
+            cSelect = false;
+            //verifica se é um comentário de função e adiciona no array
+            comentFuncoes.push(
+                [linha.trim().replace("/*/{PROTHEUS.DOC}", "").trim().toLocaleUpperCase(), key]
+            );
         }
-        //verifica se é função e adiciona no array
-        if (linha.search("STATIC\\ FUNCTION\\ ") !== -1 ||
-            linha.search("USER\\ FUNCTION\\ ") !== -1) {
-            funcoes.push([linha.trim().split(" ")[2].split("(")[0].toLocaleUpperCase(), key]);
+        //se não estiver dentro do Protheus DOC valida linha
+        if (!ProtheusDoc) {
+            //verifica se é função e adiciona no array
+            if (linha.search("STATIC\\ FUNCTION\\ ") !== -1 ||
+                linha.search("USER\\ FUNCTION\\ ") !== -1) {
+                //reseta todas as ariáveis de controle pois está fora de qualquer função
+                cBeginSql = false;
+                FromQuery = false;
+                JoinQuery = false;
+                cSelect = false;
+                //verifica se é um função e adiciona no array
+                funcoes.push(
+                    [linha.trim().split(" ")[2].split("(")[0].toLocaleUpperCase(), key]
+                );
+            }
+
+
+            //Verifica se adicionou o include TOTVS.CH
+            if (linha.search("#INCLUDE") !== -1 && linha.search("TOTVS.CH") !== -1) {
+                includeTotvs = true;
+            }
+            if (linha.search("BEGINSQL\\ ") !== -1) {
+                cBeginSql = true;
+            }
+            if (linha.match("SELECT\\ ") ||
+                linha.match("DELETE\\ ") ||
+                linha.match("UPDATE\\ ")) {
+                cSelect = true;
+            }
+            if (!cBeginSql && linha.search("SELECT\\ ") !== -1) {
+                aErros.push(
+                    new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                        'Uso INDEVIDO de Query sem o Embedded SQL.! => Utilizar: BeginSQL … EndSQL.',
+                        vscode.DiagnosticSeverity.Warning)
+                );
+            }
+            if (linha.search("SELECT\\ ") !== -1 && linha.search("\\ \\*\\ ") !== -1) {
+                aErros.push(
+                    new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                        'Uso NÃO PERMITIDO de SELECT com asterisco "*".! ',
+                        vscode.DiagnosticSeverity.Warning)
+                );
+            }
+            if (linha.search("CHR\\(13\\)") !== -1 && linha.search("CHR\\(10\\)") !== -1) {
+                aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                    'É recomendado o uso da expressão CRLF.',
+                    vscode.DiagnosticSeverity.Warning)
+                );
+            }
+            if (cSelect && linha.search("FROM") !== -1) {
+                FromQuery = true;
+            }
+            if (cSelect && FromQuery && linha.search("JOIN") !== -1) {
+                JoinQuery = true;
+            }
+            if (linha.search("ENDSQL") !== -1 ||
+                linha.search("WHERE") !== -1 ||
+                linha.search("TCQUERY") !== -1) {
+                FromQuery = false;
+                cSelect = false;
+            }
+            if (cSelect && FromQuery && linha.search(ownerDb) !== -1) {
+                aErros.push(
+                    new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                        'Uso NÃO PERMITIDO do SHEMA ' + ownerDb + ' em Query. ',
+                        vscode.DiagnosticSeverity.Error)
+                );
+            }
+            if (cSelect && (FromQuery || JoinQuery || linha.search("SET") !== -1) &&
+                linha.search("exp:cTable") === -1 &&
+                (linha.search("010\\ ") !== -1 || linha.search("020\\ ") !== -1)) {
+                aErros.push(
+                    new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                        'PROIBIDO Fixar tabela na  Query. ',
+                        vscode.DiagnosticSeverity.Error)
+                );
+            }
+            if (cSelect && JoinQuery && linha.search("ON") !== -1) {
+                FromQuery = false;
+                JoinQuery = false;
+            }
+            if (linha.search("CONOUT") !== -1) {
+                aErros.push(
+                    new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                        'Uso NÃO PERMITIDO do Conout. => Utilizar a API de Log padrão (FWLogMsg).',
+                        vscode.DiagnosticSeverity.Warning)
+                );
+            }
         }
     }
 
@@ -187,42 +243,46 @@ function validacao(texto: String, uri: vscode.Uri) {
     if (!comentariosFonte) {
         aErros.push(new vscode.Diagnostic(new vscode.Range(0, 0, 0, 0),
             'Verifique os padrões de comentários de fontes! => Use o autocomplete docFuncaoPoupex.',
-            vscode.DiagnosticSeverity.Information));
+            vscode.DiagnosticSeverity.Information)
+        );
     }
 
     //Validação funções sem comentários
     funcoes.forEach(funcao => {
         let achou = false;
         comentFuncoes.forEach(comentario => {
-            achou = achou || comentario[0] === funcao[0]; 
+            achou = achou || comentario[0] === funcao[0];
         });
 
-        if (! achou) {
+        if (!achou) {
             aErros.push(new vscode.Diagnostic(
                 new vscode.Range(parseInt(funcao[1]), 0, parseInt(funcao[1]), 0),
                 'Função não comentada!',
-                vscode.DiagnosticSeverity.Error));
+                vscode.DiagnosticSeverity.Warning)
+            );
         }
     });
     //Validação comentários sem funções
     comentFuncoes.forEach(comentario => {
         let achou = false;
         funcoes.forEach(funcao => {
-            achou = achou || comentario[0] === funcao[0]; 
+            achou = achou || comentario[0] === funcao[0];
         });
 
-        if (! achou) {
+        if (!achou) {
             aErros.push(new vscode.Diagnostic(
                 new vscode.Range(parseInt(comentario[1]), 0, parseInt(comentario[1]), 0),
                 'Comentário de função sem função!',
-                vscode.DiagnosticSeverity.Error));
+                vscode.DiagnosticSeverity.Warning)
+            );
         }
     });
 
     if (!includeTotvs) {
         aErros.push(new vscode.Diagnostic(new vscode.Range(0, 0, 0, 0),
             'Falta o include TOTVS.CH !',
-            vscode.DiagnosticSeverity.Error));
+            vscode.DiagnosticSeverity.Warning)
+        );
     }
 
     collection.set(uri, aErros);
