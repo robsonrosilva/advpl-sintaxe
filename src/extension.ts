@@ -9,59 +9,72 @@ import * as fileSystem from 'fs';
 //Cria um colection para os erros ADVPL
 const collection = vscode.languages.createDiagnosticCollection('advpl');
 let branchTeste = vscode.workspace.getConfiguration("advpl-sintax").get("branchTeste") as string;
-if (! branchTeste) {
+if (!branchTeste) {
     branchTeste = 'V11_Validacao';
 }
 let branchHomol = vscode.workspace.getConfiguration("advpl-sintax").get("branchHomologacao") as string;
-if (! branchHomol) {
+if (!branchHomol) {
     branchHomol = 'V11_Release';
 }
 let branchProdu = vscode.workspace.getConfiguration("advpl-sintax").get("branchProducao") as string;
-if (! branchProdu) {
+if (!branchProdu) {
     branchProdu = 'master';
 }
 let ownerDb = vscode.workspace.getConfiguration("advpl-sintax").get("ownerDb") as string;
-if (! ownerDb) {
-    ownerDb = 'PROTHEUS'; 
+if (!ownerDb) {
+    ownerDb = 'PROTHEUS';
 }
 export function activate(context: vscode.ExtensionContext) {
     vscode.window.showInformationMessage('Validação ADVPL Ativa!');
     vscode.workspace.onDidChangeTextDocument(validaADVPL);
 
     //Adiciona comando de envia para Validação
-    let disposableVal = vscode.commands.registerCommand('advpl-sintax.gitValidacao', () => {
-        let repository = getRepository();
-        if (!repository) {
-            return;
-        }
+    context.subscriptions.push(
+        vscode.commands.registerCommand('advpl-sintax.gitValidacao', () => {
+            let repository = getRepository();
+            if (!repository) {
+                return;
+            }
 
-        let branchAtual = repository.headLabel;
-        merge(repository, branchAtual, branchTeste, false, false);
-    });
-    context.subscriptions.push(disposableVal);
+            let branchAtual = repository.headLabel;
+            merge(repository, branchAtual, branchTeste, false, false);
+        })
+    );
     //Adiciona comando de envia para Release
-    let disposableRel = vscode.commands.registerCommand('advpl-sintax.gitRelease', () => {
-        let repository = getRepository();
-        if (!repository) {
-            return;
-        }
+    context.subscriptions.push(
+        vscode.commands.registerCommand('advpl-sintax.gitRelease', () => {
+            let repository = getRepository();
+            if (!repository) {
+                return;
+            }
 
-        let branchAtual = repository.headLabel;
-        merge(repository, branchAtual, branchTeste, true, false);
-    });
-    context.subscriptions.push(disposableRel);
+            let branchAtual = repository.headLabel;
+            merge(repository, branchAtual, branchTeste, true, false);
+        })
+    );
     //Adiciona comando de envia para master
-    let disposable = vscode.commands.registerCommand('advpl-sintax.gitMaster', () => {
-        //Faz o merge para master
-        let repository = getRepository();
-        if (!repository) {
-            return;
-        }
+    context.subscriptions.push(
+        vscode.commands.registerCommand('advpl-sintax.gitMaster', () => {
+            //Faz o merge para master
+            let repository = getRepository();
+            if (!repository) {
+                return;
+            }
 
-        let branchAtual = repository.headLabel;
-        merge(repository, branchAtual, branchTeste, true, true);
-    });
-    context.subscriptions.push(disposable);
+            let branchAtual = repository.headLabel;
+            merge(repository, branchAtual, branchTeste, true, true);
+        })
+    );
+    //Adiciona comando de envia para master
+    context.subscriptions.push(
+        vscode.commands.registerCommand('advpl-sintax.validaProjeto', () => {
+            validaProjeto();
+        })
+    );
+    validaProjeto();
+}
+
+function validaProjeto() {
     //percorre todos os fontes do Workspace e valida se for ADVPL
     let advplExtensions = ['**/*.prw', '**/*.prx', '**/*.prg', '**/*.apw', '**/*.aph', '**/*.apl', '**/*.tlpp'];
     advplExtensions.forEach(extension => {

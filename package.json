@@ -38,6 +38,10 @@
             {
                 "command": "advpl-sintax.gitMaster",
                 "title": "POUPEX - Envia os commits para a branche MASTER!"
+            },
+            {
+                "command": "advpl-sintax.validaProjeto",
+                "title": "POUPEX - Valida Projeto!"
             }
         ],
         "snippets": []
