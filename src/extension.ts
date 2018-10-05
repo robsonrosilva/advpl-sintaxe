@@ -76,11 +76,12 @@ export function activate(context: vscode.ExtensionContext) {
 
 function validaProjeto() {
     //percorre todos os fontes do Workspace e valida se for ADVPL
-    let advplExtensions = ['**/*.prw', '**/*.prx', '**/*.prg', '**/*.apw', '**/*.aph', '**/*.apl', '**/*.tlpp'];
-    advplExtensions.forEach(extension => {
-        let busca = vscode.workspace.findFiles(extension);
-        busca.then((files: vscode.Uri[]) => {
-            files.forEach(file => {
+    let advplExtensions = ['prw', 'prx', 'prg', 'apw', 'apl', 'tlpp'];
+    vscode.workspace.findFiles('**/*.*', '**/*.json').then((files: vscode.Uri[]) => {
+        files.forEach(file => {
+            let re = /(?:\.([^.]+))?$/;
+            let extensao = re.exec(file.fsPath);
+            if (extensao && advplExtensions.indexOf(extensao[1].toLowerCase()) !== -1) {
                 fileSystem.readFile(file.fsPath, "latin1", (err, data) => {
                     if (err) {
                         vscode.window.showErrorMessage('Problema na validação de arquivos!');
@@ -88,7 +89,8 @@ function validaProjeto() {
                         validacao(data, file);
                     }
                 });
-            });
+
+            }
         });
     });
 }
@@ -110,59 +112,117 @@ function validacao(texto: String, uri: vscode.Uri) {
     //Limpa as mensagens do colection
     collection.delete(uri);
 
-    //let comentariosFonte = false;
-    //let comentariosFuncao = false;
-    //let selectTcQuery = false;
-    //let comentAlteracao = false;
+    let comentFuncoes = new Array();
+    let funcoes = new Array();
     let includeTotvs = false;
     let cBeginSql = false;
     let FromQuery = false;
     let cSelect = false;
     //Percorre todas as linhas
     for (var key in linhas) {
-        let linha = linhas[key];
+        let linha = linhas[key].toLocaleUpperCase();
         //Verifica se adicionou o include TOTVS.CH
-        if (linha.toUpperCase().search("#INCLUDE") !== -1 && linha.toUpperCase().search("TOTVS.CH") !== -1) {
+        if (linha.search("#INCLUDE") !== -1 && linha.search("TOTVS.CH") !== -1) {
             includeTotvs = true;
         }
-        if (linha.toUpperCase().search("BEGINSQL\\ ") !== -1) {
+        if (linha.search("BEGINSQL\\ ") !== -1) {
             cBeginSql = true;
         }
-        if (linha.toUpperCase().search("SELECT\\ ") !== -1) {
+        if (linha.search("SELECT\\ ") !== -1) {
             cSelect = true;
         }
-        if (!cBeginSql && linha.toUpperCase().search("SELECT\\ ") !== -1) {
+        if (!cBeginSql && linha.search("SELECT\\ ") !== -1) {
             aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                'Uso INDEVIDO de Query sem o Embedded SQL.! => Utilizar: BeginSQL … EndSQL.', vscode.DiagnosticSeverity.Error));
+                'Uso INDEVIDO de Query sem o Embedded SQL.! => Utilizar: BeginSQL … EndSQL.',
+                vscode.DiagnosticSeverity.Error));
         }
-        if (linha.toUpperCase().search("SELECT\\ ") !== -1 && linha.toUpperCase().search("\\ \\*\\ ") !== -1) {
+        if (linha.search("SELECT\\ ") !== -1 && linha.search("\\ \\*\\ ") !== -1) {
             aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                'Uso NÃO PERMITIDO de SELECT com asterisco "*".! ', vscode.DiagnosticSeverity.Error));
+                'Uso NÃO PERMITIDO de SELECT com asterisco "*".! ',
+                vscode.DiagnosticSeverity.Error));
         }
-        if (linha.toUpperCase().search("CHR\\(13\\)") !== -1 && linha.toUpperCase().search("CHR\\(10\\)") !== -1) {
+        if (linha.search("CHR\\(13\\)") !== -1 && linha.search("CHR\\(10\\)") !== -1) {
             aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                'É recomendado o uso da expressão CRLF.', vscode.DiagnosticSeverity.Warning));
+                'É recomendado o uso da expressão CRLF.',
+                vscode.DiagnosticSeverity.Warning));
         }
-        if (cSelect && linha.toUpperCase().search("FROM") !== -1) {
+        if (cSelect && linha.search("FROM") !== -1) {
             FromQuery = true;
         }
-        if (linha.toUpperCase().search("ENDSQL") !== -1 ||
-            linha.toUpperCase().search("WHERE") !== -1 ||
-            linha.toUpperCase().search("TCQUERY") !== -1) {
+        if (linha.search("ENDSQL") !== -1 ||
+            linha.search("WHERE") !== -1 ||
+            linha.search("TCQUERY") !== -1) {
             FromQuery = false;
             cSelect = false;
         }
-        if (cSelect && FromQuery && linha.toUpperCase().search(ownerDb) !== -1) {
+        if (cSelect && FromQuery && linha.search(ownerDb) !== -1) {
             aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                'Uso NÃO PERMITIDO do SHEMA ' + ownerDb + ' em Query. ', vscode.DiagnosticSeverity.Error));
+                'Uso NÃO PERMITIDO do SHEMA ' + ownerDb + ' em Query. ',
+                vscode.DiagnosticSeverity.Error));
         }
-        if (linha.toUpperCase().search("CONOUT") !== -1) {
+        if (linha.search("CONOUT") !== -1) {
             aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                'Uso NÃO PERMITIDO do Conout. => Utilizar a API de Log padrão (FWLogMsg).', vscode.DiagnosticSeverity.Error));
+                'Uso NÃO PERMITIDO do Conout. => Utilizar a API de Log padrão (FWLogMsg).',
+                vscode.DiagnosticSeverity.Error));
+        }
+        //verifica se é um comentário de função e adiciona no array
+        if (linha.search("\\/\\*\\/\\{PROTHEUS\\.DOC\\}") !== -1) {
+            comentFuncoes.push([linha.trim().replace("/*/{PROTHEUS.DOC}", "").trim().toLocaleUpperCase(), key]);
+        }
+        //verifica se é função e adiciona no array
+        if (linha.search("STATIC\\ FUNCTION\\ ") !== -1 ||
+            linha.search("USER\\ FUNCTION\\ ") !== -1) {
+            funcoes.push([linha.trim().split(" ")[2].split("(")[0].toLocaleUpperCase(), key]);
         }
     }
+
+    //Validação de padrão de comentáris de fontes
+    let comentariosFonte = linhas[0] === '/*//' + '#'.repeat(89) + "\r";
+    comentariosFonte = comentariosFonte && linhas[1].search('Projeto\\ \\:') !== -1;
+    comentariosFonte = comentariosFonte && linhas[2].search('Modulo\\ \\ \\:') !== -1;
+    comentariosFonte = comentariosFonte && linhas[3].search('Fonte\\ \\ \\ \\:') !== -1;
+    comentariosFonte = comentariosFonte && linhas[4].search('Objetivo\\:') !== -1;
+    comentariosFonte = comentariosFonte && linhas[5] === '*///' + '#'.repeat(89) + "\r";
+
+    if (!comentariosFonte) {
+        aErros.push(new vscode.Diagnostic(new vscode.Range(0, 0, 0, 0),
+            'Verifique os padrões de comentários de fontes! => Use o autocomplete docFuncaoPoupex.',
+            vscode.DiagnosticSeverity.Information));
+    }
+
+    //Validação funções sem comentários
+    funcoes.forEach(funcao => {
+        let achou = false;
+        comentFuncoes.forEach(comentario => {
+            achou = achou || comentario[0] === funcao[0]; 
+        });
+
+        if (! achou) {
+            aErros.push(new vscode.Diagnostic(
+                new vscode.Range(parseInt(funcao[1]), 0, parseInt(funcao[1]), 0),
+                'Função não comentada!',
+                vscode.DiagnosticSeverity.Error));
+        }
+    });
+    //Validação comentários sem funções
+    comentFuncoes.forEach(comentario => {
+        let achou = false;
+        funcoes.forEach(funcao => {
+            achou = achou || comentario[0] === funcao[0]; 
+        });
+
+        if (! achou) {
+            aErros.push(new vscode.Diagnostic(
+                new vscode.Range(parseInt(comentario[1]), 0, parseInt(comentario[1]), 0),
+                'Comentário de função sem função!',
+                vscode.DiagnosticSeverity.Error));
+        }
+    });
+
     if (!includeTotvs) {
-        aErros.push(new vscode.Diagnostic(new vscode.Range(0, 0, 0, 0), 'Falta o include TOTVS.CH !', vscode.DiagnosticSeverity.Error));
+        aErros.push(new vscode.Diagnostic(new vscode.Range(0, 0, 0, 0),
+            'Falta o include TOTVS.CH !',
+            vscode.DiagnosticSeverity.Error));
     }
 
     collection.set(uri, aErros);
