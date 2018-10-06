@@ -1,10 +1,17 @@
 # advpl-sintax README
 
-Este extenão visa facilitar processos de desnvolvimento ADVPL específicos para a POUPEX.
+Este extensão visa facilitar processos de desnvolvimento ADVPL específicos para a POUPEX.
 
 ## Release Notes
+### 0.0.6  - 2018-10-05
+- Implementação para aceitar vários bancos de dados.
+- Ajuste para identificação no Settings de configurações de extensão.
+- Segregação de classes de Merge e de Validação.
+- Melhoria de identificação de banco de dados fixo no fonte.
+- Recomendação de identação de queryes para melhor análise.
+
 ### 0.0.5  - 2018-10-05
-- Alteração do conceito do tipo de mensagens de Error para Warning
+- Alteração de classificações de mensagens de Error para Warning.
 - Criação de regra para verificar tabelas fixas em query.
 
 ### 0.0.4  - 2018-10-05
@@ -15,8 +22,8 @@ Este extenão visa facilitar processos de desnvolvimento ADVPL específicos para
 - Criticas de comentários de fontes e funções.
 
 ### 0.0.3 - 2018-10-04
-- Criado variavel cSelect para indentificar Query e validar o Schema.
-- Criação de variáveis de Workspace para branches e owner.
+- Criado variavel cSelect para indentificar Query e validar o owner.
+- Criação de variáveis de Workspace para extensão.
 - Melhoria na identificação de owner.
 
 ### 0.0.2 - 2018-10-04

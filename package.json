@@ -1,8 +1,8 @@
 {
     "name": "advpl-sintax-poupex",
-    "displayName": "advpl-sintax",
-    "description": "Extensão para POUPEX que faz os merges e análise de códigos ADVPL.",
-    "version": "0.0.5",
+    "displayName": "Extensão de análise de sintaxe advpl.",
+    "description": "Extensão para automatização de merges do GIT e análise de códigos ADVPL.",
+    "version": "0.0.6",
     "publisher": "robsonrosilva",
     "engines": {
         "vscode": "^1.9.1"
@@ -44,6 +44,54 @@
                 "title": "POUPEX - Valida Projeto!"
             }
         ],
+        "configuration": {
+            "type": "object",
+            "title": "Configuração de Advpl Sintax",
+            "properties": {
+                "advpl-sintax": {
+                    "type": "object",
+                    "default": {},
+                    "description": "Configurações de extensão Advpl Sintax.",
+                    "properties": {
+                        "branchTeste": {
+                            "type": "string",
+                            "default": "V11_Validacao",
+                            "description": "Nome da branche do GIT do ambiente de Testes."
+                        },
+                        "branchHomologacao": {
+                            "type": "string",
+                            "default": "V11_Release",
+                            "description": "Nome da branche do GIT do ambiente de Homologação."
+                        },
+                        "branchProducao": {
+                            "type": "string",
+                            "default": "master",
+                            "description": "Nome da branche do GIT do ambiente de Produção"
+                        },
+                        "ownerDb": {
+                            "type": "array",
+                            "default": [],
+                            "description": "Lista dos Owner's ou Bancos de dados que o Protheus usa.",
+                            "items": {
+                                "type": "string",
+                                "default":"PROTHEUS",
+                                "description": "Nome do banco de dados ou owner."
+                            }
+                        },
+                        "empresas": {
+                            "type": "array",
+                            "default": [],
+                            "description": "Lista com os códigos de empresas que o Protheus usa.",
+                            "items": {
+                                "type": "string",
+                                "default":"01",
+                                "description": "Códigos das empresas do Protheus para validação de queryes."
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "snippets": [
             {
                 "language": "advpl",
