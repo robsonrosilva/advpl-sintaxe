@@ -1,8 +1,11 @@
 # advpl-sintax README
 
-Este extensão visa facilitar processos de desnvolvimento ADVPL específicos para a POUPEX.
+Extensão para automatização de merges do GIT e análise de códigos ADVPL.
 
 ## Release Notes
+### 0.0.7  - 2018-10-06
+- Montagem de settings para padrão de comentário de fonte.
+
 ### 0.0.6  - 2018-10-05
 - Implementação para aceitar vários bancos de dados.
 - Ajuste para identificação no Settings de configurações de extensão.

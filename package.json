@@ -1,8 +1,8 @@
 {
     "name": "advpl-sintax-poupex",
-    "displayName": "Extensão de análise de sintaxe advpl.",
+    "displayName": "Análise ADVPL",
     "description": "Extensão para automatização de merges do GIT e análise de códigos ADVPL.",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "publisher": "robsonrosilva",
     "engines": {
         "vscode": "^1.9.1"
@@ -86,6 +86,16 @@
                                 "type": "string",
                                 "default":"01",
                                 "description": "Códigos das empresas do Protheus para validação de queryes."
+                            }
+                        },
+                        "comentFontPad": {
+                            "type": "array",
+                            "default": [],
+                            "description": "Lista com as linhas de comentário de fonte.",
+                            "items": {
+                                "type": "string",
+                                "default":"",
+                                "description": "Linha do comentário de fonte. (Usar padrão de search TypeScript)"
                             }
                         }
                     }

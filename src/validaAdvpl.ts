@@ -5,7 +5,22 @@ import * as fileSystem from 'fs';
 const collection = vscode.languages.createDiagnosticCollection('advpl');
 
 export class ValidaAdvpl {
-    constructor() { }
+    public comentFontPad: any;
+    
+    constructor() { 
+        this.comentFontPad = vscode.workspace.getConfiguration("advpl-sintax").get("comentFontPad");
+
+        //Se não está preenchido seta com valor padrão
+        if (! this.comentFontPad){
+            this.comentFontPad = [];
+            this.comentFontPad.push('\\/\\*\\/\\/' + '\\#'.repeat(89));
+            this.comentFontPad.push('Projeto\\ \\:');
+            this.comentFontPad.push('Modulo\\ \\ \\:');
+            this.comentFontPad.push('Fonte\\ \\ \\ \\:');
+            this.comentFontPad.push('Objetivo\\:');
+            this.comentFontPad.push('\\*\\/\\/\\/' + '\\#'.repeat(89));
+        }
+    }
     public validaProjeto() {
         //guarda objeto this
         let objeto = this;
@@ -41,6 +56,8 @@ export class ValidaAdvpl {
     }
 
     protected validacao(texto: String, uri: vscode.Uri) {
+        //guarda objeto this
+        let objeto = this;
         //Busca Configurações do Settings
         let ownerDb = vscode.workspace.getConfiguration("advpl-sintax").get("ownerDb") as Array<string>;
         if (!ownerDb) {
@@ -203,13 +220,13 @@ export class ValidaAdvpl {
         }
 
         //Validação de padrão de comentáris de fontes
-        let comentariosFonte = linhas[0] === '/*//' + '#'.repeat(89) + "\r";
-        comentariosFonte = comentariosFonte && linhas[1].search('Projeto\\ \\:') !== -1;
-        comentariosFonte = comentariosFonte && linhas[2].search('Modulo\\ \\ \\:') !== -1;
-        comentariosFonte = comentariosFonte && linhas[3].search('Fonte\\ \\ \\ \\:') !== -1;
-        comentariosFonte = comentariosFonte && linhas[4].search('Objetivo\\:') !== -1;
-        comentariosFonte = comentariosFonte && linhas[5] === '*///' + '#'.repeat(89) + "\r";
-
+        let comentariosFonte = true;
+        for (var _i = 0; _i < objeto.comentFontPad.length ; _i++) {
+            let cExpressao = objeto.comentFontPad[_i] as string;
+            let linha = linhas[_i] as string;
+            comentariosFonte = comentariosFonte && linha.search(cExpressao) !== -1;
+        }
+        
         if (!comentariosFonte) {
             aErros.push(new vscode.Diagnostic(new vscode.Range(0, 0, 0, 0),
                 'Verifique os padrões de comentários de fontes! => Use o autocomplete docFuncaoPoupex.',

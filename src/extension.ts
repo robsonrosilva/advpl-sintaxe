@@ -6,8 +6,9 @@ import {ValidaAdvpl} from './ValidaAdvpl';
 import {MergeAdvpl} from './merge';
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
-let validaAdvpl = new ValidaAdvpl();
 export function activate(context: vscode.ExtensionContext) {
+    let validaAdvpl = new ValidaAdvpl();
+
     vscode.window.showInformationMessage('Validação ADVPL Ativa!');
     vscode.workspace.onDidChangeTextDocument(validaFonte);
 
@@ -44,6 +45,7 @@ export function activate(context: vscode.ExtensionContext) {
     validaAdvpl.validaProjeto();
 }
 function validaFonte(editor: any){
+    let validaAdvpl = new ValidaAdvpl();
     validaAdvpl.validaFonte(editor);
 }
 
