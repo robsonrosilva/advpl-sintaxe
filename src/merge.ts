@@ -47,6 +47,12 @@ export class MergeAdvpl {
             repository.push().then((value: any) => {
                 repository.checkout(branchdestino).then((value: any) => {
                     repository.pull().then((value: any) => {
+                        let branchOriginal : any = undefined;
+                        //se for merge para produção usa no merge a branch de homologação
+                        if (branchdestino === objeto.branchProdu){
+                            branchOriginal = branchAtual;
+                            branchAtual = objeto.branchHomol;
+                        }
                         repository.merge(branchAtual, "").then((value: any) => {
                             let oComando;
                             //Se a branch destino for a master precisa criar tag
@@ -88,6 +94,10 @@ export class MergeAdvpl {
                             }
                             oComando.then((value: any) => {
                                 repository.push().then((value: any) => {
+                                    //se for usou a branche de homologação volta o conteúdo original
+                                    if(branchOriginal){
+                                        branchAtual = branchOriginal;
+                                    }
                                     repository.checkout(branchAtual).then((value: any) => {
                                         if (enviaHomolog) {
                                             objeto.merge(repository, branchAtual, objeto.branchHomol, false, enviaMaster);

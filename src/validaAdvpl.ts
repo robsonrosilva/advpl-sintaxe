@@ -6,12 +6,12 @@ const collection = vscode.languages.createDiagnosticCollection('advpl');
 
 export class ValidaAdvpl {
     public comentFontPad: any;
-    
-    constructor() { 
+
+    constructor() {
         this.comentFontPad = vscode.workspace.getConfiguration("advpl-sintax").get("comentFontPad");
 
         //Se não está preenchido seta com valor padrão
-        if (! this.comentFontPad){
+        if (!this.comentFontPad) {
             this.comentFontPad = [];
             this.comentFontPad.push('\\/\\*\\/\\/' + '\\#'.repeat(89));
             this.comentFontPad.push('Projeto\\ \\:');
@@ -133,15 +133,33 @@ export class ValidaAdvpl {
                 }
                 if (!cBeginSql && linha.search("SELECT\\ ") !== -1) {
                     aErros.push(
-                        new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                            'Uso INDEVIDO de Query sem o Embedded SQL.! => Utilizar: BeginSQL … EndSQL.',
+                        new vscode.Diagnostic(
+                            new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                            'Uso INDEVIDO de Query sem o Embedded SQL.! \n Utilizar: BeginSQL … EndSQL.',
                             vscode.DiagnosticSeverity.Warning)
+                    );
+                }
+                if (linha.search("DELETE\\ FROM") !== -1) {
+                    aErros.push(
+                        new vscode.Diagnostic(
+                            new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                            'Uso não permitido uso de DELETE FROM.! ',
+                            vscode.DiagnosticSeverity.Warning)
+                    );
+                }
+                if (linha.search("\\<\\<\\<\\<\\<\\<\\<\\ HEAD") !== -1) {
+                    aErros.push(
+                        new vscode.Diagnostic(
+                            new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                            'Existem conflitos de merge, avalie antes de continuar! ',
+                            vscode.DiagnosticSeverity.Error)
                     );
                 }
                 if (linha.search("SELECT\\ ") !== -1 && linha.search("\\ \\*\\ ") !== -1) {
                     aErros.push(
-                        new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                            'Uso NÃO PERMITIDO de SELECT com asterisco "*".! ',
+                        new vscode.Diagnostic(
+                            new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                            'Uso não permitido uso de SELECT com asterisco \n "*".! ',
                             vscode.DiagnosticSeverity.Warning)
                     );
                 }
@@ -167,8 +185,9 @@ export class ValidaAdvpl {
                 ownerDb.forEach(banco => {
                     if (cSelect && FromQuery && linha.search(banco) !== -1) {
                         aErros.push(
-                            new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                                'Uso NÃO PERMITIDO do SHEMA ' + banco + ' em Query. ',
+                            new vscode.Diagnostic(
+                                new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                                'Uso não permitido uso do SHEMA ' + banco + ' em Query. ',
                                 vscode.DiagnosticSeverity.Error)
                         );
                     }
@@ -179,7 +198,8 @@ export class ValidaAdvpl {
                     empresas.forEach(empresa => {
                         if (linha.search(empresa + "0\\ ") !== -1) {
                             aErros.push(
-                                new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                                new vscode.Diagnostic(
+                                    new vscode.Range(parseInt(key), 0, parseInt(key), 0),
                                     'PROIBIDO Fixar tabela na Query. ',
                                     vscode.DiagnosticSeverity.Error)
                             );
@@ -191,8 +211,9 @@ export class ValidaAdvpl {
                 }
                 if (linha.search("CONOUT") !== -1) {
                     aErros.push(
-                        new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                            'Uso NÃO PERMITIDO do Conout. => Utilizar a API de Log padrão (FWLogMsg).',
+                        new vscode.Diagnostic(
+                            new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                            'Uso não permitido uso do Conout. => Utilizar a API de Log padrão (FWLogMsg).',
                             vscode.DiagnosticSeverity.Warning)
                     );
                 }
@@ -210,8 +231,9 @@ export class ValidaAdvpl {
                     )
                 ) {
                     aErros.push(
-                        new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                            'Para melhorar a análise dessa query coloque em linhas diferentes as clausulas'+
+                        new vscode.Diagnostic(
+                            new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                            'Para melhorar a análise dessa query coloque em linhas diferentes as clausulas' +
                             ' SELECT, DELETE, UPDATE, JOIN, FROM, ON, WHERE.',
                             vscode.DiagnosticSeverity.Information)
                     );
@@ -221,16 +243,17 @@ export class ValidaAdvpl {
 
         //Validação de padrão de comentáris de fontes
         let comentariosFonte = true;
-        for (var _i = 0; _i < objeto.comentFontPad.length ; _i++) {
+        for (var _i = 0; _i < objeto.comentFontPad.length; _i++) {
             let cExpressao = objeto.comentFontPad[_i] as string;
             let linha = linhas[_i] as string;
             comentariosFonte = comentariosFonte && linha.search(cExpressao) !== -1;
         }
-        
+
         if (!comentariosFonte) {
-            aErros.push(new vscode.Diagnostic(new vscode.Range(0, 0, 0, 0),
-                'Verifique os padrões de comentários de fontes! => Use o autocomplete docFuncaoPoupex.',
-                vscode.DiagnosticSeverity.Information)
+            aErros.push(
+                new vscode.Diagnostic(new vscode.Range(0, 0, 0, 0),
+                    'Verifique os padrões de comentários de fontes! => Use o autocomplete docFuncaoPoupex.',
+                    vscode.DiagnosticSeverity.Information)
             );
         }
 

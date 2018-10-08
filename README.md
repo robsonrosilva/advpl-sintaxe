@@ -3,6 +3,11 @@
 Extensão para automatização de merges do GIT e análise de códigos ADVPL.
 
 ## Release Notes
+### 0.0.8  - 2018-10-08
+- Correção do Fluxo de merge para a Master.
+- Criticas de DELETE FROM.
+- Criticas de Erro de Commit.
+
 ### 0.0.7  - 2018-10-06
 - Montagem de settings para padrão de comentário de fonte.
 
