@@ -1,0 +1,34 @@
+{
+    "docFontePoupex": {
+        "prefix": "Documentação de Fonte - POUPEX",
+        "body": [
+            "/*//#########################################################################################",
+            "Projeto : ${project}",
+            "Modulo  : ${module}",
+            "Fonte   : ${TM_FILENAME_BASE}",
+            "Objetivo: ${objetivo}",
+            "*///#########################################################################################",
+            "",
+            "#INCLUDE 'TOTVS.CH'",
+            ""
+        ]
+    },
+    "docFuncaoPoupex": {
+        "prefix": "Documentação de Função - POUPEX",
+        "body": [
+            "",
+            "/*/{Protheus.doc} ${Funcao}",
+            "",
+            "   ${Descricao}",
+            "",
+            "   @author  ${Nome}",
+            "   @example ${Exemplos}",
+            "   @param   [${Nome_do_Parametro}],${Tipo_do_Parametro},${Descricao_do_Parametro}",
+            "   @return  ${Especifica_o_retorno}",
+            "   @table   ${Tabelas}",
+            "   @since   ${Data}",
+            "/*/",
+            ""
+        ]
+    }
+}
