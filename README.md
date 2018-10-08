@@ -3,6 +3,9 @@
 Extensão para automatização de merges do GIT e análise de códigos ADVPL.
 
 ## Release Notes
+### 0.0.9  - 2018-10-08
+- Executa as validações de projeto quando chama as rotinas do GIT.
+
 ### 0.0.8  - 2018-10-08
 - Correção do Fluxo de merge para a Master.
 - Criticas de DELETE FROM.

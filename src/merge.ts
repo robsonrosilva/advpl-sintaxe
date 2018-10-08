@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import {ValidaAdvpl} from './ValidaAdvpl';
 
 export class MergeAdvpl {
     public branchTeste: string;
@@ -164,9 +165,14 @@ export class MergeAdvpl {
         }
     }
     protected sucesso(value: any, rotina: String) {
+        let validaAdvpl = new ValidaAdvpl();
         vscode.window.showInformationMessage('FUNCIONOU ' + rotina + " [" + value + "]");
+        validaAdvpl.validaProjeto();
+
     }
     protected falha(rotina: String) {
+        let validaAdvpl = new ValidaAdvpl();
         vscode.window.showErrorMessage('ERRO ' + rotina + "!");
+        validaAdvpl.validaProjeto();
     }
 }
