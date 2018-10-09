@@ -107,7 +107,9 @@ export class ValidaAdvpl {
             if (!ProtheusDoc) {
                 //verifica se é função e adiciona no array
                 if (linha.search("STATIC\\ FUNCTION\\ ") !== -1 ||
-                    linha.search("USER\\ FUNCTION\\ ") !== -1) {
+                linha.search("USER\\ FUNCTION\\ ") !== -1 ||
+                linha.search("WSSERVICE\\ ") !== -1 ||
+                linha.search("METHOD.+?CLASS") !== -1) {
                     //reseta todas as ariáveis de controle pois está fora de qualquer função
                     cBeginSql = false;
                     FromQuery = false;
@@ -274,7 +276,7 @@ export class ValidaAdvpl {
             if (!achou) {
                 aErros.push(new vscode.Diagnostic(
                     new vscode.Range(parseInt(funcao[1]), 0, parseInt(funcao[1]), 0),
-                    'Função não comentada!',
+                    'Função, Método ou WebService não comentado!',
                     vscode.DiagnosticSeverity.Warning)
                 );
             }
