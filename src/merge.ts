@@ -159,6 +159,16 @@ export class MergeAdvpl {
                             return;
                         }
                         return repository;
+                    }else{
+                        let repository = git.exports._model.getRepository(vscode.workspace.rootPath);
+                        // set resource groups
+                        if (repository.mergeGroup.resourceStates.length !== 0 ||
+                            repository.indexGroup.resourceStates.length !== 0 ||
+                            repository.workingTreeGroup.resourceStates.length !== 0) {
+                            vscode.window.showErrorMessage("Merge não realizado, existem arquivos não commitados!");
+                            return;
+                        }
+                        return repository;
                     }
                 }
             }

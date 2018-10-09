@@ -148,9 +148,16 @@ export class ValidaAdvpl {
                     );
                 }
                 if (linha.search("\\<\\<\\<\\<\\<\\<\\<\\ HEAD") !== -1) {
+                    //Verifica linha onde terminou o conflito
+                    let nFim = key;
+                    for (var key2 in linhas) {
+                        if (linhas[key2].search("\\>\\>\\>\\>\\>\\>\\>") !== -1 && nFim === key && key2 > key) {
+                            nFim = key2;
+                        }
+                    }
                     aErros.push(
                         new vscode.Diagnostic(
-                            new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                            new vscode.Range(parseInt(key), 0, parseInt(nFim), 0),
                             'Existem conflitos de merge, avalie antes de continuar! ',
                             vscode.DiagnosticSeverity.Error)
                     );
@@ -297,5 +304,4 @@ export class ValidaAdvpl {
 
         collection.set(uri, aErros);
     }
-
 }
