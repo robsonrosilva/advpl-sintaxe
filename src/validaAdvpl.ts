@@ -107,9 +107,7 @@ export class ValidaAdvpl {
             if (!ProtheusDoc) {
                 //verifica se é função e adiciona no array
                 if (linha.search("STATIC\\ FUNCTION\\ ") !== -1 ||
-                linha.search("USER\\ FUNCTION\\ ") !== -1 ||
-                linha.search("WSSERVICE\\ ") !== -1 ||
-                linha.search("METHOD.+?CLASS") !== -1) {
+                    linha.search("USER\\ FUNCTION\\ ") !== -1) {
                     //reseta todas as ariáveis de controle pois está fora de qualquer função
                     cBeginSql = false;
                     FromQuery = false;
@@ -117,10 +115,24 @@ export class ValidaAdvpl {
                     cSelect = false;
                     //verifica se é um função e adiciona no array
                     funcoes.push(
-                        [linha.trim().split(" ")[2].split("(")[0].toLocaleUpperCase(), key]
+                        [linha.trim().split(" ")[2].split("(")[0], key]
                     );
                 }
-
+                //Verifica se é CLASSE ou WEBSERVICE 
+                if (linha.search("METHOD.*?CLASS") !== -1 ||
+                    linha.search("CLASS\\ ") !== -1 ||
+                    linha.search("WSMETHOD.*?WSSERVICE") !== -1 ||
+                    linha.search("WSSERVICE\\ ") !== -1) {
+                    //reseta todas as ariáveis de controle pois está fora de qualquer função
+                    cBeginSql = false;
+                    FromQuery = false;
+                    JoinQuery = false;
+                    cSelect = false;
+                    //verifica se é um função e adiciona no array
+                    funcoes.push(
+                        [linha.trim().split(" ")[1].split("(")[0], key]
+                    );
+                }
                 //Verifica se adicionou o include TOTVS.CH
                 if (linha.search("#INCLUDE") !== -1 && linha.search("TOTVS.CH") !== -1) {
                     includeTotvs = true;
@@ -276,7 +288,7 @@ export class ValidaAdvpl {
             if (!achou) {
                 aErros.push(new vscode.Diagnostic(
                     new vscode.Range(parseInt(funcao[1]), 0, parseInt(funcao[1]), 0),
-                    'Função, Método ou WebService não comentado!',
+                    'Função, Classe, Método ou WebService não comentado!',
                     vscode.DiagnosticSeverity.Warning)
                 );
             }
