@@ -3,6 +3,9 @@
 Extensão para automatização de merges do GIT e análise de códigos ADVPL.
 
 ## Release Notes
+### 0.1.1  - 2018-10-10
+- Melhoria na identificação UPDATE, SELECT, JOIN e DELETE na mesma linha.
+
 ### 0.1.0  - 2018-10-10
 - Melhoria na identificação de comentários.
 

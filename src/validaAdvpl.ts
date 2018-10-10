@@ -251,13 +251,24 @@ export class ValidaAdvpl {
                         linha.match("WHERE\\ ")
                     )
                 ) {
-                    aErros.push(
-                        new vscode.Diagnostic(
-                            new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                            'Para melhorar a análise dessa query coloque em linhas diferentes as clausulas' +
-                            ' SELECT, DELETE, UPDATE, JOIN, FROM, ON, WHERE.',
-                            vscode.DiagnosticSeverity.Information)
-                    );
+                    //verifica o caracter anterior tem que ser ou ESPACO ou ' ou " ou nada
+                    let itens1 = ["FROM", "ON", "WHERE"];
+                    let addErro = false;
+                    itens1.forEach(item => {
+                        addErro = addErro || linha.search("\\'" + item) !== -1;
+                        addErro = addErro || linha.search('\\"' + item) !== -1;
+                        addErro = addErro || linha.search("\\ " + item) !== -1;
+                    });
+
+                    if (addErro) {
+                        aErros.push(
+                            new vscode.Diagnostic(
+                                new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                                'Para melhorar a análise dessa query coloque em linhas diferentes as clausulas' +
+                                ' SELECT, DELETE, UPDATE, JOIN, FROM, ON, WHERE.',
+                                vscode.DiagnosticSeverity.Information)
+                        );
+                    }
                 }
             }
         }
