@@ -3,6 +3,13 @@
 Extensão para automatização de merges do GIT e análise de códigos ADVPL.
 
 ## Release Notes
+### 0.2.1  - 2018-10-16
+- Ajuste de identificação de tabela chumbada.
+
+### 0.2.0  - 2018-10-16
+- Criação de análise de tags, onde serão varidas as tags do padrão N.N.N e gerado um arquivo na raiz com as pendências de cada TAG.
+- Melhorada a identificação de tabelas chumbadas em queries.
+
 ### 0.1.1  - 2018-10-10
 - Melhoria na identificação UPDATE, SELECT, JOIN e DELETE na mesma linha.
 

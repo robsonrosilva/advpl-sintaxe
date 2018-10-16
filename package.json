@@ -2,7 +2,7 @@
     "name": "advpl-sintax-poupex",
     "displayName": "ADVPL Análise",
     "description": "Extensão para automatização de merges do GIT e análise de códigos ADVPL.",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "publisher": "robsonrosilva",
     "engines": {
         "vscode": "^1.9.1"

@@ -260,7 +260,7 @@ export class ValidaAdvpl {
                         //para melhorar a análise vou quebrar a string por espaços 
                         //e removendo as quebras de linhas, vou varrer os itens do array e verificar o tamanho 
                         //e o código da empresa chumbado
-                        let palavras = linha.replace("\r", "").split(" ");
+                        let palavras = linha.replace(/\r/g, "").replace(/\t/g, "").split(" ");
                         palavras.forEach(palavra => {
                             if (palavra.search(empresa + "0") !== -1 && palavra.length === 6) {
                                 aErros.push(
