@@ -6,9 +6,18 @@ const collection = vscode.languages.createDiagnosticCollection('advpl');
 
 export class ValidaAdvpl {
     public comentFontPad: any;
+    public error: number;
+    public warning: number;
+    public information: number;
+    public hint: number;
 
     constructor() {
         this.comentFontPad = vscode.workspace.getConfiguration("advpl-sintax").get("comentFontPad");
+
+        this.error = 0;
+        this.warning = 0;
+        this.information = 0;
+        this.hint = 0;
 
         //Se não está preenchido seta com valor padrão
         if (!this.comentFontPad) {
@@ -21,9 +30,15 @@ export class ValidaAdvpl {
             this.comentFontPad.push('\\*\\/\\/\\/' + '\\#'.repeat(89));
         }
     }
-    public validaProjeto() {
+    public validaProjeto(nGeradas: number = 0, tags: string[] = [], fileContent: string = '', branchAtual: string = '', objetoMerge: any) {
+        let tag = tags[nGeradas];
+        let fileLog = vscode.workspace.rootPath + "/AnaliseProjeto.csv";
         //guarda objeto this
         let objeto = this;
+        objeto.error = 0;
+        objeto.warning = 0;
+        objeto.information = 0;
+        objeto.hint = 0;
         //percorre todos os fontes do Workspace e valida se for ADVPL
         let advplExtensions = ['prw', 'prx', 'prg', 'apw', 'apl', 'tlpp'];
         vscode.workspace.findFiles('**/*.*', '**/*.json').then((files: vscode.Uri[]) => {
@@ -36,9 +51,28 @@ export class ValidaAdvpl {
                             vscode.window.showErrorMessage('Problema na validação de arquivos!');
                         } else {
                             objeto.validacao(data, file);
+                            //Se for o último arquivo verifica se deve gravar no arquivo LOG
+                            if (!fileContent && file === files[files.length - 1]) {
+                                vscode.window.showInformationMessage('Fim da Análise do Projeto!');
+                            } else if (fileContent && file === files[files.length - 1]) {
+                                fileContent = fileContent.replace(
+                                    tag + ";;;;\n",
+                                    tag + ";" +
+                                    objeto.error + ";" +
+                                    objeto.warning + ";" +
+                                    objeto.information + ";" +
+                                    objeto.hint + "\n");
+
+                                fileSystem.writeFile(fileLog, fileContent, (err) => {
+                                    console.log("Gerou TAG " + tag + " ERRO " + err);
+                                    nGeradas++;
+                                    if (tags[nGeradas]) {
+                                        objetoMerge.geraRelatorio(nGeradas, tags, fileContent, branchAtual);
+                                    }
+                                });
+                            }
                         }
                     });
-
                 }
             });
         });
@@ -152,6 +186,7 @@ export class ValidaAdvpl {
                             'Uso INDEVIDO de Query sem o Embedded SQL.! \n Utilizar: BeginSQL … EndSQL.',
                             vscode.DiagnosticSeverity.Warning)
                     );
+                    objeto.warning++;
                 }
                 if (linha.search("DELETE\\ FROM") !== -1) {
                     aErros.push(
@@ -160,6 +195,7 @@ export class ValidaAdvpl {
                             'Uso não permitido uso de DELETE FROM.! ',
                             vscode.DiagnosticSeverity.Warning)
                     );
+                    objeto.warning++;
                 }
                 if (linha.search("\\<\\<\\<\\<\\<\\<\\<\\ HEAD") !== -1) {
                     //Verifica linha onde terminou o conflito
@@ -175,6 +211,7 @@ export class ValidaAdvpl {
                             'Existem conflitos de merge, avalie antes de continuar! ',
                             vscode.DiagnosticSeverity.Error)
                     );
+                    objeto.error++;
                 }
                 if (linha.search("SELECT\\ ") !== -1 && linha.search("\\ \\*\\ ") !== -1) {
                     aErros.push(
@@ -183,12 +220,14 @@ export class ValidaAdvpl {
                             'Uso não permitido uso de SELECT com asterisco \n "*".! ',
                             vscode.DiagnosticSeverity.Warning)
                     );
+                    objeto.warning++;
                 }
                 if (linha.search("CHR\\(13\\)") !== -1 && linha.search("CHR\\(10\\)") !== -1) {
                     aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
                         'É recomendado o uso da expressão CRLF.',
                         vscode.DiagnosticSeverity.Warning)
                     );
+                    objeto.warning++;
                 }
                 if (cSelect && linha.search("FROM") !== -1) {
                     FromQuery = true;
@@ -211,20 +250,28 @@ export class ValidaAdvpl {
                                 'Uso não permitido uso do SHEMA ' + banco + ' em Query. ',
                                 vscode.DiagnosticSeverity.Error)
                         );
+                        objeto.error++;
                     }
                 });
                 if (cSelect && (FromQuery || JoinQuery || linha.search("SET") !== -1) &&
                     linha.search("exp:cTable") === -1) {
                     //procura códigos de empresas nas queryes 
                     empresas.forEach(empresa => {
-                        if (linha.search(empresa + "0\\ ") !== -1) {
-                            aErros.push(
-                                new vscode.Diagnostic(
-                                    new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                                    'PROIBIDO Fixar tabela na Query. ',
-                                    vscode.DiagnosticSeverity.Error)
-                            );
-                        }
+                        //para melhorar a análise vou quebrar a string por espaços 
+                        //e removendo as quebras de linhas, vou varrer os itens do array e verificar o tamanho 
+                        //e o código da empresa chumbado
+                        let palavras = linha.replace("\r", "").split(" ");
+                        palavras.forEach(palavra => {
+                            if (palavra.search(empresa + "0") !== -1 && palavra.length === 6) {
+                                aErros.push(
+                                    new vscode.Diagnostic(
+                                        new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                                        'PROIBIDO Fixar tabela na Query. ',
+                                        vscode.DiagnosticSeverity.Error)
+                                );
+                                objeto.error++;
+                            }
+                        });
                     });
                 }
                 if (cSelect && JoinQuery && linha.search("ON") !== -1) {
@@ -237,6 +284,7 @@ export class ValidaAdvpl {
                             'Uso não permitido uso do Conout. => Utilizar a API de Log padrão (FWLogMsg).',
                             vscode.DiagnosticSeverity.Warning)
                     );
+                    objeto.warning++;
                 }
                 //recomendação para melhorar identificação de problemas em queryes
                 if (
@@ -268,6 +316,7 @@ export class ValidaAdvpl {
                                 ' SELECT, DELETE, UPDATE, JOIN, FROM, ON, WHERE.',
                                 vscode.DiagnosticSeverity.Information)
                         );
+                        objeto.information++;
                     }
                 }
             }
@@ -287,6 +336,7 @@ export class ValidaAdvpl {
                     'Verifique os padrões de comentários de fontes! => Use o autocomplete docFuncaoPoupex.',
                     vscode.DiagnosticSeverity.Information)
             );
+            objeto.information++;
         }
 
         //Validação funções sem comentários
@@ -302,6 +352,7 @@ export class ValidaAdvpl {
                     'Função, Classe, Método ou WebService não comentado!',
                     vscode.DiagnosticSeverity.Warning)
                 );
+                objeto.warning++;
             }
         });
         //Validação comentários sem funções
@@ -317,6 +368,7 @@ export class ValidaAdvpl {
                     'Comentário de função sem função!',
                     vscode.DiagnosticSeverity.Warning)
                 );
+                objeto.warning++;
             }
         });
 
@@ -325,6 +377,7 @@ export class ValidaAdvpl {
                 'Falta o include TOTVS.CH !',
                 vscode.DiagnosticSeverity.Warning)
             );
+            objeto.warning++;
         }
 
         collection.set(uri, aErros);

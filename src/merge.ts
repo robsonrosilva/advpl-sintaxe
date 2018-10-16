@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import {ValidaAdvpl} from './ValidaAdvpl';
+import { ValidaAdvpl } from './ValidaAdvpl';
 
 export class MergeAdvpl {
     public branchTeste: string;
@@ -7,7 +7,7 @@ export class MergeAdvpl {
     public branchProdu: string;
     public branchesControladas: string[];
     public repository: any;
-    constructor() {
+    constructor(forca : boolean) {
         //Busca Configurações do Settings
         this.branchTeste = vscode.workspace.getConfiguration("advpl-sintax").get("branchTeste") as string;
         if (!this.branchTeste) {
@@ -25,7 +25,7 @@ export class MergeAdvpl {
         this.branchesControladas.push(this.branchHomol.toLocaleUpperCase.toString());
         this.branchesControladas.push(this.branchTeste.toLocaleUpperCase.toString());
         this.branchesControladas.push(this.branchProdu.toLocaleUpperCase.toString());
-        this.repository = this.getRepository();
+        this.repository = this.getRepository(forca);
     }
 
     public merge(repository: any, branchAtual: any, branchdestino: any, enviaHomolog: boolean, enviaMaster: boolean) {
@@ -48,9 +48,9 @@ export class MergeAdvpl {
             repository.push().then((value: any) => {
                 repository.checkout(branchdestino).then((value: any) => {
                     repository.pull().then((value: any) => {
-                        let branchOriginal : any = undefined;
+                        let branchOriginal: any = undefined;
                         //se for merge para produção usa no merge a branch de homologação
-                        if (branchdestino === objeto.branchProdu){
+                        if (branchdestino === objeto.branchProdu) {
                             branchOriginal = branchAtual;
                             branchAtual = objeto.branchHomol;
                         }
@@ -96,7 +96,7 @@ export class MergeAdvpl {
                             oComando.then((value: any) => {
                                 repository.push().then((value: any) => {
                                     //se for usou a branche de homologação volta o conteúdo original
-                                    if(branchOriginal){
+                                    if (branchOriginal) {
                                         branchAtual = branchOriginal;
                                     }
                                     repository.checkout(branchAtual).then((value: any) => {
@@ -144,7 +144,45 @@ export class MergeAdvpl {
             });
         }
     }
-    protected getRepository() {
+    public analisaTags() {
+        let fileContent = "TAG;Error;Warning;Information;Hint\n";
+        let branchAtual = this.repository.headLabel;
+        let objeto = this;
+        let tags : string[] = []; 
+        let nGeradas = 0;
+
+        //Verifica ultima tag
+        objeto.repository.refs.forEach((item: any) => {
+            //verifica se é TAG
+            if (item.type === 2) {
+                //Verifica se é padrão de numeração
+                let aNiveis = item.name.split('.');
+                if (aNiveis.length === 3) {
+                    fileContent += item.name + ";;;;\n";
+                    tags.push(item.name);
+                }
+            }
+        });
+
+        objeto.geraRelatorio(nGeradas,tags, fileContent, branchAtual);
+    }
+
+    public geraRelatorio(nGeradas : number,tags : string[], fileContent : string, branchAtual: string){
+        let tag = tags[nGeradas];
+        let objeto = this;
+
+        objeto.repository.checkout(tag).then((value: any) => {
+            let validaAdvpl = new ValidaAdvpl();
+            validaAdvpl.validaProjeto(nGeradas,tags, fileContent, branchAtual, objeto);
+        }).catch(function () {
+            objeto.falha(objeto.repository.headLabel + " " + arguments[0]);
+            objeto.repository.checkout(branchAtual);
+            return;
+        });
+
+    }
+
+    protected getRepository(forca: boolean) {
         if (vscode) {
             let git = vscode.extensions.getExtension('vscode.git');
             if (git) {
@@ -152,14 +190,16 @@ export class MergeAdvpl {
                     if (vscode.window.activeTextEditor) {
                         let repository = git.exports._model.getRepository(vscode.window.activeTextEditor.document.uri);
                         // set resource groups
-                        if (repository.mergeGroup.resourceStates.length !== 0 ||
+                        if ((repository.mergeGroup.resourceStates.length !== 0 ||
                             repository.indexGroup.resourceStates.length !== 0 ||
-                            repository.workingTreeGroup.resourceStates.length !== 0) {
+                            repository.workingTreeGroup.resourceStates.length !== 0) &&
+                            ! forca
+                            ) {
                             vscode.window.showErrorMessage("Merge não realizado, existem arquivos não commitados!");
                             return;
                         }
                         return repository;
-                    }else{
+                    } else {
                         let repository = git.exports._model.getRepository(vscode.workspace.rootPath);
                         // set resource groups
                         if (repository.mergeGroup.resourceStates.length !== 0 ||
@@ -177,12 +217,12 @@ export class MergeAdvpl {
     protected sucesso(value: any, rotina: String) {
         let validaAdvpl = new ValidaAdvpl();
         vscode.window.showInformationMessage('FUNCIONOU ' + rotina + " [" + value + "]");
-        validaAdvpl.validaProjeto();
+        validaAdvpl.validaProjeto(undefined,undefined,undefined,undefined,undefined);
 
     }
     protected falha(rotina: String) {
         let validaAdvpl = new ValidaAdvpl();
         vscode.window.showErrorMessage('ERRO ' + rotina + "!");
-        validaAdvpl.validaProjeto();
+        validaAdvpl.validaProjeto(undefined,undefined,undefined,undefined,undefined);
     }
 }

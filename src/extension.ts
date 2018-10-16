@@ -15,7 +15,7 @@ export function activate(context: vscode.ExtensionContext) {
     //Adiciona comando de envia para Validação
     context.subscriptions.push(
         vscode.commands.registerCommand('advpl-sintax.gitValidacao', () => {
-            let mergeAdvpl = new MergeAdvpl();
+            let mergeAdvpl = new MergeAdvpl(false);
             let branchAtual = mergeAdvpl.repository.headLabel;
             mergeAdvpl.merge(mergeAdvpl.repository, branchAtual, mergeAdvpl.branchTeste, false, false);
         })
@@ -23,7 +23,7 @@ export function activate(context: vscode.ExtensionContext) {
     //Adiciona comando de envia para Release
     context.subscriptions.push(
         vscode.commands.registerCommand('advpl-sintax.gitRelease', () => {
-            let mergeAdvpl = new MergeAdvpl();
+            let mergeAdvpl = new MergeAdvpl(false);
             let branchAtual = mergeAdvpl.repository.headLabel;
             mergeAdvpl.merge(mergeAdvpl.repository, branchAtual, mergeAdvpl.branchTeste, true, false);
         })
@@ -31,7 +31,7 @@ export function activate(context: vscode.ExtensionContext) {
     //Adiciona comando de envia para master
     context.subscriptions.push(
         vscode.commands.registerCommand('advpl-sintax.gitMaster', () => {
-            let mergeAdvpl = new MergeAdvpl();
+            let mergeAdvpl = new MergeAdvpl(false);
             let branchAtual = mergeAdvpl.repository.headLabel;
             mergeAdvpl.merge(mergeAdvpl.repository, branchAtual, mergeAdvpl.branchTeste, true, true);
         })
@@ -39,10 +39,17 @@ export function activate(context: vscode.ExtensionContext) {
     //Adiciona comando de envia para master
     context.subscriptions.push(
         vscode.commands.registerCommand('advpl-sintax.validaProjeto', () => {
-            validaAdvpl.validaProjeto();
+            validaAdvpl.validaProjeto(undefined,undefined,undefined,undefined,undefined);
         })
     );
-    validaAdvpl.validaProjeto();
+    //Adiciona comando de envia para master
+    context.subscriptions.push(
+        vscode.commands.registerCommand('advpl-sintax.analisaTags', () => {
+            let mergeAdvpl = new MergeAdvpl(true);
+            mergeAdvpl.analisaTags();
+        })
+    );
+    validaAdvpl.validaProjeto(undefined,undefined,undefined,undefined,undefined);
 }
 function validaFonte(editor: any){
     let validaAdvpl = new ValidaAdvpl();
