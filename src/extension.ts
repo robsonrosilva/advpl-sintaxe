@@ -17,7 +17,13 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('advpl-sintax.gitValidacao', () => {
             let mergeAdvpl = new MergeAdvpl(false);
             let branchAtual = mergeAdvpl.repository.headLabel;
-            mergeAdvpl.merge(mergeAdvpl.repository, branchAtual, mergeAdvpl.branchTeste, false, false);
+            try {
+                mergeAdvpl.merge(mergeAdvpl.repository, branchAtual, mergeAdvpl.branchTeste, false, false);
+            } catch (e) {
+                mergeAdvpl.falha(e.stdout);
+            }
+            mergeAdvpl.repository.checkout(branchAtual);
+            validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);
         })
     );
     //Adiciona comando de envia para Release
@@ -25,7 +31,13 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('advpl-sintax.gitRelease', () => {
             let mergeAdvpl = new MergeAdvpl(false);
             let branchAtual = mergeAdvpl.repository.headLabel;
-            mergeAdvpl.merge(mergeAdvpl.repository, branchAtual, mergeAdvpl.branchTeste, true, false);
+            try {
+                mergeAdvpl.merge(mergeAdvpl.repository, branchAtual, mergeAdvpl.branchTeste, true, false);
+            } catch (e) {
+                mergeAdvpl.falha(e.stdout);
+            }
+            mergeAdvpl.repository.checkout(branchAtual);
+            validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);
         })
     );
     //Adiciona comando de envia para master
@@ -33,20 +45,38 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('advpl-sintax.gitMaster', () => {
             let mergeAdvpl = new MergeAdvpl(false);
             let branchAtual = mergeAdvpl.repository.headLabel;
-            mergeAdvpl.merge(mergeAdvpl.repository, branchAtual, mergeAdvpl.branchTeste, true, true);
+            try {
+                mergeAdvpl.merge(mergeAdvpl.repository, branchAtual, mergeAdvpl.branchTeste, true, true);
+            } catch (e) {
+                mergeAdvpl.falha(e.stdout);
+            }
+            mergeAdvpl.repository.checkout(branchAtual);
+            validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);
         })
     );
     //Adiciona comando de envia para master
     context.subscriptions.push(
         vscode.commands.registerCommand('advpl-sintax.validaProjeto', () => {
-            validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);
+            let mergeAdvpl = new MergeAdvpl(false);
+            try {
+                validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);
+            } catch (e) {
+                mergeAdvpl.falha(e.stdout);
+            }
         })
     );
     //Adiciona comando de envia para master
     context.subscriptions.push(
         vscode.commands.registerCommand('advpl-sintax.analisaTags', () => {
             let mergeAdvpl = new MergeAdvpl(true);
-            mergeAdvpl.analisaTags();
+            let branchAtual = mergeAdvpl.repository.headLabel;
+            try {
+                mergeAdvpl.analisaTags();
+            } catch (e) {
+                mergeAdvpl.falha(e.stdout);
+            }
+            mergeAdvpl.repository.checkout(branchAtual);
+            validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);
         })
     );
     validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);

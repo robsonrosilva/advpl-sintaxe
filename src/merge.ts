@@ -63,70 +63,66 @@ export class MergeAdvpl {
                 );
                 return;
             }
-            try {
-                await gitPushSync(repository);
-                await gitCheckoutSync(objeto, branchdestino);
-                await gitPullSync(repository);
+            await gitPushSync(repository);
+            await gitCheckoutSync(objeto, branchdestino);
+            await gitPullSync(repository);
 
-                let branchOriginal: any = undefined;
-                //se for merge para produção usa no merge a branch de homologação
-                if (branchdestino === objeto.branchProdu) {
-                    branchOriginal = branchAtual;
-                    branchAtual = objeto.branchHomol;
-                }
+            let branchOriginal: any = undefined;
+            //se for merge para produção usa no merge a branch de homologação
+            if (branchdestino === objeto.branchProdu) {
+                branchOriginal = branchAtual;
+                branchAtual = objeto.branchHomol;
+            }
 
-                await gitMergeSync(repository, branchAtual);
-                //Se a branch destino for a master precisa criar tag
-                if (branchdestino === objeto.branchProdu) {
-                    let aUltimaTag = [0, 0, 0];
-                    let commit;
-                    //Verifica ultima tag
-                    repository.refs.forEach((item: any) => {
-                        //verifica se é TAG
-                        if (item.type === 2) {
-                            //Verifica se é padrão de numeração
-                            let aNiveis = item.name.split('.');
-                            if (aNiveis.length === 3) {
-                                let aTag = [Number(aNiveis[0]), Number(aNiveis[1]), Number(aNiveis[2])];
-                                if (aTag[0] >= aUltimaTag[0]) {
-                                    if (aTag[1] >= aUltimaTag[1]) {
-                                        if (aTag[2] >= aUltimaTag[2]) {
-                                            aUltimaTag = aTag;
-                                            commit = item.commit;
-                                        }
+            await gitMergeSync(repository, branchAtual);
+            //Se a branch destino for a master precisa criar tag
+            if (branchdestino === objeto.branchProdu) {
+                let aUltimaTag = [0, 0, 0];
+                let commit;
+                //Verifica ultima tag
+                repository.refs.forEach((item: any) => {
+                    //verifica se é TAG
+                    if (item.type === 2) {
+                        //Verifica se é padrão de numeração
+                        let aNiveis = item.name.split('.');
+                        if (aNiveis.length === 3) {
+                            let aTag = [Number(aNiveis[0]), Number(aNiveis[1]), Number(aNiveis[2])];
+                            if (aTag[0] >= aUltimaTag[0]) {
+                                if (aTag[1] >= aUltimaTag[1]) {
+                                    if (aTag[2] >= aUltimaTag[2]) {
+                                        aUltimaTag = aTag;
+                                        commit = item.commit;
                                     }
                                 }
                             }
                         }
-                    });
-                    if (aUltimaTag[2] === 9) {
-                        aUltimaTag[2] = 0;
-                        aUltimaTag[1]++;
-                    } else {
-                        aUltimaTag[2]++;
                     }
-                    if (commit !== repository.HEAD.commit) {
-                        await gitTagSync(repository, String(aUltimaTag[0]) + "." + String(aUltimaTag[1]) + "." + String(aUltimaTag[2]));
-                    }
-                }
-
-                await gitPushSync(repository);
-                //se for usou a branche de homologação volta o conteúdo original
-                if (branchOriginal) {
-                    branchAtual = branchOriginal;
-                }
-                await gitCheckoutSync(repository, branchAtual);
-                if (enviaHomolog) {
-                    objeto.merge(repository, branchAtual, objeto.branchHomol, false, enviaMaster);
-                } else if (enviaMaster) {
-                    objeto.merge(repository, branchAtual, objeto.branchProdu, false, false);
+                });
+                if (aUltimaTag[2] === 9) {
+                    aUltimaTag[2] = 0;
+                    aUltimaTag[1]++;
                 } else {
-                    objeto.sucesso("", "Merge de finalizado " + repository.headLabel + " -> " + branchdestino + ".");
+                    aUltimaTag[2]++;
                 }
-            } catch (e) {
-                repository.checkout(branchAtual);
-                objeto.falha(e.stdout);
+                if (commit !== repository.HEAD.commit) {
+                    await gitTagSync(repository, String(aUltimaTag[0]) + "." + String(aUltimaTag[1]) + "." + String(aUltimaTag[2]));
+                }
             }
+
+            await gitPushSync(repository);
+            //se for usou a branche de homologação volta o conteúdo original
+            if (branchOriginal) {
+                branchAtual = branchOriginal;
+            }
+            await gitCheckoutSync(repository, branchAtual);
+            if (enviaHomolog) {
+                objeto.merge(repository, branchAtual, objeto.branchHomol, false, enviaMaster);
+            } else if (enviaMaster) {
+                objeto.merge(repository, branchAtual, objeto.branchProdu, false, false);
+            } else {
+                objeto.sucesso("", "Merge de finalizado " + branchAtual + " -> " + branchdestino + ".");
+            }
+
         }
     }
 
@@ -202,7 +198,7 @@ export class MergeAdvpl {
         validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);
 
     }
-    protected falha(rotina: String) {
+    public falha(rotina: String) {
         let validaAdvpl = new ValidaAdvpl();
         vscode.window.showErrorMessage('ERRO ' + rotina + "!");
         validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);

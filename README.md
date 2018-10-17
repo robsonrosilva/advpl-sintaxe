@@ -3,6 +3,10 @@
 Extensão para automatização de merges do GIT e análise de códigos ADVPL.
 
 ## Release Notes
+### 0.3.1  - 2018-10-17
+- Tratamentos de erros na extensão.
+- Ajuste de mensagem de MERGE.
+
 ### 0.3.0  - 2018-10-17
 - Mudança de execução de rotinas de forma síncrona.
 
