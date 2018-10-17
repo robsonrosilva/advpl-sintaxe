@@ -4,12 +4,17 @@ import * as fileSystem from 'fs';
 //Cria um colection para os erros ADVPL
 const collection = vscode.languages.createDiagnosticCollection('advpl');
 
+async function vscodeFindFilesSync() {
+    return vscode.workspace.findFiles('**/*.*', '**/*.json');
+}
+
 export class ValidaAdvpl {
     public comentFontPad: any;
     public error: number;
     public warning: number;
     public information: number;
     public hint: number;
+    public versao: string;
 
     constructor() {
         this.comentFontPad = vscode.workspace.getConfiguration("advpl-sintax").get("comentFontPad");
@@ -18,7 +23,11 @@ export class ValidaAdvpl {
         this.warning = 0;
         this.information = 0;
         this.hint = 0;
-
+        this.versao = "";
+        let extensao = vscode.extensions.getExtension("robsonrosilva.advpl-sintax-poupex");
+        if (extensao) {
+            this.versao = extensao.packageJSON.version;
+        }
         //Se não está preenchido seta com valor padrão
         if (!this.comentFontPad) {
             this.comentFontPad = [];
@@ -30,7 +39,7 @@ export class ValidaAdvpl {
             this.comentFontPad.push('\\*\\/\\/\\/' + '\\#'.repeat(89));
         }
     }
-    public validaProjeto(nGeradas: number = 0, tags: string[] = [], fileContent: string = '', branchAtual: string = '', objetoMerge: any) {
+    public async validaProjeto(nGeradas: number = 0, tags: string[] = [], fileContent: string = '', branchAtual: string = '', objetoMerge: any) {
         let tag = tags[nGeradas];
         let fileLog = vscode.workspace.rootPath + "/AnaliseProjeto.csv";
         //guarda objeto this
@@ -41,40 +50,38 @@ export class ValidaAdvpl {
         objeto.hint = 0;
         //percorre todos os fontes do Workspace e valida se for ADVPL
         let advplExtensions = ['prw', 'prx', 'prg', 'apw', 'apl', 'tlpp'];
-        vscode.workspace.findFiles('**/*.*', '**/*.json').then((files: vscode.Uri[]) => {
-            files.forEach(file => {
-                let re = /(?:\.([^.]+))?$/;
-                let extensao = re.exec(file.fsPath);
-                if (extensao && advplExtensions.indexOf(extensao[1].toLowerCase()) !== -1) {
-                    fileSystem.readFile(file.fsPath, "latin1", (err, data) => {
-                        if (err) {
-                            vscode.window.showErrorMessage('Problema na validação de arquivos!');
-                        } else {
-                            objeto.validacao(data, file);
-                            //Se for o último arquivo verifica se deve gravar no arquivo LOG
-                            if (!fileContent && file === files[files.length - 1]) {
-                                vscode.window.showInformationMessage('Fim da Análise do Projeto!');
-                            } else if (fileContent && file === files[files.length - 1]) {
-                                fileContent = fileContent.replace(
-                                    tag + ";;;;\n",
-                                    tag + ";" +
-                                    objeto.error + ";" +
-                                    objeto.warning + ";" +
-                                    objeto.information + ";" +
-                                    objeto.hint + "\n");
-
-                                fileSystem.writeFile(fileLog, fileContent, (err) => {
-                                    console.log("Gerou TAG " + tag + " ERRO " + err);
-                                    nGeradas++;
-                                    if (tags[nGeradas]) {
-                                        objetoMerge.geraRelatorio(nGeradas, tags, fileContent, branchAtual);
-                                    }
-                                });
-                            }
-                        }
-                    });
+        let files = await vscodeFindFilesSync();
+        files.forEach((file: vscode.Uri) => {
+            let re = /(?:\.([^.]+))?$/;
+            let extensao = re.exec(file.fsPath);
+            if (extensao && advplExtensions.indexOf(extensao[1].toLowerCase()) !== -1) {
+                let conteudo = fileSystem.readFileSync(file.fsPath, "latin1");
+                if (conteudo) {
+                    objeto.validacao(conteudo, file);
                 }
-            });
+            }
+            //Se for o último arquivo verifica se deve gravar no arquivo LOG
+            if (!fileContent && file === files[files.length - 1]) {
+                vscode.window.showInformationMessage('Fim da Análise do Projeto!');
+            } else if (fileContent && file === files[files.length - 1]) {
+                fileContent = fileContent.replace(
+                    tag + "\t\t\t\t\n",
+                    objeto.padTag(tag, tags) + "\t" +
+                    objeto.error + "\t" +
+                    objeto.warning + "\t" +
+                    objeto.information + "\t" +
+                    objeto.hint + "\t" +
+                    objeto.versao
+                    + "\n");
+
+                fileSystem.writeFile(fileLog, fileContent, (err) => {
+                    console.log("Gerou TAG " + tag + " ERRO " + err);
+                    nGeradas++;
+                    if (tags[nGeradas]) {
+                        objetoMerge.geraRelatorio(nGeradas, tags, fileContent, branchAtual);
+                    }
+                });
+            }
         });
     }
 
@@ -87,6 +94,34 @@ export class ValidaAdvpl {
                 objeto.validacao(editor.document.getText(), editor.document.uri);
             }
         }
+    }
+
+    protected padTag(tag: String, tags: any) {
+        //Padroniza TAGS
+        let nNivel1 = 0;
+        let nNivel2 = 0;
+        let nNivel3 = 0;
+        tags.forEach((tagAtu: string) => {
+            let aNiveis = tagAtu.split('.');
+            nNivel1 = Math.max(aNiveis[0].length, nNivel1);
+            nNivel2 = Math.max(aNiveis[1].length, nNivel2);
+            nNivel3 = Math.max(aNiveis[2].length, nNivel3);
+        });
+
+        let aNiveis = tag.split('.');
+        if (aNiveis[0].length < nNivel1) {
+            let length = nNivel1 - aNiveis[0].toString().length + 1;
+            aNiveis[0] = Array(length).join('0') + aNiveis[0];
+        }
+        if (aNiveis[1].length < nNivel2) {
+            let length = nNivel2 - aNiveis[1].toString().length + 1;
+            aNiveis[1] = Array(length).join('0') + aNiveis[1];
+        }
+        if (aNiveis[2].length < nNivel3) {
+            let length = nNivel3 - aNiveis[2].toString().length + 1;
+            aNiveis[2] = Array(length).join('0') + aNiveis[2];
+        }
+        return aNiveis[0] + "." + aNiveis[1] + "." + aNiveis[2];
     }
 
     protected validacao(texto: String, uri: vscode.Uri) {
@@ -153,7 +188,7 @@ export class ValidaAdvpl {
                     );
                 }
                 //Verifica se é CLASSE ou WEBSERVICE 
-                if (linha.search("METHOD.*?CLASS") !== -1 ||
+                if (linha.search("METHOD\\ .*?CLASS") !== -1 ||
                     linha.search("CLASS\\ ") !== -1 ||
                     linha.search("WSMETHOD.*?WSSERVICE") !== -1 ||
                     linha.search("WSSERVICE\\ ") !== -1) {

@@ -2,8 +2,8 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import {ValidaAdvpl} from './ValidaAdvpl';
-import {MergeAdvpl} from './merge';
+import { ValidaAdvpl } from './ValidaAdvpl';
+import { MergeAdvpl } from './Merge';
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -39,7 +39,7 @@ export function activate(context: vscode.ExtensionContext) {
     //Adiciona comando de envia para master
     context.subscriptions.push(
         vscode.commands.registerCommand('advpl-sintax.validaProjeto', () => {
-            validaAdvpl.validaProjeto(undefined,undefined,undefined,undefined,undefined);
+            validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);
         })
     );
     //Adiciona comando de envia para master
@@ -49,9 +49,9 @@ export function activate(context: vscode.ExtensionContext) {
             mergeAdvpl.analisaTags();
         })
     );
-    validaAdvpl.validaProjeto(undefined,undefined,undefined,undefined,undefined);
+    validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);
 }
-function validaFonte(editor: any){
+function validaFonte(editor: any) {
     let validaAdvpl = new ValidaAdvpl();
     validaAdvpl.validaFonte(editor);
 }

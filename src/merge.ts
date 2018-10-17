@@ -1,13 +1,31 @@
 import * as vscode from 'vscode';
 import { ValidaAdvpl } from './ValidaAdvpl';
 
+//Criação sincrona de funções do git
+async function gitCheckoutSync(objeto: MergeAdvpl, destino: string) {
+    return objeto.repository.checkout(destino);
+}
+async function gitMergeSync(repository: any, branchOrigem: string) {
+    return repository.merge(branchOrigem, "");
+}
+async function gitTagSync(repository: any, tag: string) {
+    return repository.tag(tag, '');
+}
+async function gitPushSync(repository: any) {
+    repository.pushTags();
+    return repository.push();
+}
+async function gitPullSync(repository: any) {
+    return repository.pull();
+}
+
 export class MergeAdvpl {
     public branchTeste: string;
     public branchHomol: string;
     public branchProdu: string;
     public branchesControladas: string[];
     public repository: any;
-    constructor(forca : boolean) {
+    constructor(forca: boolean) {
         //Busca Configurações do Settings
         this.branchTeste = vscode.workspace.getConfiguration("advpl-sintax").get("branchTeste") as string;
         if (!this.branchTeste) {
@@ -28,7 +46,7 @@ export class MergeAdvpl {
         this.repository = this.getRepository(forca);
     }
 
-    public merge(repository: any, branchAtual: any, branchdestino: any, enviaHomolog: boolean, enviaMaster: boolean) {
+    public async merge(repository: any, branchAtual: any, branchdestino: any, enviaHomolog: boolean, enviaMaster: boolean) {
         //guarda objeto this
         let objeto = this;
         //verifica se não está numa branch controlada
@@ -45,110 +63,78 @@ export class MergeAdvpl {
                 );
                 return;
             }
-            repository.push().then((value: any) => {
-                repository.checkout(branchdestino).then((value: any) => {
-                    repository.pull().then((value: any) => {
-                        let branchOriginal: any = undefined;
-                        //se for merge para produção usa no merge a branch de homologação
-                        if (branchdestino === objeto.branchProdu) {
-                            branchOriginal = branchAtual;
-                            branchAtual = objeto.branchHomol;
-                        }
-                        repository.merge(branchAtual, "").then((value: any) => {
-                            let oComando;
-                            //Se a branch destino for a master precisa criar tag
-                            if (branchdestino === objeto.branchProdu) {
-                                let aUltimaTag = [0, 0, 0];
-                                let commit;
-                                //Verifica ultima tag
-                                repository.refs.forEach((item: any) => {
-                                    //verifica se é TAG
-                                    if (item.type === 2) {
-                                        //Verifica se é padrão de numeração
-                                        let aNiveis = item.name.split('.');
-                                        if (aNiveis.length === 3) {
-                                            let aTag = [Number(aNiveis[0]), Number(aNiveis[1]), Number(aNiveis[2])];
-                                            if (aTag[0] >= aUltimaTag[0]) {
-                                                if (aTag[1] >= aUltimaTag[1]) {
-                                                    if (aTag[2] >= aUltimaTag[2]) {
-                                                        aUltimaTag = aTag;
-                                                        commit = item.commit;
-                                                    }
-                                                }
-                                            }
+            try {
+                await gitPushSync(repository);
+                await gitCheckoutSync(objeto, branchdestino);
+                await gitPullSync(repository);
+
+                let branchOriginal: any = undefined;
+                //se for merge para produção usa no merge a branch de homologação
+                if (branchdestino === objeto.branchProdu) {
+                    branchOriginal = branchAtual;
+                    branchAtual = objeto.branchHomol;
+                }
+
+                await gitMergeSync(repository, branchAtual);
+                //Se a branch destino for a master precisa criar tag
+                if (branchdestino === objeto.branchProdu) {
+                    let aUltimaTag = [0, 0, 0];
+                    let commit;
+                    //Verifica ultima tag
+                    repository.refs.forEach((item: any) => {
+                        //verifica se é TAG
+                        if (item.type === 2) {
+                            //Verifica se é padrão de numeração
+                            let aNiveis = item.name.split('.');
+                            if (aNiveis.length === 3) {
+                                let aTag = [Number(aNiveis[0]), Number(aNiveis[1]), Number(aNiveis[2])];
+                                if (aTag[0] >= aUltimaTag[0]) {
+                                    if (aTag[1] >= aUltimaTag[1]) {
+                                        if (aTag[2] >= aUltimaTag[2]) {
+                                            aUltimaTag = aTag;
+                                            commit = item.commit;
                                         }
                                     }
-                                });
-                                if (aUltimaTag[2] === 9) {
-                                    aUltimaTag[2] = 0;
-                                    aUltimaTag[1]++;
-                                } else {
-                                    aUltimaTag[2]++;
                                 }
-                                if (commit !== repository.HEAD.commit) {
-                                    oComando = repository.tag(String(aUltimaTag[0]) + "." + String(aUltimaTag[1]) + "." + String(aUltimaTag[2]), '');
-                                } else {
-                                    oComando = repository.push();
-                                }
-                            } else {
-                                oComando = repository.push();
                             }
-                            oComando.then((value: any) => {
-                                repository.push().then((value: any) => {
-                                    //se for usou a branche de homologação volta o conteúdo original
-                                    if (branchOriginal) {
-                                        branchAtual = branchOriginal;
-                                    }
-                                    repository.checkout(branchAtual).then((value: any) => {
-                                        if (enviaHomolog) {
-                                            objeto.merge(repository, branchAtual, objeto.branchHomol, false, enviaMaster);
-                                        } else {
-                                            if (enviaMaster) {
-                                                objeto.merge(repository, branchAtual, objeto.branchProdu, false, false);
-                                            } else {
-                                                repository.pushTags();
-                                                objeto.sucesso("", "Merge de finalizado " + repository.headLabel + " -> " + branchdestino + ".");
-                                            }
-                                        }
-                                        return;
-                                    });
-                                }).catch(function () {
-                                    objeto.falha(repository.headLabel + " " + arguments[0]);
-                                    repository.checkout(branchAtual);
-                                    return;
-                                });
-                            }).catch(function () {
-                                objeto.falha(repository.headLabel + " " + arguments[0]);
-                                repository.checkout(branchAtual);
-                                return;
-                            });
-                        }).catch(function () {
-                            objeto.falha(repository.headLabel + " " + arguments[0]);
-                            repository.checkout(branchAtual);
-                            return;
-                        });
-                    }).catch(function () {
-                        objeto.falha(repository.headLabel + " " + arguments[0]);
-                        repository.checkout(branchAtual);
-                        return;
+                        }
                     });
-                }).catch(function () {
-                    objeto.falha(repository.headLabel + " " + arguments[0]);
-                    repository.checkout(branchAtual);
-                    return;
-                });
-            }).catch(function () {
-                objeto.falha(repository.headLabel + " " + arguments[0]);
+                    if (aUltimaTag[2] === 9) {
+                        aUltimaTag[2] = 0;
+                        aUltimaTag[1]++;
+                    } else {
+                        aUltimaTag[2]++;
+                    }
+                    if (commit !== repository.HEAD.commit) {
+                        await gitTagSync(repository, String(aUltimaTag[0]) + "." + String(aUltimaTag[1]) + "." + String(aUltimaTag[2]));
+                    }
+                }
+
+                await gitPushSync(repository);
+                //se for usou a branche de homologação volta o conteúdo original
+                if (branchOriginal) {
+                    branchAtual = branchOriginal;
+                }
+                await gitCheckoutSync(repository, branchAtual);
+                if (enviaHomolog) {
+                    objeto.merge(repository, branchAtual, objeto.branchHomol, false, enviaMaster);
+                } else if (enviaMaster) {
+                    objeto.merge(repository, branchAtual, objeto.branchProdu, false, false);
+                } else {
+                    objeto.sucesso("", "Merge de finalizado " + repository.headLabel + " -> " + branchdestino + ".");
+                }
+            } catch (e) {
                 repository.checkout(branchAtual);
-                return;
-            });
+                objeto.falha(e.stdout);
+            }
         }
     }
+
     public analisaTags() {
-        let fileContent = "TAG;Error;Warning;Information;Hint\n";
+        let fileContent = "TAG\tError\tWarning\tInformation\tHint\tVersao Extensao\n";
         let branchAtual = this.repository.headLabel;
         let objeto = this;
-        let tags : string[] = []; 
+        let tags: string[] = [];
         let nGeradas = 0;
 
         //Verifica ultima tag
@@ -158,28 +144,24 @@ export class MergeAdvpl {
                 //Verifica se é padrão de numeração
                 let aNiveis = item.name.split('.');
                 if (aNiveis.length === 3) {
-                    fileContent += item.name + ";;;;\n";
+                    fileContent += item.name + "\t\t\t\t\n";
                     tags.push(item.name);
                 }
             }
         });
 
-        objeto.geraRelatorio(nGeradas,tags, fileContent, branchAtual);
+        objeto.geraRelatorio(nGeradas, tags, fileContent, branchAtual);
     }
 
-    public geraRelatorio(nGeradas : number,tags : string[], fileContent : string, branchAtual: string){
+    public async geraRelatorio(nGeradas: number, tags: string[], fileContent: string, branchAtual: string) {
         let tag = tags[nGeradas];
         let objeto = this;
 
-        objeto.repository.checkout(tag).then((value: any) => {
-            let validaAdvpl = new ValidaAdvpl();
-            validaAdvpl.validaProjeto(nGeradas,tags, fileContent, branchAtual, objeto);
-        }).catch(function () {
-            objeto.falha(objeto.repository.headLabel + " " + arguments[0]);
-            objeto.repository.checkout(branchAtual);
-            return;
-        });
-
+        console.log("TROCANDO PARA TAG " + tag);
+        await gitCheckoutSync(objeto, tag);
+        let validaAdvpl = new ValidaAdvpl();
+        validaAdvpl.validaProjeto(nGeradas, tags, fileContent, branchAtual, objeto);
+        console.log("VALIDANDO TAG " + tag);
     }
 
     protected getRepository(forca: boolean) {
@@ -193,8 +175,8 @@ export class MergeAdvpl {
                         if ((repository.mergeGroup.resourceStates.length !== 0 ||
                             repository.indexGroup.resourceStates.length !== 0 ||
                             repository.workingTreeGroup.resourceStates.length !== 0) &&
-                            ! forca
-                            ) {
+                            !forca
+                        ) {
                             vscode.window.showErrorMessage("Merge não realizado, existem arquivos não commitados!");
                             return;
                         }
@@ -217,12 +199,12 @@ export class MergeAdvpl {
     protected sucesso(value: any, rotina: String) {
         let validaAdvpl = new ValidaAdvpl();
         vscode.window.showInformationMessage('FUNCIONOU ' + rotina + " [" + value + "]");
-        validaAdvpl.validaProjeto(undefined,undefined,undefined,undefined,undefined);
+        validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);
 
     }
     protected falha(rotina: String) {
         let validaAdvpl = new ValidaAdvpl();
         vscode.window.showErrorMessage('ERRO ' + rotina + "!");
-        validaAdvpl.validaProjeto(undefined,undefined,undefined,undefined,undefined);
+        validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);
     }
 }
