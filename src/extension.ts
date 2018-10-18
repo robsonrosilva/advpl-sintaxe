@@ -57,7 +57,7 @@ export function activate(context: vscode.ExtensionContext) {
     //Adiciona comando de envia para master
     context.subscriptions.push(
         vscode.commands.registerCommand('advpl-sintax.validaProjeto', () => {
-            let mergeAdvpl = new MergeAdvpl(false);
+            let mergeAdvpl = new MergeAdvpl(true);
             try {
                 validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);
             } catch (e) {
