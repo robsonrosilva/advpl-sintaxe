@@ -214,7 +214,10 @@ export class ValidaAdvpl {
                     linha.match("UPDATE\\ ")) {
                     cSelect = true;
                 }
-                if (!cBeginSql && linha.search("SELECT\\ ") !== -1) {
+                if (!cBeginSql &&
+                    linha.search("SELECT\\ ") !== -1 &&
+                    linha.search("TCSQLEXEC\\(") === -1) {
+
                     aErros.push(
                         new vscode.Diagnostic(
                             new vscode.Range(parseInt(key), 0, parseInt(key), 0),
@@ -332,7 +335,8 @@ export class ValidaAdvpl {
                         linha.match("FROM\\ ") ||
                         linha.match("ON\\ ") ||
                         linha.match("WHERE\\ ")
-                    )
+                    ) &&
+                    linha.search("TCSQLEXEC\\(") === -1
                 ) {
                     //verifica o caracter anterior tem que ser ou ESPACO ou ' ou " ou nada
                     let itens1 = ["FROM", "ON", "WHERE"];

@@ -3,6 +3,9 @@
 Extensão para automatização de merges do GIT e análise de códigos ADVPL.
 
 ## Release Notes
+### 0.3.3  - 2018-10-18
+- Correção de mensagens dadas quando for executar TcSqlExec.
+
 ### 0.3.2  - 2018-10-18
 - Correção de mensagem na análise de projeto.
 
