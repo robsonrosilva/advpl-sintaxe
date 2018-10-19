@@ -143,9 +143,10 @@ export class ValidaAdvpl {
         //Limpa as mensagens do colection
         collection.delete(uri);
 
+        let includes = new Array();
         let comentFuncoes = new Array();
         let funcoes = new Array();
-        let includeTotvs = false;
+        let prepareEnvionment = new Array();
         let cBeginSql = false;
         let FromQuery = false;
         let JoinQuery = false;
@@ -203,11 +204,20 @@ export class ValidaAdvpl {
                     );
                 }
                 //Verifica se adicionou o include TOTVS.CH
-                if (linha.search("#INCLUDE") !== -1 && linha.search("TOTVS.CH") !== -1) {
-                    includeTotvs = true;
+                if (linha.search("#INCLUDE") !== -1) {
+                    //REMOVE as aspas a palavra #include e os espacos e tabulações
+                    includes.push(
+                        {
+                            include: linha.replace(/#INCLUDE/g, "").replace(/\t/g, "").replace(/\'/g, "").replace(/\"/g, "").trim(),
+                            linha: parseInt(key)
+                        }
+                    );
                 }
                 if (linha.search("BEGINSQL\\ ") !== -1) {
                     cBeginSql = true;
+                }
+                if (linha.search("PREPARE\\ ENVIRONMENT\\ ") !== -1) {
+                    prepareEnvionment.push(parseInt(key));
                 }
                 if (linha.match("SELECT\\ ") ||
                     linha.match("DELETE\\ ") ||
@@ -411,13 +421,55 @@ export class ValidaAdvpl {
             }
         });
 
-        if (!includeTotvs) {
+        if (!includes.indexOf((x: any) => x.include === "TOTVS.CH")) {
             aErros.push(new vscode.Diagnostic(new vscode.Range(0, 0, 0, 0),
                 'Falta o include TOTVS.CH !',
                 vscode.DiagnosticSeverity.Warning)
             );
             objeto.warning++;
         }
+
+        let tbiconn: any = includes[includes.findIndex(
+            function (x: any) {
+                return x.include === "TBICONN.CH";
+            }
+        )];
+
+        if (!tbiconn) {
+            prepareEnvionment.forEach(numeroLinha => {
+                aErros.push(new vscode.Diagnostic(new vscode.Range(numeroLinha, 0, numeroLinha, 0),
+                    'Falta o include TBICONN.CH para o PREPARE ENVIRONMENT!',
+                    vscode.DiagnosticSeverity.Error)
+                );
+                objeto.error++;
+            });
+        }
+
+        if (tbiconn && prepareEnvionment.length === 0) {
+            aErros.push(new vscode.Diagnostic(new vscode.Range(tbiconn.linha, 0, tbiconn.linha, 0),
+                'Include TBICONN.CH desnecessário, não há PREPARE ENVIRONMENT!',
+                vscode.DiagnosticSeverity.Warning)
+            );
+            objeto.warning++;
+        }
+
+        //Busca includes duplicados
+        includes.forEach((include: any) => {
+            //Verifica se há o mesmo include em uma linha diferente do mesmo fonte
+            if (
+                includes.findIndex(
+                    function (x: any) {
+                        return x.include === include.include && x.linha !== include.linha;
+                    }
+                ) !== -1
+            ) {
+                aErros.push(new vscode.Diagnostic(new vscode.Range(include.linha, 0, include.linha, 0),
+                    'Include ' + include.include + ' em duplicidade!',
+                    vscode.DiagnosticSeverity.Warning)
+                );
+                objeto.warning++;
+            }
+        });
 
         collection.set(uri, aErros);
     }
