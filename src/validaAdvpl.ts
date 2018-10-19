@@ -435,7 +435,7 @@ export class ValidaAdvpl {
             }
         )];
 
-        if (!includeProtheus) {
+        if (includeProtheus) {
             aErros.push(new vscode.Diagnostic(new vscode.Range(includeProtheus.linha, 0, includeProtheus.linha, 0),
                 'Include desnecessário ele já está presente no TOTVS.CH!',
                 vscode.DiagnosticSeverity.Warning)

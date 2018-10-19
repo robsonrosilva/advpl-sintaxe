@@ -3,7 +3,10 @@
 Extensão para automatização de merges do GIT e análise de códigos ADVPL.
 
 ## Release Notes
-### 0.3.4  - 2018-10-19
+### 0.3.6  - 2018-10-19
+- Correção de erro de identificação de PROTHEUS.CH.
+
+### 0.3.5  - 2018-10-19
 - Crítica de PROTHEUS.CH desnecessário.
 
 ### 0.3.4  - 2018-10-19
