@@ -429,20 +429,6 @@ export class ValidaAdvpl {
             objeto.warning++;
         }
 
-        let includeProtheus: any = includes[includes.findIndex(
-            function (x: any) {
-                return x.include === "PROTHEUS.CH";
-            }
-        )];
-
-        if (includeProtheus) {
-            aErros.push(new vscode.Diagnostic(new vscode.Range(includeProtheus.linha, 0, includeProtheus.linha, 0),
-                'Include desnecessário ele já está presente no TOTVS.CH!',
-                vscode.DiagnosticSeverity.Warning)
-            );
-            objeto.warning++;
-        }
-
         let tbiconn: any = includes[includes.findIndex(
             function (x: any) {
                 return x.include === "TBICONN.CH";
@@ -469,6 +455,18 @@ export class ValidaAdvpl {
 
         //Busca includes duplicados
         includes.forEach((include: any) => {
+            //Verifica se o include é obsoleto
+            if (
+                include.include === "PROTHEUS.CH" ||
+                include.include === "RWMAKE.CH"
+            ) {
+                aErros.push(new vscode.Diagnostic(new vscode.Range(include.linha, 0, include.linha, 0),
+                    'O include ' + include.include + ' é obsoleto, o mesmo foi substituído pelo TOTVS.CH!',
+                    vscode.DiagnosticSeverity.Warning)
+                );
+                objeto.warning++;
+            }
+
             //Verifica se há o mesmo include em uma linha diferente do mesmo fonte
             if (
                 includes.findIndex(
