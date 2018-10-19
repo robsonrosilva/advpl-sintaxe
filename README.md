@@ -4,6 +4,9 @@ Extensão para automatização de merges do GIT e análise de códigos ADVPL.
 
 ## Release Notes
 ### 0.3.4  - 2018-10-19
+- Crítica de PROTHEUS.CH desnecessário.
+
+### 0.3.4  - 2018-10-19
 - Análise de TBICONN.CH sem PREPARE ENVIRONMENT.
 - Análise de PREPARE ENVIRONMENT sem TBICONN.CH.
 - Análise de includes duplicados.

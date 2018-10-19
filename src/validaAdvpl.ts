@@ -429,6 +429,20 @@ export class ValidaAdvpl {
             objeto.warning++;
         }
 
+        let includeProtheus: any = includes[includes.findIndex(
+            function (x: any) {
+                return x.include === "PROTHEUS.CH";
+            }
+        )];
+
+        if (!includeProtheus) {
+            aErros.push(new vscode.Diagnostic(new vscode.Range(includeProtheus.linha, 0, includeProtheus.linha, 0),
+                'Include desnecessário ele já está presente no TOTVS.CH!',
+                vscode.DiagnosticSeverity.Warning)
+            );
+            objeto.warning++;
+        }
+
         let tbiconn: any = includes[includes.findIndex(
             function (x: any) {
                 return x.include === "TBICONN.CH";
