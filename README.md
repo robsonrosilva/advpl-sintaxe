@@ -3,6 +3,12 @@
 Extensão para automatização de merges do GIT e análise de códigos ADVPL.
 
 ## Release Notes
+### 0.4.0  - 2018-10-21
+- Montagem de objeto de análise de includes.
+    -    Analisados - TOPCONN, TBICONN, REPORT, AP5MAIL, APWIZARD, FILEIO, TBICODE, PARMTYPE, FWMVCDEF, AARRAY, RPTDEF, 
+                 FWPRINTSETUP, APWEBSRV, APWEBEX e MSOLE.
+    - Obsoletos - PROTHEUS, DIALOG, FONT, PTMENU, PRINT, COLORS, FOLDER, MSOBJECT, VKEY, WINAPI, FWCOMMAND e FWCSS.
+
 ### 0.3.7  - 2018-10-19
 - Crítica de RWMAKE.CH obsoleto.
 
