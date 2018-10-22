@@ -19,7 +19,9 @@ export class Include {
         this.includesObsoletos.push("WINAPI.CH");
         this.includesObsoletos.push("FWCOMMAND.CH");
         this.includesObsoletos.push("FWCSS.CH");
-        this.includesObsoletos.push("RWMAKE.CH");
+        this.includesObsoletos.push("RWMAKE.CH");     
+        this.includesObsoletos.push("STDWIN.CH");
+        this.includesObsoletos.push("SET.CH");
 
         this.includeExpressoes = [];
         //TOPCONN.CH
