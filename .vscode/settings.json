@@ -10,5 +10,6 @@
     "typescript.tsc.autoDetect": "off",
     "files.encoding": "utf8",
     "git.ignoreLimitWarning": true,
-    "editor.autoIndent":true
+    "editor.autoIndent":true,
+    "editor.minimap.enabled": false
 }

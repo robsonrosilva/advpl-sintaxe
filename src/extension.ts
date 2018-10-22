@@ -81,7 +81,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
     validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);
 }
-function validaFonte(editor: any) {
+async function validaFonte(editor: any) {
     let validaAdvpl = new ValidaAdvpl();
     validaAdvpl.validaFonte(editor);
 }

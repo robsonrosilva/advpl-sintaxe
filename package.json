@@ -1,9 +1,10 @@
 {
     "name": "advpl-sintax-poupex",
-    "displayName": "ADVPL Análise e GIT",
-    "description": "Extensão para automatização de merges do GIT e análise de códigos ADVPL.",
-    "version": "0.3.3",
+    "displayName": "ADVPL Análise, Snippets e GIT",
+    "description": "Extensão de análise de qualidade e sintaxe e snippets ADVPL e que facilita a utilização do GIT.",
+    "version": "0.4.2",
     "publisher": "robsonrosilva",
+    "icon": "images/icon.png",
     "engines": {
         "vscode": "^1.9.1"
     },
@@ -78,7 +79,7 @@
                             "description": "Lista dos Owner's ou Bancos de dados que o Protheus usa.",
                             "items": {
                                 "type": "string",
-                                "default":"PROTHEUS",
+                                "default": "PROTHEUS",
                                 "description": "Nome do banco de dados ou owner."
                             }
                         },
@@ -88,7 +89,7 @@
                             "description": "Lista com os códigos de empresas que o Protheus usa.",
                             "items": {
                                 "type": "string",
-                                "default":"01",
+                                "default": "01",
                                 "description": "Códigos das empresas do Protheus para validação de queryes."
                             }
                         },
@@ -98,7 +99,7 @@
                             "description": "Lista com as linhas de comentário de fonte.",
                             "items": {
                                 "type": "string",
-                                "default":"",
+                                "default": "",
                                 "description": "Linha do comentário de fonte. (Usar padrão de search TypeScript)"
                             }
                         }
@@ -146,6 +147,7 @@
     "dependencies": {
         "git": "^0.1.5",
         "regex": "^0.1.1",
-        "spawn-command": "0.0.2-1"
+        "spawn-command": "0.0.2-1",
+        "zlibjs": "^0.3.1"
     }
 }
