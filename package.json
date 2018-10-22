@@ -2,7 +2,7 @@
     "name": "advpl-sintax-poupex",
     "displayName": "ADVPL Análise, Snippets e GIT",
     "description": "Extensão de análise de qualidade e sintaxe e snippets ADVPL e que facilita a utilização do GIT.",
-    "version": "0.4.2",
+    "version": "0.4.3",
     "publisher": "robsonrosilva",
     "icon": "images/icon.png",
     "engines": {

@@ -34,8 +34,12 @@ Verifica se estão sendo utilizados padrões básicos de qualidade como:
  - Tabelas fixas nas queries.
  - Schema (banco de dados) fixo na query. 
 
+![Análise de Fontes](images/analise_fontes.png?raw=true "Análise de Fontes")
+
 ## ANÁLISE DE TAGS
 Essa funcionalidade faz uma análise de todas as tags com padrão N.N.N gravando em um arquivo na raiz do projeto a quantidade de críticas em cada tag.
+
+![Análise de TAGS](images/analise_tags.png?raw=true "Análise de TAGS")
 
 # GIT
 ## BRANCHES
