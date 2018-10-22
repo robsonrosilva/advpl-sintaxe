@@ -1,12 +1,59 @@
-# advpl-sintax README
+# Leia-me
+## Visual Studio Code ADVPL Análise e GIT
+ 
+Esta extensão adiciona no visual code [VsCode MarketPlace](https://marketplace.visualstudio.com/items?itemName=robsonrosilva.advpl-sintax-poupex):
+- Snippets da linguagem.
+- Funcionalidades para promover os desenvolvimentos utilizando git de forma a enviar para homologação e produção de forma simples, gerando TAGS ao mergear para a branch de produção.
+- Análise de qualidade e sintaxe de programas ADVPL.
+- Comando para análise de evolução de qualidade por TAGS.
 
-Extensão para automatização de merges do GIT e análise de códigos ADVPL.
+Caso você encontre algum problema ou queira dar alguma sugestão de melhoria, por favor abra uma issue no [GitHub](https://github.com/robsonrosilva/advpl-sintax/issues). 
+
+# Instalação
+1. Intalação Visual Studio Code 0.10.1 ou superior
+2. Iniciar o Visual Studio Code
+3. Na aba de pompt de comando `Ctrl-Shift-P` (Windows, Linux) ou `Cmd-Shift-P` (OSX)
+4. Selecione Extensão
+5. Digite `ADVPL`
+6. Escolha a extensão
+7. Recarregue Visual Studio Code
+
+
+# Snippets
+1. TReport
+ * **tReport1** - Modelo de TReport 1 Sessão.
+ * **tReport2** - Modelo de TReport 2 Sessões.
+ * **tReport3** - Modelo de TReport 3 Sessões.
+ * **tReport4** - Modelo de TReport 4 Sessões.
+ * **tReport5** - Modelo de TReport 5 Sessões.
+ * **tReportTrCell** - Modelo de TRCell para uso nas sessões.
+ * **tReportAllParam** - Modelo de adição de parâmetros de impressão. 
+ * **pergunta** - Modelo de PutSx1 para geraçãod e parâmetros para o relatório.
+
+2. WebServices
+ * **WebService** - Estrutura base do Fonte para WebServices.
+ * **WsMethodDec** - Estrutura de declaração de método.
+ * **WsMethod** - Estrutura do método.
+ * **WsD__** - Estrutura de declaração de WsData.
+ * **WSStruct** - Estrutura de Array para o WsData tipo Array.
+
+3. WebServices REST
+ * **WebServiceREST** - Estrutura base do Fonte para WebServices REST.
+ * **WsMethodGetREST** - Estrutura do método GET para WebServices REST.
+ * **WsMethodPostREST** - Estrutura do método POST para WebServices REST.
+ * **WsMethodPutREST** - Estrutura do método PUT para WebServices REST.
+ * **WsMethodDeleteREST** - Estrutura do método DELETE para WebServices REST.
+ * **WsResponseTrueREST** - Retorno positivo para a operação para WebServices REST.
+ * **WsResponseFalseREST** - Retorno negativo para a operação para WebServices REST.
 
 ## Release Notes
+### 0.4.2  - 2018-10-21
+- Inclusão de icone de extensão e melhoria de padrões de README.
+
 ### 0.4.1  - 2018-10-21
-    - Ajuste de identificação de includes FWMVCDEF.CH e REPORT.CH.
-    - Ajuste de exibição de erros em todas as linhas quando faltar o include.
-    - Melhoria de identificação de comentários em linhas.
+- Ajuste de identificação de includes FWMVCDEF.CH e REPORT.CH.
+- Ajuste de exibição de erros em todas as linhas quando faltar o include.
+- Melhoria de identificação de comentários em linhas.
 
 ### 0.4.0  - 2018-10-21
 - Montagem de objeto de análise de includes.
@@ -96,4 +143,7 @@ Extensão para automatização de merges do GIT e análise de códigos ADVPL.
 ### 0.0.1 - 2018-10-04
 - Foi implementada a Validação de fontes básica e os merges.
 
-**Enjoy!**
+# Código
+[Github](https://github.com/robsonrosilva/advpl-sintax)
+
+** Enjoy!**
