@@ -18,8 +18,39 @@ Caso você encontre algum problema ou queira dar alguma sugestão de melhoria, p
 6. Escolha a extensão
 7. Recarregue Visual Studio Code
 
+# Análise de Qualidade e Sintaxe
+## ITENS ANALISADOS
+Verifica se estão sendo utilizados padrões básicos de qualidade como:
+ - EmbededSql em vez de TcQuery.
+ - Include TOTVS.CH.
+ - Includes desnecessários.
+ - Includes que faltam.
+ - Comentários desnecessários.
+ - Padrões de comentários.
+ - Comentários de todas as funções, métodos, webservices e classes.
+ - Critica de uso de Connout.
+ - Critica de conflitos de merge.
+ - Utilização de CHR(13) + CHR(10) em vez da variável CRLF.
+ - Tabelas fixas nas queries.
+ - Schema (banco de dados) fixo na query. 
+
+## ANÁLISE DE TAGS
+Essa funcionalidade faz uma análise de todas as tags com padrão N.N.N gravando em um arquivo na raiz do projeto a quantidade de críticas em cada tag.
+
+# GIT
+## BRANCHES
+ * **Merge para Teste** Branch de Teste é uma branch onde todas as features e hotfixes serão enviados para submeter aos primeiros testes.
+ * **Merge para Homologação** Branch de Homologação é uma branch onde são enviadas todas as implementações que estão testadas e aprovadas.
+ * **Merge para Produção** Branch de Produção é destinada a ser aplicada em ambiente de produção onde sempre se deve taguear a versão a ser aplicada.
+
+## FLUXO
+![Fluxo do GIT](images/fluxo_git.png?raw=true "Fluxo do GIT")
 
 # Snippets
+Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVPL.
+
+![Snippets](images/snippet.png?raw=true "Snippets")
+
 1. TReport
  * **tReport1** - Modelo de TReport 1 Sessão.
  * **tReport2** - Modelo de TReport 2 Sessões.
