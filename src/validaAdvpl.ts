@@ -160,8 +160,8 @@ export class ValidaAdvpl {
         let emComentario = false;
         //Percorre todas as linhas
         for (var key in linhas) {
-            //seta linha atual em caixa alta e ignorando comentários e linha
-            let linha = linhas[key].toLocaleUpperCase().split("//")[0];
+            //seta linha atual em caixa alta
+            let linha = linhas[key].toLocaleUpperCase();
             //se estiver no PotheusDoc vê se está fechando
             if (ProtheusDoc && linha.search("\\/\\*\\/") !== -1) {
                 ProtheusDoc = false;
@@ -193,11 +193,11 @@ export class ValidaAdvpl {
                     emComentario = true;
                     linha = linha.split(/\/\*/)[0];
                 }
+                linha = linha.split("//")[0];
                 conteudoSComentario = conteudoSComentario + linha + "\n";
 
                 //verifica se é função e adiciona no array
-                if (linha.search("STATIC\\ FUNCTION\\ ") !== -1 ||
-                    linha.search("USER\\ FUNCTION\\ ") !== -1) {
+                if (linha.search(/(STATIC|USER)+(\ |\t)+FUNCTION+(\ |\t)/) !== -1 ) {
                     //reseta todas as ariáveis de controle pois está fora de qualquer função
                     cBeginSql = false;
                     FromQuery = false;
@@ -205,7 +205,7 @@ export class ValidaAdvpl {
                     cSelect = false;
                     //verifica se é um função e adiciona no array
                     funcoes.push(
-                        [linha.trim().split(" ")[2].split("(")[0], key]
+                        [linha.replace("\t","\ ").trim().split(" ")[2].split("(")[0], key]
                     );
                 }
                 //Verifica se é CLASSE ou WEBSERVICE 
