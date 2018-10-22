@@ -78,6 +78,9 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
  * **WsResponseFalseREST** - Retorno negativo para a operação para WebServices REST.
 
 ## Release Notes
+### 0.4.3  - 2018-10-22
+- Inclusão de includes obsoletos - STDWIN, SET.
+
 ### 0.4.2  - 2018-10-21
 - Inclusão de icone de extensão e melhoria de padrões de README.
 
