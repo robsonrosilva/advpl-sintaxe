@@ -3,6 +3,11 @@
 Extensão para automatização de merges do GIT e análise de códigos ADVPL.
 
 ## Release Notes
+### 0.4.1  - 2018-10-21
+    - Ajuste de identificação de includes FWMVCDEF.CH e REPORT.CH.
+    - Ajuste de exibição de erros em todas as linhas quando faltar o include.
+    - Melhoria de identificação de comentários em linhas.
+
 ### 0.4.0  - 2018-10-21
 - Montagem de objeto de análise de includes.
     -    Analisados - TOPCONN, TBICONN, REPORT, AP5MAIL, APWIZARD, FILEIO, TBICODE, PARMTYPE, FWMVCDEF, AARRAY, RPTDEF, 
@@ -10,7 +15,7 @@ Extensão para automatização de merges do GIT e análise de códigos ADVPL.
     - Obsoletos - PROTHEUS, DIALOG, FONT, PTMENU, PRINT, COLORS, FOLDER, MSOBJECT, VKEY, WINAPI, FWCOMMAND e FWCSS.
 
 ### 0.3.7  - 2018-10-19
-- Crítica de RWMAKE.CH obsoleto.
+- Crítica de RWMAKE.CH, REPORT.CH obsoleto.
 
 ### 0.3.6  - 2018-10-19
 - Correção de erro de identificação de PROTHEUS.CH.

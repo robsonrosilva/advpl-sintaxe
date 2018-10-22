@@ -19,6 +19,7 @@ export class Include {
         this.includesObsoletos.push("WINAPI.CH");
         this.includesObsoletos.push("FWCOMMAND.CH");
         this.includesObsoletos.push("FWCSS.CH");
+        this.includesObsoletos.push("RWMAKE.CH");
 
         this.includeExpressoes = [];
         //TOPCONN.CH
@@ -45,16 +46,16 @@ export class Include {
         //REPORT.CH
         this.includeExpressoes.push({
             expressoes: [
-                /((\ )|(\t))+DEFINE+((\ )|(\t))+REPORT+((\ )|(\t))+NAME+(((\ )|(\t)))/,
-                /((\ )|(\t))+DEFINE+((\ )|(\t))+SECTION+((\ )|(\t))+OF+(((\ )|(\t)))/,
-                /((\ )|(\t))+DEFINE+((\ )|(\t))+CELL+((\ )|(\t))+NAME+((\ )|(\t))+OF+(((\ )|(\t)))/,
+                /((\ )|(\t))+DEFINE+((\ )|(\t))+REPORT+((\ )|(\t))+.+((\ )|(\t))+NAME+(((\ )|(\t)))/,
+                /((\ )|(\t))+DEFINE+((\ )|(\t))+SECTION+((\ )|(\t))+.+((\ )|(\t))+OF+(((\ )|(\t)))/,
+                /((\ )|(\t))+DEFINE+((\ )|(\t))+CELL+((\ )|(\t))+NAME+((\ )|(\t))+.+((\ )|(\t))+OF+(((\ )|(\t)))/,
                 /((\ )|(\t))+DEFINE+((\ )|(\t))+BREAK+((\ )|(\t))+OF+(((\ )|(\t)))/,
                 /((\ )|(\t))+DEFINE+((\ )|(\t))+FUNCTION+((\ )|(\t))+FROM+(((\ )|(\t)))/,
-                /((\ )|(\t))+DEFINE+((\ )|(\t))+COLLECTION+((\ )|(\t))+OF+(((\ )|(\t)))/,
-                /((\ )|(\t))+DEFINE+((\ )|(\t))+BORDER+((\ )|(\t))+OF+((\ )|(\t))+/,
-                /((\ )|(\t))+DEFINE+((\ )|(\t))+HEADER+((\ )|(\t))+BORDER+((\ )|(\t))+OF+(((\ )|(\t)))/,
-                /((\ )|(\t))+DEFINE+((\ )|(\t))+CELL+((\ )|(\t))+BORDER+((\ )|(\t))+OF+(((\ )|(\t)))/,
-                /((\ )|(\t))+DEFINE+((\ )|(\t))+CELL+((\ )|(\t))+HEADER+((\ )|(\t))+BORDER+((\ )|(\t))+OF+(((\ )|(\t)))/
+                /((\ )|(\t))+DEFINE+((\ )|(\t))+COLLECTION+((\ )|(\t))+.+((\ )|(\t))+OF+(((\ )|(\t)))/,
+                /((\ )|(\t))+DEFINE+((\ )|(\t))+BORDER+((\ )|(\t))+.+((\ )|(\t))+OF+((\ )|(\t))+/,
+                /((\ )|(\t))+DEFINE+((\ )|(\t))+HEADER+((\ )|(\t))+BORDER+((\ )|(\t))+.+((\ )|(\t))+OF+(((\ )|(\t)))/,
+                /((\ )|(\t))+DEFINE+((\ )|(\t))+CELL+((\ )|(\t))+BORDER+((\ )|(\t))+.+((\ )|(\t))+OF+(((\ )|(\t)))/,
+                /((\ )|(\t))+DEFINE+((\ )|(\t))+CELL+((\ )|(\t))+HEADER+((\ )|(\t))+BORDER+((\ )|(\t))+.+((\ )|(\t))+OF+(((\ )|(\t)))/
             ],
             include: "REPORT.CH",
             precisa: false
@@ -180,7 +181,8 @@ export class Include {
                 /((\ )|(\t)|(\()|(\,))+OP_COPIA/,
                 /((\ )|(\t)|(\()|(\,))+ADD+((\ )|(\t))+FWTOOLBUTTON/,
                 /((\ )|(\t)|(\()|(\,))+NEW+((\ )|(\t))+MODEL/,
-                /((\ )|(\t)|(\()|(\,))+PUBLISH+((\ )|(\t))+MODEL+((\ )|(\t))+REST+((\ )|(\t))+NAME/
+                /((\ )|(\t)|(\()|(\,))+PUBLISH+((\ )|(\t))+MODEL+((\ )|(\t))+REST+((\ )|(\t))+NAME/,
+                /((\ )|(\t)|(\()|(\,))+ADD+((\ )|(\t))+OPTION+((\ )|(\t))+.+((\ )|(\t))+TITLE+((\ )|(\t))+.+((\ )|(\t))+ACTION+((\ )|(\t))+.+((\ )|(\t))+OPERATION+((\ )|(\t))+.+((\ )|(\t))+ACCESS+((\ )|(\t))/
             ],
             include: "FWMVCDEF.CH",
             precisa: false
@@ -418,25 +420,23 @@ export class Include {
         let linhas = conteudoFile.split("\n");
         for (var key in linhas) {
             //seta linha atual
-            let linha = linhas[key];
+            let linha = ' ' + linhas[key];
 
             this.includeExpressoes.forEach(element => {
-                if (!element.precisa) {
-                    element.expressoes.forEach((expressao: RegExp) => {
-                        if (linha.search(expressao) !== -1) {
-                            element.precisa = true;
-                            //se não estiver na lista de includes 
-                            if (
-                                includesFonte.indexOf(element.include) === -1
-                            ) {
-                                objetoValidacao.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                                    'Falta o import do include ' + element.include + '!',
-                                    vscode.DiagnosticSeverity.Error)
-                                );
-                            }
+                element.expressoes.forEach((expressao: RegExp) => {
+                    if (linha.search(expressao) !== -1) {
+                        element.precisa = true;
+                        //se não estiver na lista de includes 
+                        if (
+                            includesFonte.indexOf(element.include) === -1
+                        ) {
+                            objetoValidacao.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                                'Falta o import do include ' + element.include + '!',
+                                vscode.DiagnosticSeverity.Error)
+                            );
                         }
-                    });
-                }
+                    }
+                });
             });
 
         }

@@ -188,7 +188,7 @@ export class ValidaAdvpl {
             }
 
             //se não estiver dentro do Protheus DOC valida linha
-            if (!ProtheusDoc && !emComentario) {
+            if (!emComentario) {
                 if (linha.search(/\/\*/) !== -1) {
                     emComentario = true;
                     linha = linha.split(/\/\*/)[0];
