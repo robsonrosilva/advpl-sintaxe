@@ -82,6 +82,11 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
  * **WsResponseFalseREST** - Retorno negativo para a operação para WebServices REST.
 
 ## Release Notes
+### 0.4.5  - 2018-10-23
+- Análise de expressões de includes somente com o texto sem comentários e strings.
+- Análise de Includes contidos em outros.
+- Simplificação de expressões de Includes.
+
 ### 0.4.4  - 2018-10-22
 - Correção de identificação de funções.
 

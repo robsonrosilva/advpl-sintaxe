@@ -189,15 +189,44 @@ export class ValidaAdvpl {
 
             //se não estiver dentro do Protheus DOC valida linha
             if (!emComentario) {
-                if (linha.search(/\/\*/) !== -1) {
+                if (linha.replace(/\"+.+\"/, "").replace(/\'+.+\'/, "").search(/\/\*/) !== -1) {
                     emComentario = true;
                     linha = linha.split(/\/\*/)[0];
                 }
-                linha = linha.split("//")[0];
-                conteudoSComentario = conteudoSComentario + linha + "\n";
+
+                //Se não estiver em comentário verifica se o último caracter da linha é ;
+                if (!emComentario && linha.charAt(linha.length - 1) === ";") {
+                    linhas[parseInt(key) + 1] = linha + " " + linhas[parseInt(key) + 1];
+                    linha = "";
+                }
+
+                //trata comentários em linha ou strings em aspas simples ou duplas
+                //não remove aspas quando for include
+                if (linha.search(/#INCLUDE/) === -1) {
+                    linha = linha.split("//")[0];
+                    let textoSAspas = linha; 
+
+                    while (textoSAspas.search(/\"+.+\"/) !== -1 || textoSAspas.search(/\'+.+\'/) !== -1) {
+                        let colunaDupla   = textoSAspas.search(/\"+.+\"/) ;
+                        let colunaSimples = textoSAspas.search(/\'+.+\'/);
+                        //se a primeira for a dupla
+                        if(colunaDupla  !== -1 && (colunaDupla < colunaSimples || colunaSimples === -1)){
+                            let quebra = textoSAspas.split('\"');
+                            textoSAspas = textoSAspas.replace('\"'+quebra[1]+'\"',"");
+                        }else{
+                            let quebra = textoSAspas.split("\'");
+                            textoSAspas = textoSAspas.replace("\'"+quebra[1]+"\'","");
+                        }
+                    }
+
+                    conteudoSComentario = conteudoSComentario + textoSAspas + "\n";
+                } else {
+                    linha = linha.split("//")[0];
+                    conteudoSComentario = conteudoSComentario + linha + "\n";
+                }
 
                 //verifica se é função e adiciona no array
-                if (linha.search(/(STATIC|USER)+(\ |\t)+FUNCTION+(\ |\t)/) !== -1 ) {
+                if (linha.search(/(STATIC|USER)+(\ |\t)+FUNCTION+(\ |\t)/) !== -1) {
                     //reseta todas as ariáveis de controle pois está fora de qualquer função
                     cBeginSql = false;
                     FromQuery = false;
@@ -205,7 +234,7 @@ export class ValidaAdvpl {
                     cSelect = false;
                     //verifica se é um função e adiciona no array
                     funcoes.push(
-                        [linha.replace("\t","\ ").trim().split(" ")[2].split("(")[0], key]
+                        [linha.replace("\t", "\ ").trim().split(" ")[2].split("(")[0], key]
                     );
                 }
                 //Verifica se é CLASSE ou WEBSERVICE 
@@ -438,21 +467,21 @@ export class ValidaAdvpl {
         collection.set(uri, objeto.aErros);
         //Conta os erros por tipo e totaliza no objeto
         objeto.aErros.forEach((erro: vscode.Diagnostic) => {
-            if(erro.severity === vscode.DiagnosticSeverity.Hint){
+            if (erro.severity === vscode.DiagnosticSeverity.Hint) {
                 this.hint++;
             }
-            if(erro.severity === vscode.DiagnosticSeverity.Information){
+            if (erro.severity === vscode.DiagnosticSeverity.Information) {
                 this.information++;
             }
-            if(erro.severity === vscode.DiagnosticSeverity.Warning){
+            if (erro.severity === vscode.DiagnosticSeverity.Warning) {
                 this.warning++;
             }
-            if(erro.severity === vscode.DiagnosticSeverity.Error){
+            if (erro.severity === vscode.DiagnosticSeverity.Error) {
                 this.error++;
             }
         });
         this.aErros = [];
         this.includes = [];
-        
+
     }
 }
