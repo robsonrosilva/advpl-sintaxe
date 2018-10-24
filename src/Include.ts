@@ -198,7 +198,7 @@ export class Include {
         //AARRAY.CH
         this.includeExpressoes.push({
             expressoes: [
-                /\[+(\ |\t|)+\#+.+\]/
+                /\[+(\ |\t|)+\#+(.|)+\]/
             ],
             include: "AARRAY.CH",
             precisa: false,
