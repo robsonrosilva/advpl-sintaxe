@@ -180,6 +180,16 @@ export class ValidaAdvpl {
                     [linha.trim().replace("/*/{PROTHEUS.DOC}", "").trim().toLocaleUpperCase(), key]
                 );
             }
+            
+            //verifica se a linha está toda comentada
+            let posComentLinha = linha.search(/\/\//);
+            let posComentBloco = linha.search(/\/\*/);
+            posComentBloco = (posComentBloco === -1 ? 999999 : posComentBloco);
+            posComentLinha = (posComentLinha === -1 ? 999999 : posComentLinha);
+            if (!emComentario && posComentLinha < posComentBloco) {
+                linha = linha.split("//")[0];
+            }
+
             //Verifica se está em comentário de bloco
             //trata comentários dentro da linha
             linha = linha.replace(/\/\*+.+\*\//, "");
@@ -204,19 +214,19 @@ export class ValidaAdvpl {
                 //trata comentários em linha ou strings em aspas simples ou duplas
                 //não remove aspas quando for include
                 linha = linha.split("//")[0];
-                linhaClean = linha; 
+                linhaClean = linha;
                 if (linha.search(/#INCLUDE/) === -1) {
 
                     while (linhaClean.search(/\"+.+\"/) !== -1 || linhaClean.search(/\'+.+\'/) !== -1) {
-                        let colunaDupla   = linhaClean.search(/\"+.+\"/) ;
+                        let colunaDupla = linhaClean.search(/\"+.+\"/);
                         let colunaSimples = linhaClean.search(/\'+.+\'/);
                         //se a primeira for a dupla
-                        if(colunaDupla  !== -1 && (colunaDupla < colunaSimples || colunaSimples === -1)){
+                        if (colunaDupla !== -1 && (colunaDupla < colunaSimples || colunaSimples === -1)) {
                             let quebra = linhaClean.split('\"');
-                            linhaClean = linhaClean.replace('\"'+quebra[1]+'\"',"");
-                        }else{
+                            linhaClean = linhaClean.replace('\"' + quebra[1] + '\"', "");
+                        } else {
                             let quebra = linhaClean.split("\'");
-                            linhaClean = linhaClean.replace("\'"+quebra[1]+"\'","");
+                            linhaClean = linhaClean.replace("\'" + quebra[1] + "\'", "");
                         }
                     }
                 }
@@ -236,9 +246,9 @@ export class ValidaAdvpl {
                 }
                 //Verifica se é CLASSE ou WEBSERVICE 
                 if (linhaClean.search("METHOD\\ .*?CLASS") !== -1 ||
-                linhaClean.search("CLASS\\ ") !== -1 ||
-                linhaClean.search("WSMETHOD.*?WSSERVICE") !== -1 ||
-                linhaClean.search("WSSERVICE\\ ") !== -1) {
+                    linhaClean.search("CLASS\\ ") !== -1 ||
+                    linhaClean.search("WSMETHOD.*?WSSERVICE") !== -1 ||
+                    linhaClean.search("WSSERVICE\\ ") !== -1) {
                     //reseta todas as ariáveis de controle pois está fora de qualquer função
                     cBeginSql = false;
                     FromQuery = false;
