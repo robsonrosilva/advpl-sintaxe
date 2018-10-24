@@ -4,7 +4,7 @@
     "description": "Extensão de análise de qualidade e sintaxe e snippets ADVPL e que facilita a utilização do GIT.",
     "version": "0.4.5",
     "publisher": "robsonrosilva",
-    "icon": "images/icon.png",
+    "icon": "images/icone.png",
     "engines": {
         "vscode": "^1.9.1"
     },

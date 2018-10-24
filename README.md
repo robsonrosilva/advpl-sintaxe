@@ -34,12 +34,12 @@ Verifica se estão sendo utilizados padrões básicos de qualidade como:
  - Tabelas fixas nas queries.
  - Schema (banco de dados) fixo na query. 
 
-![Análise de Fontes](images/analise_fontes.png?raw=true "Análise de Fontes")
+![Análise de Fontes](images/analiseFontes.png?raw=true "Análise de Fontes")
 
 ## ANÁLISE DE TAGS
 Essa funcionalidade faz uma análise de todas as tags com padrão N.N.N gravando em um arquivo na raiz do projeto a quantidade de críticas em cada tag.
 
-![Análise de TAGS](images/analise_tags.png?raw=true "Análise de TAGS")
+![Análise de TAGS](images/analiseTags.png?raw=true "Análise de TAGS")
 
 # GIT
 ## BRANCHES
@@ -48,12 +48,12 @@ Essa funcionalidade faz uma análise de todas as tags com padrão N.N.N gravando
  * **Merge para Produção** Branch de Produção é destinada a ser aplicada em ambiente de produção onde sempre se deve taguear a versão a ser aplicada.
 
 ## FLUXO
-![Fluxo do GIT](images/fluxo_git.png?raw=true "Fluxo do GIT")
+![Fluxo do GIT](images/fluxoGit.png?raw=true "Fluxo do GIT")
 
 # Snippets
 Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVPL.
 
-![Snippets](images/snippet.png?raw=true "Snippets")
+![Snippets](images/snippets.png?raw=true "Snippets")
 
 1. TReport
  * **tReport1** - Modelo de TReport 1 Sessão.
@@ -86,6 +86,8 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
 - Análise de expressões de includes somente com o texto sem comentários e strings.
 - Análise de Includes contidos em outros.
 - Simplificação de expressões de Includes.
+- Análise de Parâmetro MV_FOLMES e MSGBOX que foram descontinuados para o Protheus 12.
+- Correção de bug de identificação de classe fix #1.
 
 ### 0.4.4  - 2018-10-22
 - Correção de identificação de funções.

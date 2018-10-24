@@ -162,6 +162,7 @@ export class ValidaAdvpl {
         for (var key in linhas) {
             //seta linha atual em caixa alta
             let linha = linhas[key].toLocaleUpperCase();
+            let linhaClean = "";
             //se estiver no PotheusDoc vê se está fechando
             if (ProtheusDoc && linha.search("\\/\\*\\/") !== -1) {
                 ProtheusDoc = false;
@@ -202,31 +203,27 @@ export class ValidaAdvpl {
 
                 //trata comentários em linha ou strings em aspas simples ou duplas
                 //não remove aspas quando for include
+                linha = linha.split("//")[0];
+                linhaClean = linha; 
                 if (linha.search(/#INCLUDE/) === -1) {
-                    linha = linha.split("//")[0];
-                    let textoSAspas = linha; 
 
-                    while (textoSAspas.search(/\"+.+\"/) !== -1 || textoSAspas.search(/\'+.+\'/) !== -1) {
-                        let colunaDupla   = textoSAspas.search(/\"+.+\"/) ;
-                        let colunaSimples = textoSAspas.search(/\'+.+\'/);
+                    while (linhaClean.search(/\"+.+\"/) !== -1 || linhaClean.search(/\'+.+\'/) !== -1) {
+                        let colunaDupla   = linhaClean.search(/\"+.+\"/) ;
+                        let colunaSimples = linhaClean.search(/\'+.+\'/);
                         //se a primeira for a dupla
                         if(colunaDupla  !== -1 && (colunaDupla < colunaSimples || colunaSimples === -1)){
-                            let quebra = textoSAspas.split('\"');
-                            textoSAspas = textoSAspas.replace('\"'+quebra[1]+'\"',"");
+                            let quebra = linhaClean.split('\"');
+                            linhaClean = linhaClean.replace('\"'+quebra[1]+'\"',"");
                         }else{
-                            let quebra = textoSAspas.split("\'");
-                            textoSAspas = textoSAspas.replace("\'"+quebra[1]+"\'","");
+                            let quebra = linhaClean.split("\'");
+                            linhaClean = linhaClean.replace("\'"+quebra[1]+"\'","");
                         }
                     }
-
-                    conteudoSComentario = conteudoSComentario + textoSAspas + "\n";
-                } else {
-                    linha = linha.split("//")[0];
-                    conteudoSComentario = conteudoSComentario + linha + "\n";
                 }
+                conteudoSComentario = conteudoSComentario + linhaClean + "\n";
 
                 //verifica se é função e adiciona no array
-                if (linha.search(/(STATIC|USER)+(\ |\t)+FUNCTION+(\ |\t)/) !== -1) {
+                if (linhaClean.search(/(STATIC|USER)+(\ |\t)+FUNCTION+(\ |\t)/) !== -1) {
                     //reseta todas as ariáveis de controle pois está fora de qualquer função
                     cBeginSql = false;
                     FromQuery = false;
@@ -234,14 +231,14 @@ export class ValidaAdvpl {
                     cSelect = false;
                     //verifica se é um função e adiciona no array
                     funcoes.push(
-                        [linha.replace("\t", "\ ").trim().split(" ")[2].split("(")[0], key]
+                        [linhaClean.replace("\t", "\ ").trim().split(" ")[2].split("(")[0], key]
                     );
                 }
                 //Verifica se é CLASSE ou WEBSERVICE 
-                if (linha.search("METHOD\\ .*?CLASS") !== -1 ||
-                    linha.search("CLASS\\ ") !== -1 ||
-                    linha.search("WSMETHOD.*?WSSERVICE") !== -1 ||
-                    linha.search("WSSERVICE\\ ") !== -1) {
+                if (linhaClean.search("METHOD\\ .*?CLASS") !== -1 ||
+                linhaClean.search("CLASS\\ ") !== -1 ||
+                linhaClean.search("WSMETHOD.*?WSSERVICE") !== -1 ||
+                linhaClean.search("WSSERVICE\\ ") !== -1) {
                     //reseta todas as ariáveis de controle pois está fora de qualquer função
                     cBeginSql = false;
                     FromQuery = false;
@@ -249,7 +246,7 @@ export class ValidaAdvpl {
                     cSelect = false;
                     //verifica se é um função e adiciona no array
                     funcoes.push(
-                        [linha.trim().split(" ")[1].split("(")[0], key]
+                        [linhaClean.trim().split(" ")[1].split("(")[0], key]
                     );
                 }
                 //Verifica se adicionou o include TOTVS.CH
@@ -262,10 +259,10 @@ export class ValidaAdvpl {
                         }
                     );
                 }
-                if (linha.search("BEGINSQL\\ ") !== -1) {
+                if (linhaClean.search("BEGINSQL\\ ") !== -1) {
                     cBeginSql = true;
                 }
-                if (linha.search("PREPARE\\ ENVIRONMENT\\ ") !== -1) {
+                if (linhaClean.search("PREPARE\\ ENVIRONMENT\\ ") !== -1) {
                     prepareEnvionment.push(parseInt(key));
                 }
                 if (linha.match("SELECT\\ ") ||
@@ -290,6 +287,22 @@ export class ValidaAdvpl {
                             new vscode.Range(parseInt(key), 0, parseInt(key), 0),
                             'Uso não permitido uso de DELETE FROM.! ',
                             vscode.DiagnosticSeverity.Warning)
+                    );
+                }
+                if (linhaClean.search(/(\ |\t|)+MSGBOX\(/) !== -1) {
+                    objeto.aErros.push(
+                        new vscode.Diagnostic(
+                            new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                            'Esta função foi descontinuada no Protheus 12, utilize MessageBox().! ',
+                            vscode.DiagnosticSeverity.Information)
+                    );
+                }
+                if (linha.search(/GETMV\(+(\ |\t|)+(\"|\')+MV_FOLMES+(\"|\')+(\ |\t|)\)/) !== -1) {
+                    objeto.aErros.push(
+                        new vscode.Diagnostic(
+                            new vscode.Range(parseInt(key), 0, parseInt(key), 0),
+                            'Este parâmetro foi descontinuado no Protheus 12! ',
+                            vscode.DiagnosticSeverity.Information)
                     );
                 }
                 if (linha.search("\\<\\<\\<\\<\\<\\<\\<\\ HEAD") !== -1) {
@@ -367,7 +380,7 @@ export class ValidaAdvpl {
                 if (cSelect && JoinQuery && linha.search("ON") !== -1) {
                     JoinQuery = false;
                 }
-                if (linha.search("CONOUT") !== -1) {
+                if (linhaClean.search("CONOUT") !== -1) {
                     objeto.aErros.push(
                         new vscode.Diagnostic(
                             new vscode.Range(parseInt(key), 0, parseInt(key), 0),
