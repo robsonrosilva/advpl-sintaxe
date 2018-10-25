@@ -26,7 +26,7 @@
             "   @param   [${Nome_do_Parametro}],${Tipo_do_Parametro},${Descricao_do_Parametro}",
             "   @return  ${Especifica_o_retorno}",
             "   @table   ${Tabelas}",
-            "   @since   ${Data}",
+            "   @since   ${CURRENT_DATE}-${CURRENT_MONTH}-${CURRENT_YEAR}",
             "/*/",
             ""
         ]

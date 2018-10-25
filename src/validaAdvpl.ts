@@ -180,7 +180,7 @@ export class ValidaAdvpl {
                     [linha.trim().replace("/*/{PROTHEUS.DOC}", "").trim().toLocaleUpperCase(), key]
                 );
             }
-            
+
             //verifica se a linha está toda comentada
             let posComentLinha = linha.search(/\/\//);
             let posComentBloco = linha.search(/\/\*/);
@@ -260,7 +260,7 @@ export class ValidaAdvpl {
                     );
                 }
                 //Verifica se adicionou o include TOTVS.CH
-                if (linha.search("#INCLUDE") !== -1) {
+                if (linha.search(/#INCLUDE/) !== -1) {
                     //REMOVE as aspas a palavra #include e os espacos e tabulações
                     objeto.includes.push(
                         {
@@ -269,29 +269,33 @@ export class ValidaAdvpl {
                         }
                     );
                 }
-                if (linhaClean.search("BEGINSQL\\ ") !== -1) {
+                if (linhaClean.search(/BEGINSQL+(\ |\t)+ALIAS/) !== -1) {
                     cBeginSql = true;
                 }
-                if (linhaClean.search("PREPARE\\ ENVIRONMENT\\ ") !== -1) {
+                if (linhaClean.search(/PREPARE+(\ |\t)+ENVIRONMENT+(\ |\t)/) !== -1) {
                     prepareEnvionment.push(parseInt(key));
                 }
-                if (linha.match("SELECT\\ ") ||
-                    linha.match("DELETE\\ ") ||
-                    linha.match("UPDATE\\ ")) {
+                if (linha.match(/(\ |\t|\'|\"|)+SELECT+(\ |\t)/) ||
+                    linha.match(/(\ |\t|\'|\"|)+DELETE+(\ |\t)/) ||
+                    linha.match(/(\ |\t|\'|\"|)+UPDATE+(\ |\t)/)) {
                     cSelect = true;
                 }
                 if (!cBeginSql &&
-                    linha.search("SELECT\\ ") !== -1 &&
-                    linha.search("TCSQLEXEC\\(") === -1) {
-
+                    (
+                        linha.search(/(\ |\t|\'|\"|)+DBUSEAREA+(\ |\t|)+\(+.+TOPCONN+.+TCGENQRY/) !== -1 ||
+                        linhaClean.search(/TCQUERY+(\ |\t)/) !== -1
+                    )
+                ) {
                     objeto.aErros.push(
                         new vscode.Diagnostic(
                             new vscode.Range(parseInt(key), 0, parseInt(key), 0),
                             'Uso INDEVIDO de Query sem o Embedded SQL.! \n Utilizar: BeginSQL … EndSQL.',
                             vscode.DiagnosticSeverity.Warning)
                     );
+                    FromQuery = false;
+                    cSelect = false;
                 }
-                if (linha.search("DELETE\\ FROM") !== -1) {
+                if (linha.search(/(\ |\t|\'|\")+DELETE+(\ |\t)+FROM+(\ |\t)/) !== -1) {
                     objeto.aErros.push(
                         new vscode.Diagnostic(
                             new vscode.Range(parseInt(key), 0, parseInt(key), 0),
@@ -299,7 +303,7 @@ export class ValidaAdvpl {
                             vscode.DiagnosticSeverity.Warning)
                     );
                 }
-                if (linhaClean.search(/(\ |\t|)+MSGBOX\(/) !== -1) {
+                if (linhaClean.search(/MSGBOX\(/) !== -1) {
                     objeto.aErros.push(
                         new vscode.Diagnostic(
                             new vscode.Range(parseInt(key), 0, parseInt(key), 0),
@@ -330,7 +334,7 @@ export class ValidaAdvpl {
                             vscode.DiagnosticSeverity.Error)
                     );
                 }
-                if (linha.search("SELECT\\ ") !== -1 && linha.search("\\ \\*\\ ") !== -1) {
+                if (linha.search(/(\ |\t|\'|\"|)+SELECT+(\ |\t)/) !== -1 && linha.search("\\ \\*\\ ") !== -1) {
                     objeto.aErros.push(
                         new vscode.Diagnostic(
                             new vscode.Range(parseInt(key), 0, parseInt(key), 0),
@@ -390,7 +394,7 @@ export class ValidaAdvpl {
                 if (cSelect && JoinQuery && linha.search("ON") !== -1) {
                     JoinQuery = false;
                 }
-                if (linhaClean.search("CONOUT") !== -1) {
+                if (linhaClean.search(/CONOUT\(/) !== -1) {
                     objeto.aErros.push(
                         new vscode.Diagnostic(
                             new vscode.Range(parseInt(key), 0, parseInt(key), 0),
@@ -401,16 +405,16 @@ export class ValidaAdvpl {
                 //recomendação para melhorar identificação de problemas em queryes
                 if (
                     (
-                        linha.match("SELECT\\ ") ||
-                        linha.match("DELETE\\ ") ||
-                        linha.match("UPDATE\\ ") ||
-                        linha.match("JOIN\\ ")
+                        linha.match(/(\ |\t|)+SELECT+(\ |\t)/) ||
+                        linha.match(/(\ |\t|)+DELETE+(\ |\t)/) ||
+                        linha.match(/(\ |\t|)+UPDATE+(\ |\t)/) ||
+                        linha.match(/(\ |\t|)+JOIN+(\ |\t)/)
                     ) && (
-                        linha.match("FROM\\ ") ||
-                        linha.match("ON\\ ") ||
-                        linha.match("WHERE\\ ")
+                        linha.match(/(\ |\t|)+FROM+(\ |\t)/) ||
+                        linha.match(/(\ |\t|)+ON+(\ |\t)/) ||
+                        linha.match(/(\ |\t|)+WHERE+(\ |\t)/)
                     ) &&
-                    linha.search("TCSQLEXEC\\(") === -1
+                    linha.search(/(\ |\t)+TCSQLEXEC+\(/) === -1
                 ) {
                     //verifica o caracter anterior tem que ser ou ESPACO ou ' ou " ou nada
                     let itens1 = ["FROM", "ON", "WHERE"];

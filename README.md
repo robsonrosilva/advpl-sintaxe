@@ -82,6 +82,12 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
  * **WsResponseFalseREST** - Retorno negativo para a operação para WebServices REST.
 
 ## Release Notes
+### 0.4.8  - 2018-10-24
+- Melhoria na identificação de falta de BeginSql.
+- Melhoria na identificação de ConOut().
+- Ajuste de Expressões para utilizar de forma mais otimizada.
+- Padronização de comentários em snippets.
+
 ### 0.4.7  - 2018-10-23
 - Correção de tratamento de comentários.
 
