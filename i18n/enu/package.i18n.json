@@ -1,0 +1,16 @@
+{
+	"src.extension.activeMessage": "Validation ADVPL Active!",
+    "advpl-sintax.package.displayName" :"ADVPL Analitic, Snippets e GIT",
+    "advpl-sintax.package.description" :"Extensão de análise de qualidade e sintaxe e snippets ADVPL e que facilita a utilização do GIT.",
+    "advpl-sintax.configuration.title": "Configuration Advpl Sintax",
+    "advpl-sintax.configuration.properties.description": "Extension configurations Advpl Sintax.",
+    "advpl-sintax.configuration.properties.branchTeste": "Name GIT branch of Test environment.",
+    "advpl-sintax.configuration.properties.branchHomologacao": "Name GIT branch of Homologation environment.",
+    "advpl-sintax.configuration.properties.branchProducao": "Name GIT branch of Prodution environment.",
+    "advpl-sintax.configuration.properties.ownerDb": "Lista dos Owner's ou Bancos de dados.",
+    "advpl-sintax.configuration.properties.ownerDb.items": "Nome do banco de dados ou owner.",
+    "advpl-sintax.configuration.properties.empresas": "Lista com os códigos de empresas.",
+    "advpl-sintax.configuration.properties.empresas.items": "Códigos das empresas do Protheus para validação de queryes",
+    "advpl-sintax.configuration.properties.comentFontPad": "Lista com as linhas de comentário de fonte.",
+    "advpl-sintax.configuration.properties.comentFontPad.items": "Linha do comentário de fonte. (Usar padrão de search TypeScript)"
+}

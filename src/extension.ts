@@ -4,12 +4,17 @@
 import * as vscode from 'vscode';
 import { ValidaAdvpl } from './ValidaAdvpl';
 import { MergeAdvpl } from './Merge';
+
+import * as nls from 'vscode-nls';
+
+const localize = nls.loadMessageBundle();
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
     let validaAdvpl = new ValidaAdvpl();
 
-    vscode.window.showInformationMessage('Validação ADVPL Ativa!');
+    vscode.window.showInformationMessage(localize('src.extension.activeMessage','Validação ADVPL Ativa!'));
     vscode.workspace.onDidChangeTextDocument(validaFonte);
 
     //Adiciona comando de envia para Validação

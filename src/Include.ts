@@ -21,6 +21,91 @@ export class Include {
         this.includesObsoletos.push("FWCSS.CH");
 
         this.includeExpressoes = [];
+        //AP5MAIL.CH
+        this.includeExpressoes.push({
+            expressoes: [
+                /CONNECT+(\ |\t)+SMTP+(\ |\t)+SERVER/,
+                /CONNECT+(\ |\t)+POP+(\ |\t)+SERVER/,
+                /DISCONNECT+(\ |\t)+SMTP+(\ |\t)+SERVER/,
+                /DISCONNECT+(\ |\t)+POP+(\ |\t)+SERVER/,
+                /POP+(\ |\t)+MESSAGE+(\ |\t)+COUNT/,
+                /SEND+(\ |\t)+MAIL+(\ |\t)+FROM/,
+                /GET+(\ |\t)+MAIL+(\ |\t)+ERROR/,
+                /RECEIVE+(\ |\t)+MAIL+(\ |\t)+MESSAGE/
+            ],
+            include: "AP5MAIL.CH",
+            precisa: false,
+            includes: []
+        });
+        //APVISIO.CH
+
+        //APWEB.CH
+        this.includeExpressoes.push({
+            expressoes: [
+                /APWEB+(\ |\t)+INIT+(\ |\t)+.+(\ |\t)+USING/,
+                /APWEB+(\ |\t)+END/
+            ],
+            include: "APWEB.CH",
+            precisa: false,
+            includes: []
+        });
+        //APWEBEX.CH
+        this.includeExpressoes.push({
+            expressoes: [
+                /OPEN+(\ |\t)+QUERY+(\ |\t)+ALIAS/,
+                /CLOSE+(\ |\t)+QUERY/,
+                /WEB+(\ |\t)+EXTENDED+(\ |\t)+INIT/,
+                /WEB+(\ |\t)+EXTENDED+(\ |\t)+END/
+            ],
+            include: "APWEBEX.CH",
+            precisa: false,
+            includes: []
+        });
+        //APWEBSRV.CH
+        this.includeExpressoes.push({
+            expressoes: [
+                /(\ |\t|\(|\,)+SOAPFAULT_VERSIONMISMATCH/,
+                /(\ |\t|\(|\,)+SOAPFAULT_MUSTUNDERSTAND/,
+                /(\ |\t|\(|\,)+SOAPFAULT_DTDNOTSUPPORTED/,
+                /(\ |\t|\(|\,)+SOAPFAULT_DATAENCODINGUNKNOWN/,
+                /(\ |\t|\(|\,)+SOAPFAULT_SENDER/,
+                /(\ |\t|\(|\,)+SOAPFAULT_RECEIVER/,
+                /(\ |\t|\(|\,)+BYREF/,
+                /(\ |\t|\(|\,)+WSSTRUCT/,
+                /(\ |\t|\(|\,)+WSSERVICE/,
+                /(\ |\t|\(|\,)+WSCLIENT/,
+                /(\ |\t|\(|\,)+WSMETHOD/,
+                /(\ |\t|\(|\,)+_WSPARMS_/,
+                /(\ |\t|\(|\,)+WSDATA/
+            ],
+            include: "APWEBSRV.CH",
+            precisa: false,
+            includes: []
+        });
+        //APWIZARD.CH
+        this.includeExpressoes.push({
+            expressoes: [
+                /DEFINE+(\ |\t)+WIZARD/,
+                /ACTIVATE+(\ |\t)+WIZARD/,
+                /CREATE+(\ |\t)+PANEL/
+            ],
+            include: "APWIZARD.CH",
+            precisa: false,
+            includes: []
+        });
+        //AVPRINT.CH
+
+        //AXSDEF.CH
+
+        //BIRTDATASET.CH
+
+        //COLORS.CH - DENTRO DO PROTHEUS.CH
+        //COMMON.CH
+
+        //CONSTANT.CH
+
+        //DBFCDXAX.CH
+        
         //TOPCONN.CH
         this.includeExpressoes.push({
             expressoes: [/TCQUERY+(\ |\t)/],
@@ -31,14 +116,14 @@ export class Include {
         //TBICONN.CH
         this.includeExpressoes.push({
             expressoes: [
-                /(\ |\t)+CREATE+(\ |\t)+RPCCONN+(\ |\t)/,
-                /(\ |\t)+CLOSE+(\ |\t)+RPCCONN+(\ |\t)/,
-                /(\ |\t)+PREPARE+(\ |\t)+ENVIRONMENT+(\ |\t)/,
-                /(\ |\t)+RESET+(\ |\t)+ENVIRONMENT+(\ |\t)/,
-                /(\ |\t)+OPEN+(\ |\t)+REMOTE+(\ |\t)+TRANSACTION+(\ |\t)/,
-                /(\ |\t)+CLOSE+(\ |\t)+REMOTE+(\ |\t)+TRANSACTION+(\ |\t)/,
-                /(\ |\t)+CALLPROC+(\ |\t)+IN+(\ |\t)/,
-                /(\ |\t)+OPEN+(\ |\t)+REMOTE+(\ |\t)+TABLES+(\ |\t)/
+                /CREATE+(\ |\t)+RPCCONN+(\ |\t)/,
+                /CLOSE+(\ |\t)+RPCCONN+(\ |\t)/,
+                /PREPARE+(\ |\t)+ENVIRONMENT+(\ |\t)/,
+                /RESET+(\ |\t)+ENVIRONMENT+(\ |\t)/,
+                /OPEN+(\ |\t)+REMOTE+(\ |\t)+TRANSACTION+(\ |\t)/,
+                /CLOSE+(\ |\t)+REMOTE+(\ |\t)+TRANSACTION+(\ |\t)/,
+                /CALLPROC+(\ |\t)+IN+(\ |\t)/,
+                /OPEN+(\ |\t)+REMOTE+(\ |\t)+TABLES+(\ |\t)/
             ],
             include: "TBICONN.CH",
             precisa: false,
@@ -47,45 +132,18 @@ export class Include {
         //REPORT.CH
         this.includeExpressoes.push({
             expressoes: [
-                /(\ |\t)+DEFINE+(\ |\t)+REPORT+(\ |\t)+.+(\ |\t)+NAME+(\ |\t)/,
-                /(\ |\t)+DEFINE+(\ |\t)+SECTION+(\ |\t)+.+(\ |\t)+OF+(\ |\t)/,
-                /(\ |\t)+DEFINE+(\ |\t)+CELL+(\ |\t)+NAME+(\ |\t)+.+(\ |\t)+OF+(\ |\t)/,
-                /(\ |\t)+DEFINE+(\ |\t)+BREAK+(\ |\t)+OF+(\ |\t)/,
-                /(\ |\t)+DEFINE+(\ |\t)+FUNCTION+(\ |\t)+FROM+(\ |\t)/,
-                /(\ |\t)+DEFINE+(\ |\t)+COLLECTION+(\ |\t)+.+(\ |\t)+OF+(\ |\t)/,
-                /(\ |\t)+DEFINE+(\ |\t)+BORDER+(\ |\t)+.+(\ |\t)+OF+(\ |\t)+/,
-                /(\ |\t)+DEFINE+(\ |\t)+HEADER+(\ |\t)+BORDER+(\ |\t)+.+(\ |\t)+OF+(\ |\t)/,
-                /(\ |\t)+DEFINE+(\ |\t)+CELL+(\ |\t)+BORDER+(\ |\t)+.+(\ |\t)+OF+(\ |\t)/,
-                /(\ |\t)+DEFINE+(\ |\t)+CELL+(\ |\t)+HEADER+(\ |\t)+BORDER+(\ |\t)+.+(\ |\t)+OF+(\ |\t)/
+                /DEFINE+(\ |\t)+REPORT+(\ |\t)+.+(\ |\t)+NAME+(\ |\t)/,
+                /DEFINE+(\ |\t)+SECTION+(\ |\t)+.+(\ |\t)+OF+(\ |\t)/,
+                /DEFINE+(\ |\t)+CELL+(\ |\t)+NAME+(\ |\t)+.+(\ |\t)+OF+(\ |\t)/,
+                /DEFINE+(\ |\t)+BREAK+(\ |\t)+OF+(\ |\t)/,
+                /DEFINE+(\ |\t)+FUNCTION+(\ |\t)+FROM+(\ |\t)/,
+                /DEFINE+(\ |\t)+COLLECTION+(\ |\t)+.+(\ |\t)+OF+(\ |\t)/,
+                /DEFINE+(\ |\t)+BORDER+(\ |\t)+.+(\ |\t)+OF+(\ |\t)+/,
+                /DEFINE+(\ |\t)+HEADER+(\ |\t)+BORDER+(\ |\t)+.+(\ |\t)+OF+(\ |\t)/,
+                /DEFINE+(\ |\t)+CELL+(\ |\t)+BORDER+(\ |\t)+.+(\ |\t)+OF+(\ |\t)/,
+                /DEFINE+(\ |\t)+CELL+(\ |\t)+HEADER+(\ |\t)+BORDER+(\ |\t)+.+(\ |\t)+OF+(\ |\t)/
             ],
             include: "REPORT.CH",
-            precisa: false,
-            includes: []
-        });
-        //AP5MAIL.CH
-        this.includeExpressoes.push({
-            expressoes: [
-                /(\ |\t)+CONNECT+(\ |\t)+SMTP+(\ |\t)+SERVER/,
-                /(\ |\t)+CONNECT+(\ |\t)+POP+(\ |\t)+SERVER/,
-                /(\ |\t)+DISCONNECT+(\ |\t)+SMTP+(\ |\t)+SERVER/,
-                /(\ |\t)+DISCONNECT+(\ |\t)+POP+(\ |\t)+SERVER/,
-                /(\ |\t)+POP+(\ |\t)+MESSAGE+(\ |\t)+COUNT/,
-                /(\ |\t)+SEND+(\ |\t)+MAIL+(\ |\t)+FROM/,
-                /(\ |\t)+GET+(\ |\t)+MAIL+(\ |\t)+ERROR/,
-                /(\ |\t)+RECEIVE+(\ |\t)+MAIL+(\ |\t)+MESSAGE/
-            ],
-            include: "AP5MAIL.CH",
-            precisa: false,
-            includes: []
-        });
-        //APWIZARD.CH
-        this.includeExpressoes.push({
-            expressoes: [
-                /(\ |\t)+DEFINE+(\ |\t)+WIZARD/,
-                /(\ |\t)+ACTIVATE+(\ |\t)+WIZARD/,
-                /(\ |\t)+CREATE+(\ |\t)+PANEL/
-            ],
-            include: "APWIZARD.CH",
             precisa: false,
             includes: []
         });
@@ -328,39 +386,6 @@ export class Include {
             precisa: false,
             includes: []
         });
-        //APWEBSRV.CH
-        this.includeExpressoes.push({
-            expressoes: [
-                /(\ |\t|\(|\,)+SOAPFAULT_VERSIONMISMATCH/,
-                /(\ |\t|\(|\,)+SOAPFAULT_MUSTUNDERSTAND/,
-                /(\ |\t|\(|\,)+SOAPFAULT_DTDNOTSUPPORTED/,
-                /(\ |\t|\(|\,)+SOAPFAULT_DATAENCODINGUNKNOWN/,
-                /(\ |\t|\(|\,)+SOAPFAULT_SENDER/,
-                /(\ |\t|\(|\,)+SOAPFAULT_RECEIVER/,
-                /(\ |\t|\(|\,)+BYREF/,
-                /(\ |\t|\(|\,)+WSSTRUCT/,
-                /(\ |\t|\(|\,)+WSSERVICE/,
-                /(\ |\t|\(|\,)+WSCLIENT/,
-                /(\ |\t|\(|\,)+WSMETHOD/,
-                /(\ |\t|\(|\,)+_WSPARMS_/,
-                /(\ |\t|\(|\,)+WSDATA/
-            ],
-            include: "APWEBSRV.CH",
-            precisa: false,
-            includes: []
-        });
-        //APWEBEX.CH
-        this.includeExpressoes.push({
-            expressoes: [
-                /(\ |\t)+OPEN+(\ |\t)+QUERY+(\ |\t)+ALIAS/,
-                /(\ |\t)+CLOSE+(\ |\t)+QUERY/,
-                /(\ |\t)+WEB+(\ |\t)+EXTENDED+(\ |\t)+INIT/,
-                /(\ |\t)+WEB+(\ |\t)+EXTENDED+(\ |\t)+END/
-            ],
-            include: "APWEBEX.CH",
-            precisa: false,
-            includes: []
-        });
         //MSOLE.CH
         this.includeExpressoes.push({
             expressoes: [
@@ -393,8 +418,8 @@ export class Include {
         //RWMAKE.CH
         this.includeExpressoes.push({
             expressoes: [
-                /(\ |\t)+@+(\ |\t)+.+\,+.+(\ |\t)+TO+(\ |\t)+.+\,+.+(\ |\t)+DIALOG/,
-                /(\ |\t)+@+(\ |\t)+.+\,+.+(\ |\t)+BMPBUTTON/
+                /@+(\ |\t)+.+\,+.+(\ |\t)+TO+(\ |\t)+.+\,+.+(\ |\t)+DIALOG/,
+                /@+(\ |\t)+.+\,+.+(\ |\t)+BMPBUTTON/
             ],
             include: "RWMAKE.CH",
             precisa: false,

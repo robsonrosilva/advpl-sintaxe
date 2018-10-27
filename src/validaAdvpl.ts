@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as fileSystem from 'fs';
 import { Include } from './Include';
+import { Fonte,Tipos } from './Fonte';
 
 //Cria um colection para os erros ADVPL
 const collection = vscode.languages.createDiagnosticCollection('advpl');
@@ -18,11 +19,13 @@ export class ValidaAdvpl {
     public versao: string;
     public includes: any[];
     public aErros: any[];
+    public fontes : Fonte[];
 
     constructor() {
         this.comentFontPad = vscode.workspace.getConfiguration("advpl-sintax").get("comentFontPad");
         this.aErros = [];
         this.includes = [];
+        this.fontes = [];
         this.error = 0;
         this.warning = 0;
         this.information = 0;
@@ -46,12 +49,13 @@ export class ValidaAdvpl {
     public async validaProjeto(nGeradas: number = 0, tags: string[] = [], fileContent: string = '', branchAtual: string = '', objetoMerge: any) {
         let tag = tags[nGeradas];
         let fileLog = vscode.workspace.rootPath + "/AnaliseProjeto.csv";
+        this.fontes = [];
+        this.error = 0;
+        this.warning = 0;
+        this.information = 0;
+        this.hint = 0;
         //guarda objeto this
         let objeto = this;
-        objeto.error = 0;
-        objeto.warning = 0;
-        objeto.information = 0;
-        objeto.hint = 0;
         //percorre todos os fontes do Workspace e valida se for ADVPL
         let advplExtensions = ['prw', 'prx', 'prg', 'apw', 'apl', 'tlpp'];
         let files = await vscodeFindFilesSync();
@@ -131,6 +135,7 @@ export class ValidaAdvpl {
     protected validacao(texto: String, uri: vscode.Uri) {
         this.aErros = [];
         this.includes = [];
+        let fonte = new Fonte(uri.fsPath);
         //guarda objeto this
         let objeto = this;
         let conteudoSComentario = "";
@@ -233,20 +238,28 @@ export class ValidaAdvpl {
                 conteudoSComentario = conteudoSComentario + linhaClean + "\n";
 
                 //verifica se é função e adiciona no array
-                if (linhaClean.search(/(STATIC|USER)+(\ |\t)+FUNCTION+(\ |\t)/) !== -1) {
+                if (linhaClean.search(/(STATIC|USER|)+(\ |\t)+FUNCTION+(\ |\t)/) !== -1) {
                     //reseta todas as ariáveis de controle pois está fora de qualquer função
                     cBeginSql = false;
                     FromQuery = false;
                     JoinQuery = false;
                     cSelect = false;
+                    let nomeFuncao = linhaClean.replace("\t", "\ ").trim().split(" ")[2].split("(")[0];
                     //verifica se é um função e adiciona no array
                     funcoes.push(
-                        [linhaClean.replace("\t", "\ ").trim().split(" ")[2].split("(")[0], key]
+                        [nomeFuncao, key]
                     );
+                    //verifica o TIPO
+                    if(linhaClean.search(/(USER)+(\ |\t)+FUNCTION+(\ |\t)/) !== -1){
+                        fonte.addFunction(Tipos["User Function"],nomeFuncao,parseInt(key));
+                    }else if(linhaClean.split("\ ")[0].split("\t")[0] === "FUNCTION"){
+                    //verifica se a primeira palavra é FUNCTION
+                        fonte.addFunction(Tipos["Function"],nomeFuncao,parseInt(key));
+                    }
                 }
                 //Verifica se é CLASSE ou WEBSERVICE 
                 if (linhaClean.search("METHOD\\ .*?CLASS") !== -1 ||
-                    linhaClean.search("CLASS\\ ") !== -1 ||
+                    linhaClean.split("\ ")[0].split("\t")[0] === "CLASS" ||
                     linhaClean.search("WSMETHOD.*?WSSERVICE") !== -1 ||
                     linhaClean.search("WSSERVICE\\ ") !== -1) {
                     //reseta todas as ariáveis de controle pois está fora de qualquer função
@@ -258,6 +271,9 @@ export class ValidaAdvpl {
                     funcoes.push(
                         [linhaClean.trim().split(" ")[1].split("(")[0], key]
                     );
+                    if(linhaClean.split("\ ")[0].split("\t")[0] === "CLASS"){
+                        fonte.addFunction(Tipos["Class"],linhaClean.trim().split(" ")[1].split("(")[0],parseInt(key));
+                    }
                 }
                 //Verifica se adicionou o include TOTVS.CH
                 if (linha.search(/#INCLUDE/) !== -1) {
@@ -509,6 +525,5 @@ export class ValidaAdvpl {
         });
         this.aErros = [];
         this.includes = [];
-
     }
 }
