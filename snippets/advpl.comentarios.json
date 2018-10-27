@@ -1,6 +1,6 @@
 {
     "docFontePoupex": {
-        "prefix": "Documentação de Fonte - POUPEX",
+        "prefix": "Documentação de Fonte",
         "body": [
             "/*//#########################################################################################",
             "Projeto : ${project}",
@@ -14,7 +14,7 @@
         ]
     },
     "docFuncaoPoupex": {
-        "prefix": "Documentação de Função - POUPEX",
+        "prefix": "Documentação de Função",
         "body": [
             "",
             "/*/{Protheus.doc} ${Funcao}",
