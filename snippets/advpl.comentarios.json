@@ -1,5 +1,5 @@
 {
-    "docFontePoupex": {
+    "docFonte": {
         "prefix": "Documentação de Fonte",
         "body": [
             "/*//#########################################################################################",
@@ -13,7 +13,7 @@
             ""
         ]
     },
-    "docFuncaoPoupex": {
+    "docFuncao": {
         "prefix": "Documentação de Função",
         "body": [
             "",

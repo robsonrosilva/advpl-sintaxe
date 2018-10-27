@@ -33,7 +33,7 @@ gulp.task('compile', function(callback) {
 });
 
 gulp.task('build', function(callback) {
-	runSequence('clean', 'internal-nls-compile', 'add-i18n', callback);
+	runSequence('clean', 'internal-nls-compile', 'add-i18n','add-i18n-snippets', callback);
 });
 
 gulp.task('publish', function(callback) {
@@ -45,7 +45,7 @@ gulp.task('package', function(callback) {
 });
 
 gulp.task('clean', function() {
-	return del(['out/**', 'package.nls.*.json', 'i18n-sample*.vsix']);
+	return del(['out/**', '*.nls.*.json','snippets/*.nls.*.json', 'i18n-sample*.vsix']);
 })
 
 //---- internal
@@ -83,6 +83,12 @@ gulp.task('add-i18n', function() {
 	return gulp.src(['package.nls.json'])
 		.pipe(nls.createAdditionalLanguageFiles(languages, 'i18n'))
 		.pipe(gulp.dest('.'));
+});
+
+gulp.task('add-i18n-snippets', function() {
+	return gulp.src(['snippets/advpl.comentarios.nls.json'])
+		.pipe(nls.createAdditionalLanguageFiles(languages, 'i18n'))
+		.pipe(gulp.dest('./snippets'));
 });
 
 gulp.task('vsce:publish', function() {

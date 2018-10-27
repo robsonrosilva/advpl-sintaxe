@@ -1,6 +1,11 @@
 {
 	"advpl-sintax.package.displayName": "ADVPL Análise, Snippets e GIT",
 	"advpl-sintax.package.description": "Extensão de análise de qualidade e sintaxe e snippets ADVPL e que facilita a utilização do GIT.",
+	"advpl-sintax.commands.git.teste": "advpl-sintax - Envia os commits para a branche de VALIDAÇÃO!",
+	"advpl-sintax.commands.git.homologacao": "advpl-sintax - Envia os commits para a branche de RELEASE!",
+	"advpl-sintax.commands.git.producao": "advpl-sintax - Envia os commits para a branche de PRODUÇÃO!",
+	"advpl-sintax.commands.validacao.projeto": "advpl-sintax - Valida Projeto!",
+	"advpl-sintax.commands.validacao.tags": "advpl-sintax - Análise de TAGS!",
 	"advpl-sintax.configuration.title": "Configuração de Advpl Sintax",
 	"advpl-sintax.configuration.properties.description": "Configurações de extensão Advpl Sintax.",
 	"advpl-sintax.configuration.properties.branchTeste": "Nome da branche do GIT do ambiente de Testes.",
