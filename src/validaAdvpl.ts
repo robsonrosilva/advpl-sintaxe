@@ -1,6 +1,10 @@
 import * as vscode from 'vscode';
 import * as fileSystem from 'fs';
 import { Include } from './Include';
+import { Fonte, Tipos } from './Fonte';
+import * as nls from 'vscode-nls';
+
+const localize = nls.loadMessageBundle();
 
 //Cria um colection para os erros ADVPL
 const collection = vscode.languages.createDiagnosticCollection('advpl');
@@ -18,11 +22,13 @@ export class ValidaAdvpl {
     public versao: string;
     public includes: any[];
     public aErros: any[];
+    public fontes: Fonte[];
 
     constructor() {
         this.comentFontPad = vscode.workspace.getConfiguration("advpl-sintax").get("comentFontPad");
         this.aErros = [];
         this.includes = [];
+        this.fontes = [];
         this.error = 0;
         this.warning = 0;
         this.information = 0;
@@ -46,12 +52,13 @@ export class ValidaAdvpl {
     public async validaProjeto(nGeradas: number = 0, tags: string[] = [], fileContent: string = '', branchAtual: string = '', objetoMerge: any) {
         let tag = tags[nGeradas];
         let fileLog = vscode.workspace.rootPath + "/AnaliseProjeto.csv";
+        this.fontes = [];
+        this.error = 0;
+        this.warning = 0;
+        this.information = 0;
+        this.hint = 0;
         //guarda objeto this
         let objeto = this;
-        objeto.error = 0;
-        objeto.warning = 0;
-        objeto.information = 0;
-        objeto.hint = 0;
         //percorre todos os fontes do Workspace e valida se for ADVPL
         let advplExtensions = ['prw', 'prx', 'prg', 'apw', 'apl', 'tlpp'];
         let files = await vscodeFindFilesSync();
@@ -67,7 +74,9 @@ export class ValidaAdvpl {
             }
             //Se for o último arquivo verifica se deve gravar no arquivo LOG
             if (!fileContent && file === files[files.length - 1]) {
-                vscode.window.showInformationMessage('Fim da Análise do Projeto!');
+                vscode.window.showInformationMessage(
+                    localize('src.ValidaAdvpl.finish', 'Fim da Análise do Projeto!')
+                );
             } else if (fileContent && file === files[files.length - 1]) {
                 fileContent = fileContent.replace(
                     tag + "\t\t\t\t\n",
@@ -131,6 +140,7 @@ export class ValidaAdvpl {
     protected validacao(texto: String, uri: vscode.Uri) {
         this.aErros = [];
         this.includes = [];
+        let fonte = new Fonte(uri.fsPath);
         //guarda objeto this
         let objeto = this;
         let conteudoSComentario = "";
@@ -233,20 +243,28 @@ export class ValidaAdvpl {
                 conteudoSComentario = conteudoSComentario + linhaClean + "\n";
 
                 //verifica se é função e adiciona no array
-                if (linhaClean.search(/(STATIC|USER)+(\ |\t)+FUNCTION+(\ |\t)/) !== -1) {
+                if (linhaClean.search(/(STATIC|USER|)+(\ |\t)+FUNCTION+(\ |\t)/) !== -1) {
                     //reseta todas as ariáveis de controle pois está fora de qualquer função
                     cBeginSql = false;
                     FromQuery = false;
                     JoinQuery = false;
                     cSelect = false;
+                    let nomeFuncao = linhaClean.replace("\t", "\ ").trim().split(" ")[2].split("(")[0];
                     //verifica se é um função e adiciona no array
                     funcoes.push(
-                        [linhaClean.replace("\t", "\ ").trim().split(" ")[2].split("(")[0], key]
+                        [nomeFuncao, key]
                     );
+                    //verifica o TIPO
+                    if (linhaClean.search(/(USER)+(\ |\t)+FUNCTION+(\ |\t)/) !== -1) {
+                        fonte.addFunction(Tipos["User Function"], nomeFuncao, parseInt(key));
+                    } else if (linhaClean.split("\ ")[0].split("\t")[0] === "FUNCTION") {
+                        //verifica se a primeira palavra é FUNCTION
+                        fonte.addFunction(Tipos["Function"], nomeFuncao, parseInt(key));
+                    }
                 }
                 //Verifica se é CLASSE ou WEBSERVICE 
                 if (linhaClean.search("METHOD\\ .*?CLASS") !== -1 ||
-                    linhaClean.search("CLASS\\ ") !== -1 ||
+                    linhaClean.split("\ ")[0].split("\t")[0] === "CLASS" ||
                     linhaClean.search("WSMETHOD.*?WSSERVICE") !== -1 ||
                     linhaClean.search("WSSERVICE\\ ") !== -1) {
                     //reseta todas as ariáveis de controle pois está fora de qualquer função
@@ -258,6 +276,9 @@ export class ValidaAdvpl {
                     funcoes.push(
                         [linhaClean.trim().split(" ")[1].split("(")[0], key]
                     );
+                    if (linhaClean.split("\ ")[0].split("\t")[0] === "CLASS") {
+                        fonte.addFunction(Tipos["Class"], linhaClean.trim().split(" ")[1].split("(")[0], parseInt(key));
+                    }
                 }
                 //Verifica se adicionou o include TOTVS.CH
                 if (linha.search(/#INCLUDE/) !== -1) {
@@ -289,7 +310,7 @@ export class ValidaAdvpl {
                     objeto.aErros.push(
                         new vscode.Diagnostic(
                             new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                            'Uso INDEVIDO de Query sem o Embedded SQL.! \n Utilizar: BeginSQL … EndSQL.',
+                            localize('src.ValidaAdvpl.queryNoEmbedded', 'Uso INDEVIDO de Query sem o Embedded SQL.! \n Utilizar: BeginSQL … EndSQL.'),
                             vscode.DiagnosticSeverity.Warning)
                     );
                     FromQuery = false;
@@ -299,7 +320,7 @@ export class ValidaAdvpl {
                     objeto.aErros.push(
                         new vscode.Diagnostic(
                             new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                            'Uso não permitido uso de DELETE FROM.! ',
+                            localize('src.ValidaAdvpl.deleteFrom', 'Uso não permitido uso de DELETE FROM!'),
                             vscode.DiagnosticSeverity.Warning)
                     );
                 }
@@ -307,7 +328,7 @@ export class ValidaAdvpl {
                     objeto.aErros.push(
                         new vscode.Diagnostic(
                             new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                            'Esta função foi descontinuada no Protheus 12, utilize MessageBox().! ',
+                            localize('src.ValidaAdvpl.msgBox', 'Esta função foi descontinuada no Protheus 12, utilize MessageBox()! '),
                             vscode.DiagnosticSeverity.Information)
                     );
                 }
@@ -315,7 +336,7 @@ export class ValidaAdvpl {
                     objeto.aErros.push(
                         new vscode.Diagnostic(
                             new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                            'Este parâmetro foi descontinuado no Protheus 12! ',
+                            localize('src.ValidaAdvpl.folMes', 'Este parâmetro foi descontinuado no Protheus 12! '),
                             vscode.DiagnosticSeverity.Information)
                     );
                 }
@@ -330,7 +351,7 @@ export class ValidaAdvpl {
                     objeto.aErros.push(
                         new vscode.Diagnostic(
                             new vscode.Range(parseInt(key), 0, parseInt(nFim), 0),
-                            'Existem conflitos de merge, avalie antes de continuar! ',
+                            localize('src.ValidaAdvpl.conflictMerge', 'Existem conflitos de merge, avalie antes de continuar!'),
                             vscode.DiagnosticSeverity.Error)
                     );
                 }
@@ -338,13 +359,13 @@ export class ValidaAdvpl {
                     objeto.aErros.push(
                         new vscode.Diagnostic(
                             new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                            'Uso não permitido uso de SELECT com asterisco \n "*".! ',
+                            localize('src.ValidaAdvpl.selectAll', 'Uso não permitido uso de SELECT com asterisco \n "*".! '),
                             vscode.DiagnosticSeverity.Warning)
                     );
                 }
                 if (linha.search("CHR\\(13\\)") !== -1 && linha.search("CHR\\(10\\)") !== -1) {
                     objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                        'É recomendado o uso da expressão CRLF.',
+                        localize('src.ValidaAdvpl.crlf', 'É recomendado o uso da expressão CRLF.'),
                         vscode.DiagnosticSeverity.Warning)
                     );
                 }
@@ -366,7 +387,9 @@ export class ValidaAdvpl {
                         objeto.aErros.push(
                             new vscode.Diagnostic(
                                 new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                                'Uso não permitido uso do SHEMA ' + banco + ' em Query. ',
+                                localize('src.ValidaAdvpl.noSchema', 'Uso não permitido uso do SHEMA ')
+                                + banco +
+                                localize('src.ValidaAdvpl.inQuery', ' em Query.'),
                                 vscode.DiagnosticSeverity.Error)
                         );
                     }
@@ -384,7 +407,7 @@ export class ValidaAdvpl {
                                 objeto.aErros.push(
                                     new vscode.Diagnostic(
                                         new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                                        'PROIBIDO Fixar tabela na Query. ',
+                                        localize('src.ValidaAdvpl.tableFixed', 'PROIBIDO Fixar tabela na Query.'),
                                         vscode.DiagnosticSeverity.Error)
                                 );
                             }
@@ -398,7 +421,7 @@ export class ValidaAdvpl {
                     objeto.aErros.push(
                         new vscode.Diagnostic(
                             new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                            'Uso não permitido uso do Conout. => Utilizar a API de Log padrão (FWLogMsg).',
+                            localize('src.ValidaAdvpl.conout', 'Uso não permitido uso do Conout. => Utilizar a API de Log padrão (FWLogMsg).'),
                             vscode.DiagnosticSeverity.Warning)
                     );
                 }
@@ -429,7 +452,7 @@ export class ValidaAdvpl {
                         objeto.aErros.push(
                             new vscode.Diagnostic(
                                 new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                                'Para melhorar a análise dessa query coloque em linhas diferentes as clausulas' +
+                                localize('src.ValidaAdvpl.bestAnalitc', 'Para melhorar a análise dessa query coloque em linhas diferentes as clausulas') +
                                 ' SELECT, DELETE, UPDATE, JOIN, FROM, ON, WHERE.',
                                 vscode.DiagnosticSeverity.Information)
                         );
@@ -451,7 +474,7 @@ export class ValidaAdvpl {
         if (!comentariosFonte) {
             objeto.aErros.push(
                 new vscode.Diagnostic(new vscode.Range(0, 0, 0, 0),
-                    'Verifique os padrões de comentários de fontes! => Use o autocomplete docFuncaoPoupex.',
+                    localize('src.ValidaAdvpl.padComment', 'Verifique os padrões de comentários de fontes! => Use o autocomplete docFuncao.'),
                     vscode.DiagnosticSeverity.Information)
             );
         }
@@ -466,7 +489,7 @@ export class ValidaAdvpl {
             if (!achou) {
                 objeto.aErros.push(new vscode.Diagnostic(
                     new vscode.Range(parseInt(funcao[1]), 0, parseInt(funcao[1]), 0),
-                    'Função, Classe, Método ou WebService não comentado!',
+                    localize('src.ValidaAdvpl.functionNoCommented','Função, Classe, Método ou WebService não comentado!'),
                     vscode.DiagnosticSeverity.Warning)
                 );
             }
@@ -481,7 +504,7 @@ export class ValidaAdvpl {
             if (!achou) {
                 objeto.aErros.push(new vscode.Diagnostic(
                     new vscode.Range(parseInt(comentario[1]), 0, parseInt(comentario[1]), 0),
-                    'Comentário de função sem função!',
+                    localize('src.ValidaAdvpl.CommentNoFunction','Comentário de função sem função!'),
                     vscode.DiagnosticSeverity.Warning)
                 );
             }
@@ -509,6 +532,5 @@ export class ValidaAdvpl {
         });
         this.aErros = [];
         this.includes = [];
-
     }
 }
