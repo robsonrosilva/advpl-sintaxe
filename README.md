@@ -82,6 +82,9 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
  * **WsResponseFalseREST** - Retorno negativo para a operação para WebServices REST.
 
 ## Release Notes
+### 0.5.0  - 2018-10-27
+- Implementação de Internacionalização.
+
 ### 0.4.9  - 2018-10-24
 - Melhoria na identificação de Includes.
 - Adição de análise de APWEB.CH.
