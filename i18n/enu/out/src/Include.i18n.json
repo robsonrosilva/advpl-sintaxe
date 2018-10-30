@@ -1,0 +1,9 @@
+{
+	"src.Includes.faltaTOTVS":"Falta o include TOTVS.CH !",
+	"src.Includes.oInclude":"O Include",
+	"src.Includes.SubstTOTVS":" é obsoleto, o mesmo foi substituído pelo TOTVS.CH!",
+	"src.Includes.emDuplicidade":" está em duplicidade!",
+	"src.Includes.faltaInclude": "Falta importar o include ",
+	"src.Includes.desnecessario": " desnecessário!",
+	"src.Includes.desnecessarioContido": " desnecessário, está contido no include "
+}

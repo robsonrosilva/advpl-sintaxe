@@ -1,0 +1,8 @@
+{
+	"messages": [
+		"Starting ADVPL analytics!"
+	],
+	"keys": [
+		"src.extension.activeMessage"
+	]
+}
