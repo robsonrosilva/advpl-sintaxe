@@ -1,0 +1,7 @@
+{
+	"src.Merge.noBranchMerge":"Essa branch não pode ser utilizada para para Merge!",
+	"src.Merge.noPush":"Publique sua branche antes de mergeá-la!",
+	"src.Merge.mergeFinish":"Merge de finalizado ",
+	"src.Merge.noCommited":"Merge não realizado, existem arquivos não commitados!",
+	"src.Merge.success": "Funcionou "
+}
