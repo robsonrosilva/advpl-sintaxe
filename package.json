@@ -1,9 +1,10 @@
 {
     "name": "advpl-sintax-poupex",
-    "displayName": "Análise ADVPL",
-    "description": "Extensão para automatização de merges do GIT e análise de códigos ADVPL.",
-    "version": "0.0.7",
+    "displayName": "ADVPL Análise, Snippets e GIT",
+    "description": "Extensão de análise de qualidade e sintaxe e snippets ADVPL e que facilita a utilização do GIT.",
+    "version": "0.5.2",
     "publisher": "robsonrosilva",
+    "icon": "images/icone.png",
     "engines": {
         "vscode": "^1.9.1"
     },
@@ -24,78 +25,82 @@
     "activationEvents": [
         "*"
     ],
-    "main": "./out/extension",
+    "main": "./out/src/extension",
     "contributes": {
         "commands": [
             {
                 "command": "advpl-sintax.gitValidacao",
-                "title": "POUPEX - Envia os commits para a branche VALIDAÇÃO!"
+                "title": "%advpl-sintax.commands.git.teste%"
             },
             {
                 "command": "advpl-sintax.gitRelease",
-                "title": "POUPEX - Envia os commits para a branche RELEASE!"
+                "title": "%advpl-sintax.commands.git.homologacao%"
             },
             {
                 "command": "advpl-sintax.gitMaster",
-                "title": "POUPEX - Envia os commits para a branche MASTER!"
+                "title": "%advpl-sintax.commands.git.producao%"
             },
             {
                 "command": "advpl-sintax.validaProjeto",
-                "title": "POUPEX - Valida Projeto!"
+                "title": "%advpl-sintax.commands.validacao.projeto%"
+            },
+            {
+                "command": "advpl-sintax.analisaTags",
+                "title": "%advpl-sintax.commands.validacao.tags%"
             }
         ],
         "configuration": {
             "type": "object",
-            "title": "Configuração de Advpl Sintax",
+            "title": "%advpl-sintax.configuration.title%",
             "properties": {
                 "advpl-sintax": {
                     "type": "object",
                     "default": {},
-                    "description": "Configurações de extensão Advpl Sintax.",
+                    "description": "%advpl-sintax.configuration.properties.description%",
                     "properties": {
                         "branchTeste": {
                             "type": "string",
                             "default": "V11_Validacao",
-                            "description": "Nome da branche do GIT do ambiente de Testes."
+                            "description": "%advpl-sintax.configuration.properties.branchTeste%"
                         },
                         "branchHomologacao": {
                             "type": "string",
                             "default": "V11_Release",
-                            "description": "Nome da branche do GIT do ambiente de Homologação."
+                            "description": "%advpl-sintax.configuration.properties.branchHomologacao%"
                         },
                         "branchProducao": {
                             "type": "string",
                             "default": "master",
-                            "description": "Nome da branche do GIT do ambiente de Produção"
+                            "description": "%advpl-sintax.configuration.properties.branchProducao%"
                         },
                         "ownerDb": {
                             "type": "array",
                             "default": [],
-                            "description": "Lista dos Owner's ou Bancos de dados que o Protheus usa.",
+                            "description": "%advpl-sintax.configuration.properties.ownerDb%",
                             "items": {
                                 "type": "string",
-                                "default":"PROTHEUS",
-                                "description": "Nome do banco de dados ou owner."
+                                "default": "PROTHEUS",
+                                "description": "%advpl-sintax.configuration.properties.ownerDb.items%"
                             }
                         },
                         "empresas": {
                             "type": "array",
                             "default": [],
-                            "description": "Lista com os códigos de empresas que o Protheus usa.",
+                            "description": "%advpl-sintax.configuration.properties.empresas%",
                             "items": {
                                 "type": "string",
-                                "default":"01",
-                                "description": "Códigos das empresas do Protheus para validação de queryes."
+                                "default": "01",
+                                "description": "%advpl-sintax.configuration.properties.empresas.items%"
                             }
                         },
                         "comentFontPad": {
                             "type": "array",
                             "default": [],
-                            "description": "Lista com as linhas de comentário de fonte.",
+                            "description": "%advpl-sintax.configuration.properties.comentFontPad%",
                             "items": {
                                 "type": "string",
-                                "default":"",
-                                "description": "Linha do comentário de fonte. (Usar padrão de search TypeScript)"
+                                "default": "",
+                                "description": "%advpl-sintax.configuration.properties.comentFontPad.items%"
                             }
                         }
                     }
@@ -126,22 +131,32 @@
         ]
     },
     "scripts": {
-        "vscode:prepublish": "npm run compile",
+        "vscode:prepublish": "npm run compile && gulp build",
+        "resources": "gulp build",
         "compile": "tsc -p ./",
-        "watch": "tsc -watch -p ./",
+        "watch": "tsc -watch -p ./ && gulp build",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "devDependencies": {
+        "del": "^3.0.0",
+        "gulp": "^3.9.1",
+        "gulp-filter": "^5.0.1",
         "typescript": "^2.6.1",
         "vscode": "^1.1.21",
         "tslint": "^5.8.0",
+        "vscode-nls-dev": "^2.1.3",
         "@types/node": "^8.10.25",
         "@types/mocha": "^2.2.42"
     },
     "dependencies": {
+        "event-stream": "^4.0.1",
         "git": "^0.1.5",
-        "regex": "^0.1.1",
-        "spawn-command": "0.0.2-1"
+        "gulp-sourcemaps": "^2.6.4",
+        "gulp-typescript": "^5.0.0-alpha.3",
+        "run-sequence": "^2.2.1",
+        "spawn-command": "0.0.2-1",
+        "vsce": "^1.52.0",
+        "vscode-nls": "^2.0.2"
     }
 }
