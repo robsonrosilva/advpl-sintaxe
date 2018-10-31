@@ -436,7 +436,7 @@ export class Include {
 
         if (!objetoValidacao.includes.indexOf((x: any) => x.include === "TOTVS.CH")) {
             objetoValidacao.aErros.push(new vscode.Diagnostic(new vscode.Range(0, 0, 0, 0),
-                localize('src.Includes.faltaTOTVS', 'Falta o include TOTVS.CH !'),
+                localize('src.Includes.faltaTOTVS', 'Missing TOTVS.CH !'),
                 vscode.DiagnosticSeverity.Warning)
             );
         }
@@ -448,9 +448,9 @@ export class Include {
                 this.includesObsoletos.indexOf(include.include) !== -1
             ) {
                 objetoValidacao.aErros.push(new vscode.Diagnostic(new vscode.Range(include.linha, 0, include.linha, 0),
-                    localize('src.Includes.oInclude', 'O include ')
+                    localize('src.Includes.oInclude', 'The Include ')
                     + include.include +
-                    localize('src.Includes.SubstTOTVS', ' é obsoleto, o mesmo foi substituído pelo TOTVS.CH!'),
+                    localize('src.Includes.SubstTOTVS', ' is obsolete, it has been replaced by TOTVS.CH!'),
                     vscode.DiagnosticSeverity.Warning)
                 );
             }
@@ -464,9 +464,9 @@ export class Include {
                 ) !== -1
             ) {
                 objetoValidacao.aErros.push(new vscode.Diagnostic(new vscode.Range(include.linha, 0, include.linha, 0),
-                    localize('src.Includes.oInclude', 'O include ')
+                    localize('src.Includes.oInclude', 'The Include ')
                     + include.include +
-                    localize('src.Includes.emDuplicidade', ' está em duplicidade!'),
+                    localize('src.Includes.emDuplicidade', ' is in duplicity!'),
                     vscode.DiagnosticSeverity.Warning)
                 );
             }
@@ -487,7 +487,7 @@ export class Include {
                             includesFonte.indexOf(element.include) === -1
                         ) {
                             objetoValidacao.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0),
-                                localize('src.Includes.faltaInclude', 'Falta importar o include ') + element.include + '!',
+                                localize('src.Includes.faltaInclude', 'Import missing include ') + element.include + '!',
                                 vscode.DiagnosticSeverity.Error)
                             );
                         }
@@ -504,7 +504,7 @@ export class Include {
             if (includeAnalise) {
                 if (!includeAnalise.precisa) {
                     objetoValidacao.aErros.push(new vscode.Diagnostic(new vscode.Range(include.linha, 0, include.linha, 0),
-                        'Include ' + include.include + localize('src.Includes.desnecessario', ' desnecessário!'),
+                        'Include ' + include.include + localize('src.Includes.desnecessario', ' not necessary!'),
                         vscode.DiagnosticSeverity.Warning)
                     );
                 }
@@ -513,9 +513,9 @@ export class Include {
                     let includeAnaliseContido = objetoValidacao.includes[includesFonte.indexOf(includeContido)];
                     if (includeAnaliseContido) {
                         objetoValidacao.aErros.push(new vscode.Diagnostic(new vscode.Range(includeAnaliseContido.linha, 0, includeAnaliseContido.linha, 0),
-                            localize('src.Includes.oInclude', 'O include ') +
+                            localize('src.Includes.oInclude', 'The Include ') +
                             includeAnaliseContido.include +
-                            localize('src.Includes.desnecessarioContido', ' desnecessário, está contido no include ')
+                            localize('src.Includes.desnecessarioContido', ' unnecessary, is contained in the include ')
                             + include.include + '!',
                             vscode.DiagnosticSeverity.Warning)
                         );

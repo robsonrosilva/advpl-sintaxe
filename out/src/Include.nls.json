@@ -1,14 +1,14 @@
 {
 	"messages": [
-		"Falta o include TOTVS.CH !",
-		"O include ",
-		" é obsoleto, o mesmo foi substituído pelo TOTVS.CH!",
-		"O include ",
-		" está em duplicidade!",
-		"Falta importar o include ",
-		" desnecessário!",
-		"O include ",
-		" desnecessário, está contido no include "
+		"Missing TOTVS.CH !",
+		"The Include ",
+		" is obsolete, it has been replaced by TOTVS.CH!",
+		"The Include ",
+		" is in duplicity!",
+		"Import missing include ",
+		" not necessary!",
+		"The Include ",
+		" unnecessary, is contained in the include "
 	],
 	"keys": [
 		"src.Includes.faltaTOTVS",

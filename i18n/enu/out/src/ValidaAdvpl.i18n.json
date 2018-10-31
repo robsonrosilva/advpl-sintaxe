@@ -13,6 +13,6 @@
 	"src.ValidaAdvpl.conout" : "Use not allowed use of Conout. => Using the Default Log API (FWLogMsg).",
 	"src.ValidaAdvpl.bestAnalitc": "To improve the analysis of this query put in different lines the clauses",
 	"src.ValidaAdvpl.padComment": "Check patterns of font comments!! => Use autocomplete docFuncao.",
-	"src.ValidaAdvpl.functionNoCommented": "Function, Class, Method, or WebService not commented!",
+	"src.ValidaAdvpl.functionNoCommented": "Function, Class, Method or WebService not commented!",
 	"src.ValidaAdvpl.CommentNoFunction": "Function comment without function!"
 }

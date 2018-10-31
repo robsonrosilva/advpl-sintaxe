@@ -82,6 +82,9 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
  * **WsResponseFalseREST** - Retorno negativo para a operação para WebServices REST.
 
 ## Release Notes
+### 0.5.4  - 2018-10-31
+- Finalização de internacionalização para inglês, troca de mensagens padrão para inglês.
+
 ### 0.5.3  - 2018-10-31
 - Inicio de internacionalização para inglês.
 - Ajustes de identificação de função.

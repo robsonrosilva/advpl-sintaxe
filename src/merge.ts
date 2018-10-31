@@ -53,16 +53,16 @@ export class MergeAdvpl {
         //guarda objeto this
         let objeto = this;
         //verifica se não está numa branch controlada
-        if (objeto.branchesControladas.indexOf(branchAtual.toUpperCase()) === 0) {
+        if (objeto.branchesControladas.indexOf(branchAtual.toUpperCase()) !== -1) {
             vscode.window.showErrorMessage(
-                localize('src.Merge.noBranchMerge', 'Essa branch não pode ser utilizada para para Merge!')
+                localize('src.Merge.noBranchMerge', 'This branch can not be used to merge!')
             );
             return;
         } else {
             //Trata quando a branche ainda não subiu para o GIT
             if (!repository.HEAD.upstream) {
                 vscode.window.showErrorMessage(
-                    localize('src.Merge.noPush', 'Publique sua branche antes de mergeá-la!')
+                    localize('src.Merge.noPush', 'Post your branche before you merge it!')
                 );
                 return;
             }
@@ -123,7 +123,7 @@ export class MergeAdvpl {
             } else if (enviaMaster) {
                 objeto.merge(repository, branchAtual, objeto.branchProdu, false, false);
             } else {
-                objeto.sucesso("", localize('src.Merge.mergeFinish', "Merge de finalizado ") + branchAtual + " -> " + branchdestino + ".");
+                objeto.sucesso("", localize('src.Merge.mergeFinish', "Merge of finalized ") + branchAtual + " -> " + branchdestino + ".");
             }
 
         }
@@ -177,7 +177,7 @@ export class MergeAdvpl {
                             !forca
                         ) {
                             vscode.window.showErrorMessage(
-                                localize('src.Merge.noCommited', "Merge não realizado, existem arquivos não commitados!")
+                                localize('src.Merge.noCommited', "Merge not done, there are uncommitted files!")
                             );
                             return;
                         }
@@ -189,7 +189,7 @@ export class MergeAdvpl {
                             repository.indexGroup.resourceStates.length !== 0 ||
                             repository.workingTreeGroup.resourceStates.length !== 0) {
                             vscode.window.showErrorMessage(
-                                localize('src.Merge.noCommited', "Merge não realizado, existem arquivos não commitados!")
+                                localize('src.Merge.noCommited', "Merge not done, there are uncommitted files!")
                             );
                             return;
                         }
@@ -202,7 +202,7 @@ export class MergeAdvpl {
     protected sucesso(value: any, rotina: String) {
         let validaAdvpl = new ValidaAdvpl();
         vscode.window.showInformationMessage(
-            localize('src.Merge.success', 'Funcionou ')
+            localize('src.Merge.success', 'It worked ')
             + rotina + " [" + value + "]"
         );
         validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);

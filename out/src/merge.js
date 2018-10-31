@@ -65,7 +65,7 @@ class MergeAdvpl {
             //guarda objeto this
             let objeto = this;
             //verifica se não está numa branch controlada
-            if (objeto.branchesControladas.indexOf(branchAtual.toUpperCase()) === 0) {
+            if (objeto.branchesControladas.indexOf(branchAtual.toUpperCase()) !== -1) {
                 vscode.window.showErrorMessage(localize(0, null));
                 return;
             }

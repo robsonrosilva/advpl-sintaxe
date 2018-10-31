@@ -13,7 +13,7 @@ const localize = nls.loadMessageBundle();
 export function activate(context: vscode.ExtensionContext) {
     let validaAdvpl = new ValidaAdvpl();
 
-    vscode.window.showInformationMessage(localize('src.extension.activeMessage','Starting ADVPL analytics!'));
+    vscode.window.showInformationMessage(localize('src.extension.activeMessage','Active ADVPL Validation!'));
     vscode.workspace.onDidChangeTextDocument(validaFonte);
 
     //Adiciona comando de envia para Validação

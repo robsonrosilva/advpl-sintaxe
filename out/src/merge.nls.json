@@ -1,11 +1,11 @@
 {
 	"messages": [
-		"Essa branch não pode ser utilizada para para Merge!",
-		"Publique sua branche antes de mergeá-la!",
-		"Merge de finalizado ",
-		"Merge não realizado, existem arquivos não commitados!",
-		"Merge não realizado, existem arquivos não commitados!",
-		"Funcionou "
+		"This branch can not be used to merge!",
+		"Post your branche before you merge it!",
+		"Merge of finalized ",
+		"Merge not done, there are uncommitted files!",
+		"Merge not done, there are uncommitted files!",
+		"It worked "
 	],
 	"keys": [
 		"src.Merge.noBranchMerge",
