@@ -1,8 +1,8 @@
 {
-    "name": "advpl-sintax-poupex",
+    "name": "advpl-sintax",
     "displayName": "ADVPL Análise, Snippets e GIT",
     "description": "Extensão de análise de qualidade e sintaxe e snippets ADVPL e que facilita a utilização do GIT.",
-    "version": "0.5.2",
+    "version": "0.5.3",
     "publisher": "robsonrosilva",
     "icon": "images/icone.png",
     "engines": {
@@ -10,10 +10,10 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/robsonrosilva/advpl-sintax.git"
+        "url": "https://github.com/robsonrosilva/advpl-sintaxe.git"
     },
     "bugs": {
-        "url": "https://github.com/robsonrosilva/advpl-sintax/issues"
+        "url": "https://github.com/robsonrosilva/advpl-sintaxe/issues"
     },
     "galleryBanner": {
         "color": "#1E81C1",
@@ -29,78 +29,78 @@
     "contributes": {
         "commands": [
             {
-                "command": "advpl-sintax.gitValidacao",
-                "title": "%advpl-sintax.commands.git.teste%"
+                "command": "advpl-sintaxe.gitValidacao",
+                "title": "%advpl-sintaxe.commands.git.teste%"
             },
             {
-                "command": "advpl-sintax.gitRelease",
-                "title": "%advpl-sintax.commands.git.homologacao%"
+                "command": "advpl-sintaxe.gitRelease",
+                "title": "%advpl-sintaxe.commands.git.homologacao%"
             },
             {
-                "command": "advpl-sintax.gitMaster",
-                "title": "%advpl-sintax.commands.git.producao%"
+                "command": "advpl-sintaxe.gitMaster",
+                "title": "%advpl-sintaxe.commands.git.producao%"
             },
             {
-                "command": "advpl-sintax.validaProjeto",
-                "title": "%advpl-sintax.commands.validacao.projeto%"
+                "command": "advpl-sintaxe.validaProjeto",
+                "title": "%advpl-sintaxe.commands.validacao.projeto%"
             },
             {
-                "command": "advpl-sintax.analisaTags",
-                "title": "%advpl-sintax.commands.validacao.tags%"
+                "command": "advpl-sintaxe.analisaTags",
+                "title": "%advpl-sintaxe.commands.validacao.tags%"
             }
         ],
         "configuration": {
             "type": "object",
-            "title": "%advpl-sintax.configuration.title%",
+            "title": "%advpl-sintaxe.configuration.title%",
             "properties": {
-                "advpl-sintax": {
+                "advpl-sintaxe": {
                     "type": "object",
                     "default": {},
-                    "description": "%advpl-sintax.configuration.properties.description%",
+                    "description": "%advpl-sintaxe.configuration.properties.description%",
                     "properties": {
                         "branchTeste": {
                             "type": "string",
                             "default": "V11_Validacao",
-                            "description": "%advpl-sintax.configuration.properties.branchTeste%"
+                            "description": "%advpl-sintaxe.configuration.properties.branchTeste%"
                         },
                         "branchHomologacao": {
                             "type": "string",
                             "default": "V11_Release",
-                            "description": "%advpl-sintax.configuration.properties.branchHomologacao%"
+                            "description": "%advpl-sintaxe.configuration.properties.branchHomologacao%"
                         },
                         "branchProducao": {
                             "type": "string",
                             "default": "master",
-                            "description": "%advpl-sintax.configuration.properties.branchProducao%"
+                            "description": "%advpl-sintaxe.configuration.properties.branchProducao%"
                         },
                         "ownerDb": {
                             "type": "array",
                             "default": [],
-                            "description": "%advpl-sintax.configuration.properties.ownerDb%",
+                            "description": "%advpl-sintaxe.configuration.properties.ownerDb%",
                             "items": {
                                 "type": "string",
                                 "default": "PROTHEUS",
-                                "description": "%advpl-sintax.configuration.properties.ownerDb.items%"
+                                "description": "%advpl-sintaxe.configuration.properties.ownerDb.items%"
                             }
                         },
                         "empresas": {
                             "type": "array",
                             "default": [],
-                            "description": "%advpl-sintax.configuration.properties.empresas%",
+                            "description": "%advpl-sintaxe.configuration.properties.empresas%",
                             "items": {
                                 "type": "string",
                                 "default": "01",
-                                "description": "%advpl-sintax.configuration.properties.empresas.items%"
+                                "description": "%advpl-sintaxe.configuration.properties.empresas.items%"
                             }
                         },
                         "comentFontPad": {
                             "type": "array",
                             "default": [],
-                            "description": "%advpl-sintax.configuration.properties.comentFontPad%",
+                            "description": "%advpl-sintaxe.configuration.properties.comentFontPad%",
                             "items": {
                                 "type": "string",
                                 "default": "",
-                                "description": "%advpl-sintax.configuration.properties.comentFontPad.items%"
+                                "description": "%advpl-sintaxe.configuration.properties.comentFontPad.items%"
                             }
                         }
                     }

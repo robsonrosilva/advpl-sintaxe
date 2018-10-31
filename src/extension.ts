@@ -18,7 +18,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     //Adiciona comando de envia para Validação
     context.subscriptions.push(
-        vscode.commands.registerCommand('advpl-sintax.gitValidacao', () => {
+        vscode.commands.registerCommand('advpl-sintaxe.gitValidacao', () => {
             let mergeAdvpl = new MergeAdvpl(false);
             let branchAtual = mergeAdvpl.repository.headLabel;
             try {
@@ -32,7 +32,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
     //Adiciona comando de envia para Release
     context.subscriptions.push(
-        vscode.commands.registerCommand('advpl-sintax.gitRelease', () => {
+        vscode.commands.registerCommand('advpl-sintaxe.gitRelease', () => {
             let mergeAdvpl = new MergeAdvpl(false);
             let branchAtual = mergeAdvpl.repository.headLabel;
             try {
@@ -46,7 +46,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
     //Adiciona comando de envia para master
     context.subscriptions.push(
-        vscode.commands.registerCommand('advpl-sintax.gitMaster', () => {
+        vscode.commands.registerCommand('advpl-sintaxe.gitMaster', () => {
             let mergeAdvpl = new MergeAdvpl(false);
             let branchAtual = mergeAdvpl.repository.headLabel;
             try {
@@ -60,7 +60,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
     //Adiciona comando de envia para master
     context.subscriptions.push(
-        vscode.commands.registerCommand('advpl-sintax.validaProjeto', () => {
+        vscode.commands.registerCommand('advpl-sintaxe.validaProjeto', () => {
             let mergeAdvpl = new MergeAdvpl(true);
             try {
                 validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);
@@ -71,7 +71,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
     //Adiciona comando de envia para master
     context.subscriptions.push(
-        vscode.commands.registerCommand('advpl-sintax.analisaTags', () => {
+        vscode.commands.registerCommand('advpl-sintaxe.analisaTags', () => {
             let mergeAdvpl = new MergeAdvpl(true);
             let branchAtual = mergeAdvpl.repository.headLabel;
             try {

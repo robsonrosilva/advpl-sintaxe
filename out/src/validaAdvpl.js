@@ -23,7 +23,7 @@ function vscodeFindFilesSync() {
 }
 class ValidaAdvpl {
     constructor() {
-        this.comentFontPad = vscode.workspace.getConfiguration("advpl-sintax").get("comentFontPad");
+        this.comentFontPad = vscode.workspace.getConfiguration("advpl-sintaxe").get("comentFontPad");
         this.aErros = [];
         this.includes = [];
         this.fontes = [];
@@ -32,7 +32,7 @@ class ValidaAdvpl {
         this.information = 0;
         this.hint = 0;
         this.versao = "";
-        let extensao = vscode.extensions.getExtension("robsonrosilva.advpl-sintax-poupex");
+        let extensao = vscode.extensions.getExtension("robsonrosilva.advpl-sintaxe");
         if (extensao) {
             this.versao = extensao.packageJSON.version;
         }
@@ -137,11 +137,11 @@ class ValidaAdvpl {
         let objeto = this;
         let conteudoSComentario = "";
         //Busca Configurações do Settings
-        let ownerDb = vscode.workspace.getConfiguration("advpl-sintax").get("ownerDb");
+        let ownerDb = vscode.workspace.getConfiguration("advpl-sintaxe").get("ownerDb");
         if (!ownerDb) {
             ownerDb = ['PROTHEUS'];
         }
-        let empresas = vscode.workspace.getConfiguration("advpl-sintax").get("empresas");
+        let empresas = vscode.workspace.getConfiguration("advpl-sintaxe").get("empresas");
         if (!empresas) {
             empresas = ['01', '02'];
         }

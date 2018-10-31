@@ -1,13 +1,13 @@
 # Leia-me
 ## Visual Studio Code ADVPL Análise e GIT
  
-Esta extensão adiciona no visual code [VsCode MarketPlace](https://marketplace.visualstudio.com/items?itemName=robsonrosilva.advpl-sintax-poupex):
+Esta extensão adiciona no visual code [VsCode MarketPlace](https://marketplace.visualstudio.com/items?itemName=robsonrosilva.advpl-sintaxe):
 - Snippets da linguagem.
 - Funcionalidades para promover os desenvolvimentos utilizando git de forma a enviar para homologação e produção de forma simples, gerando TAGS ao mergear para a branch de produção.
 - Análise de qualidade e sintaxe de programas ADVPL.
 - Comando para análise de evolução de qualidade por TAGS.
 
-Caso você encontre algum problema ou queira dar alguma sugestão de melhoria, por favor abra uma issue no [GitHub](https://github.com/robsonrosilva/advpl-sintax/issues). 
+Caso você encontre algum problema ou queira dar alguma sugestão de melhoria, por favor abra uma issue no [GitHub](https://github.com/robsonrosilva/advpl-sintaxe/issues). 
 
 # Instalação
 1. Intalação Visual Studio Code 0.10.1 ou superior
@@ -82,6 +82,9 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
  * **WsResponseFalseREST** - Retorno negativo para a operação para WebServices REST.
 
 ## Release Notes
+### 0.5.3  - 2018-10-31
+- Inicio de internacionalização para inglês.
+
 ### 0.5.2  - 2018-10-27
 - Correção de Internacionalização na descrição, de forma paleativa.
 
@@ -214,6 +217,6 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
 - Foi implementada a Validação de fontes básica e os merges.
 
 # Código
-[Github](https://github.com/robsonrosilva/advpl-sintax)
+[Github](https://github.com/robsonrosilva/advpl-sintaxe)
 
 ** Enjoy!**

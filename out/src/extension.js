@@ -22,7 +22,7 @@ function activate(context) {
     vscode.window.showInformationMessage(localize(0, null));
     vscode.workspace.onDidChangeTextDocument(validaFonte);
     //Adiciona comando de envia para Validação
-    context.subscriptions.push(vscode.commands.registerCommand('advpl-sintax.gitValidacao', () => {
+    context.subscriptions.push(vscode.commands.registerCommand('advpl-sintaxe.gitValidacao', () => {
         let mergeAdvpl = new Merge_1.MergeAdvpl(false);
         let branchAtual = mergeAdvpl.repository.headLabel;
         try {
@@ -35,7 +35,7 @@ function activate(context) {
         validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);
     }));
     //Adiciona comando de envia para Release
-    context.subscriptions.push(vscode.commands.registerCommand('advpl-sintax.gitRelease', () => {
+    context.subscriptions.push(vscode.commands.registerCommand('advpl-sintaxe.gitRelease', () => {
         let mergeAdvpl = new Merge_1.MergeAdvpl(false);
         let branchAtual = mergeAdvpl.repository.headLabel;
         try {
@@ -48,7 +48,7 @@ function activate(context) {
         validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);
     }));
     //Adiciona comando de envia para master
-    context.subscriptions.push(vscode.commands.registerCommand('advpl-sintax.gitMaster', () => {
+    context.subscriptions.push(vscode.commands.registerCommand('advpl-sintaxe.gitMaster', () => {
         let mergeAdvpl = new Merge_1.MergeAdvpl(false);
         let branchAtual = mergeAdvpl.repository.headLabel;
         try {
@@ -61,7 +61,7 @@ function activate(context) {
         validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);
     }));
     //Adiciona comando de envia para master
-    context.subscriptions.push(vscode.commands.registerCommand('advpl-sintax.validaProjeto', () => {
+    context.subscriptions.push(vscode.commands.registerCommand('advpl-sintaxe.validaProjeto', () => {
         let mergeAdvpl = new Merge_1.MergeAdvpl(true);
         try {
             validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);
@@ -71,7 +71,7 @@ function activate(context) {
         }
     }));
     //Adiciona comando de envia para master
-    context.subscriptions.push(vscode.commands.registerCommand('advpl-sintax.analisaTags', () => {
+    context.subscriptions.push(vscode.commands.registerCommand('advpl-sintaxe.analisaTags', () => {
         let mergeAdvpl = new Merge_1.MergeAdvpl(true);
         let branchAtual = mergeAdvpl.repository.headLabel;
         try {

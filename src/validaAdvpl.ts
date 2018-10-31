@@ -25,7 +25,7 @@ export class ValidaAdvpl {
     public fontes: Fonte[];
 
     constructor() {
-        this.comentFontPad = vscode.workspace.getConfiguration("advpl-sintax").get("comentFontPad");
+        this.comentFontPad = vscode.workspace.getConfiguration("advpl-sintaxe").get("comentFontPad");
         this.aErros = [];
         this.includes = [];
         this.fontes = [];
@@ -34,7 +34,7 @@ export class ValidaAdvpl {
         this.information = 0;
         this.hint = 0;
         this.versao = "";
-        let extensao = vscode.extensions.getExtension("robsonrosilva.advpl-sintax-poupex");
+        let extensao = vscode.extensions.getExtension("robsonrosilva.advpl-sintaxe");
         if (extensao) {
             this.versao = extensao.packageJSON.version;
         }
@@ -145,11 +145,11 @@ export class ValidaAdvpl {
         let objeto = this;
         let conteudoSComentario = "";
         //Busca Configurações do Settings
-        let ownerDb = vscode.workspace.getConfiguration("advpl-sintax").get("ownerDb") as Array<string>;
+        let ownerDb = vscode.workspace.getConfiguration("advpl-sintaxe").get("ownerDb") as Array<string>;
         if (!ownerDb) {
             ownerDb = ['PROTHEUS'];
         }
-        let empresas = vscode.workspace.getConfiguration("advpl-sintax").get("empresas") as Array<string>;
+        let empresas = vscode.workspace.getConfiguration("advpl-sintaxe").get("empresas") as Array<string>;
         if (!empresas) {
             empresas = ['01', '02'];
         }

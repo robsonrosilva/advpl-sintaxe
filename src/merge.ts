@@ -30,15 +30,15 @@ export class MergeAdvpl {
     public repository: any;
     constructor(forca: boolean) {
         //Busca Configurações do Settings
-        this.branchTeste = vscode.workspace.getConfiguration("advpl-sintax").get("branchTeste") as string;
+        this.branchTeste = vscode.workspace.getConfiguration("advpl-sintaxe").get("branchTeste") as string;
         if (!this.branchTeste) {
             this.branchTeste = 'V11_Validacao';
         }
-        this.branchHomol = vscode.workspace.getConfiguration("advpl-sintax").get("branchHomologacao") as string;
+        this.branchHomol = vscode.workspace.getConfiguration("advpl-sintaxe").get("branchHomologacao") as string;
         if (!this.branchHomol) {
             this.branchHomol = 'V11_Release';
         }
-        this.branchProdu = vscode.workspace.getConfiguration("advpl-sintax").get("branchProducao") as string;
+        this.branchProdu = vscode.workspace.getConfiguration("advpl-sintaxe").get("branchProducao") as string;
         if (!this.branchProdu) {
             this.branchProdu = 'master';
         }

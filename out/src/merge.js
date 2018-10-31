@@ -42,15 +42,15 @@ function gitPullSync(repository) {
 class MergeAdvpl {
     constructor(forca) {
         //Busca Configurações do Settings
-        this.branchTeste = vscode.workspace.getConfiguration("advpl-sintax").get("branchTeste");
+        this.branchTeste = vscode.workspace.getConfiguration("advpl-sintaxe").get("branchTeste");
         if (!this.branchTeste) {
             this.branchTeste = 'V11_Validacao';
         }
-        this.branchHomol = vscode.workspace.getConfiguration("advpl-sintax").get("branchHomologacao");
+        this.branchHomol = vscode.workspace.getConfiguration("advpl-sintaxe").get("branchHomologacao");
         if (!this.branchHomol) {
             this.branchHomol = 'V11_Release';
         }
-        this.branchProdu = vscode.workspace.getConfiguration("advpl-sintax").get("branchProducao");
+        this.branchProdu = vscode.workspace.getConfiguration("advpl-sintaxe").get("branchProducao");
         if (!this.branchProdu) {
             this.branchProdu = 'master';
         }
