@@ -1,6 +1,6 @@
 {
 	"src.ValidaAdvpl.finish":"End of Project Review!",
-	"src.ValidaAdvpl.queryNoEmbedded":"Use of Query IMPROPER without Embedded SQL.! \ n Use: BeginSQL ... EndSQL.",
+	"src.ValidaAdvpl.queryNoEmbedded":"Use of Query IMPROPER without Embedded SQL.! \n Use: BeginSQL ... EndSQL.",
 	"src.ValidaAdvpl.deleteFrom":"Use not allowed use of DELETE FROM!",
 	"src.ValidaAdvpl.msgBox":"This feature has been deprecated in Protheus 12, use MessageBox()!",
 	"src.ValidaAdvpl.folMes": "This parameter has been deprecated in the Protheus 12!",
