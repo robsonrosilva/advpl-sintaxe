@@ -156,8 +156,6 @@ export class ValidaAdvpl {
 
         let linhas = texto.split("\n");
         //Pega as linhas do documento ativo e separa o array por linha
-        //Limpa as mensagens do colection
-        collection.delete(uri);
 
         let comentFuncoes = new Array();
         let funcoes = new Array();
@@ -243,7 +241,9 @@ export class ValidaAdvpl {
                 conteudoSComentario = conteudoSComentario + linhaClean + "\n";
 
                 //verifica se é função e adiciona no array
-                if (linhaClean.search(/(STATIC|USER|)+(\ |\t)+FUNCTION+(\ |\t)/) !== -1) {
+                if (linhaClean.search(/(STATIC|USER|)+(\ |\t)+FUNCTION+(\ |\t)/) !== -1 &&
+                    linhaClean.trim().split("\ ")[0].match(/STATIC|USER|FUNCTION/)
+                ) {
                     //reseta todas as ariáveis de controle pois está fora de qualquer função
                     cBeginSql = false;
                     FromQuery = false;
@@ -514,6 +514,8 @@ export class ValidaAdvpl {
         let oInclude = new Include();
         oInclude.valida(objeto, conteudoSComentario);
 
+        //Limpa as mensagens do colection
+        collection.delete(uri);
         collection.set(uri, objeto.aErros);
         //Conta os erros por tipo e totaliza no objeto
         objeto.aErros.forEach((erro: vscode.Diagnostic) => {
