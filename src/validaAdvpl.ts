@@ -1,10 +1,10 @@
+import { Fonte, Tipos } from './Fonte';
+import * as nls from 'vscode-nls';
+let localize = nls.config({"messageFormat": nls.MessageFormat.file})();
+
 import * as vscode from 'vscode';
 import * as fileSystem from 'fs';
 import { Include } from './Include';
-import { Fonte, Tipos } from './Fonte';
-import * as nls from 'vscode-nls';
-
-const localize = nls.loadMessageBundle();
 
 //Cria um colection para os erros ADVPL
 const collection = vscode.languages.createDiagnosticCollection('advpl');
@@ -176,7 +176,7 @@ export class ValidaAdvpl {
                 ProtheusDoc = false;
             }
             //verifica se é protheusDoc
-            if (linha.search("\\/\\*\\/\\{PROTHEUS\\.DOC\\}") !== -1) {
+            if (linha.search(/\/\*\/+( |)+\{PROTHEUS\.DOC\}/) !== -1) {
                 ProtheusDoc = true;
                 //reseta todas as ariáveis de controle pois se entrou em ProtheusDoc está fora de qualquer função
                 cBeginSql = false;
@@ -185,7 +185,7 @@ export class ValidaAdvpl {
                 cSelect = false;
                 //verifica se é um comentário de função e adiciona no array
                 comentFuncoes.push(
-                    [linha.trim().replace("/*/{PROTHEUS.DOC}", "").trim().toLocaleUpperCase(), key]
+                    [linha.trim().replace(/\/\*\/+( |)+\{PROTHEUS\.DOC\}/, "").trim().toLocaleUpperCase(), key]
                 );
             }
 

@@ -8,10 +8,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const nls = require("vscode-nls");
+let localize = nls.loadMessageBundle();
 const vscode = require("vscode");
 const ValidaAdvpl_1 = require("./ValidaAdvpl");
-const nls = require("vscode-nls");
-const localize = nls.loadMessageBundle(__filename);
 //Criação sincrona de funções do git
 function gitCheckoutSync(objeto, destino) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -66,13 +66,13 @@ class MergeAdvpl {
             let objeto = this;
             //verifica se não está numa branch controlada
             if (objeto.branchesControladas.indexOf(branchAtual.toUpperCase()) !== -1) {
-                vscode.window.showErrorMessage(localize(0, null));
+                vscode.window.showErrorMessage(localize('src.Merge.noBranchMerge', 'This branch can not be used to merge!'));
                 return;
             }
             else {
                 //Trata quando a branche ainda não subiu para o GIT
                 if (!repository.HEAD.upstream) {
-                    vscode.window.showErrorMessage(localize(1, null));
+                    vscode.window.showErrorMessage(localize('src.Merge.noPush', 'Post your branche before you merge it!'));
                     return;
                 }
                 yield gitPushSync(repository);
@@ -132,7 +132,7 @@ class MergeAdvpl {
                     objeto.merge(repository, branchAtual, objeto.branchProdu, false, false);
                 }
                 else {
-                    objeto.sucesso("", localize(2, null) + branchAtual + " -> " + branchdestino + ".");
+                    objeto.sucesso("", localize('src.Merge.mergeFinish', "Merge of finalized ") + branchAtual + " -> " + branchdestino + ".");
                 }
             }
         });
@@ -180,7 +180,7 @@ class MergeAdvpl {
                             repository.indexGroup.resourceStates.length !== 0 ||
                             repository.workingTreeGroup.resourceStates.length !== 0) &&
                             !forca) {
-                            vscode.window.showErrorMessage(localize(3, null));
+                            vscode.window.showErrorMessage(localize('src.Merge.noCommited', "Merge not done, there are uncommitted files!"));
                             return;
                         }
                         return repository;
@@ -191,7 +191,7 @@ class MergeAdvpl {
                         if (repository.mergeGroup.resourceStates.length !== 0 ||
                             repository.indexGroup.resourceStates.length !== 0 ||
                             repository.workingTreeGroup.resourceStates.length !== 0) {
-                            vscode.window.showErrorMessage(localize(4, null));
+                            vscode.window.showErrorMessage(localize('src.Merge.noCommited', "Merge not done, there are uncommitted files!"));
                             return;
                         }
                         return repository;
@@ -202,7 +202,7 @@ class MergeAdvpl {
     }
     sucesso(value, rotina) {
         let validaAdvpl = new ValidaAdvpl_1.ValidaAdvpl();
-        vscode.window.showInformationMessage(localize(5, null)
+        vscode.window.showInformationMessage(localize('src.Merge.success', 'It worked ')
             + rotina + " [" + value + "]");
         validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);
     }
@@ -213,5 +213,4 @@ class MergeAdvpl {
     }
 }
 exports.MergeAdvpl = MergeAdvpl;
-
-//# sourceMappingURL=merge.js.map
+//# sourceMappingURL=Merge.js.map

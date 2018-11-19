@@ -1,0 +1,19 @@
+{
+	"messages": [
+		"This branch can not be used to merge!",
+		"Post your branche before you merge it!",
+		"Merge of finalized ",
+		"Merge not done, there are uncommitted files!",
+		"Merge not done, there are uncommitted files!",
+		"It worked "
+	],
+	"keys": [
+		"src.Merge.noBranchMerge",
+		"src.Merge.noPush",
+		"src.Merge.mergeFinish",
+		"src.Merge.noCommited",
+		"src.Merge.noCommited",
+		"src.Merge.success"
+	],
+	"filePath": "src\\merge"
+}

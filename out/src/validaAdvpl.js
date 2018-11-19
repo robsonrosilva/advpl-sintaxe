@@ -8,12 +8,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const Fonte_1 = require("./Fonte");
+const nls = require("vscode-nls");
+let localize = nls.config({ "messageFormat": nls.MessageFormat.file })();
 const vscode = require("vscode");
 const fileSystem = require("fs");
 const Include_1 = require("./Include");
-const Fonte_1 = require("./Fonte");
-const nls = require("vscode-nls");
-const localize = nls.loadMessageBundle(__filename);
 //Cria um colection para os erros ADVPL
 const collection = vscode.languages.createDiagnosticCollection('advpl');
 function vscodeFindFilesSync() {
@@ -73,7 +73,7 @@ class ValidaAdvpl {
                 }
                 //Se for o último arquivo verifica se deve gravar no arquivo LOG
                 if (!fileContent && file === files[files.length - 1]) {
-                    vscode.window.showInformationMessage(localize(0, null));
+                    vscode.window.showInformationMessage(localize('src.ValidaAdvpl.finish', 'End of Project Review!'));
                 }
                 else if (fileContent && file === files[files.length - 1]) {
                     fileContent = fileContent.replace(tag + "\t\t\t\t\n", objeto.padTag(tag, tags) + "\t" +
@@ -166,7 +166,7 @@ class ValidaAdvpl {
                 ProtheusDoc = false;
             }
             //verifica se é protheusDoc
-            if (linha.search("\\/\\*\\/\\{PROTHEUS\\.DOC\\}") !== -1) {
+            if (linha.search(/\/\*\/+( |)+\{PROTHEUS\.DOC\}/) !== -1) {
                 ProtheusDoc = true;
                 //reseta todas as ariáveis de controle pois se entrou em ProtheusDoc está fora de qualquer função
                 cBeginSql = false;
@@ -174,7 +174,7 @@ class ValidaAdvpl {
                 JoinQuery = false;
                 cSelect = false;
                 //verifica se é um comentário de função e adiciona no array
-                comentFuncoes.push([linha.trim().replace("/*/{PROTHEUS.DOC}", "").trim().toLocaleUpperCase(), key]);
+                comentFuncoes.push([linha.trim().replace(/\/\*\/+( |)+\{PROTHEUS\.DOC\}/, "").trim().toLocaleUpperCase(), key]);
             }
             //verifica se a linha está toda comentada
             let posComentLinha = linha.search(/\/\//);
@@ -280,18 +280,18 @@ class ValidaAdvpl {
                 if (!cBeginSql &&
                     (linha.search(/(\ |\t|\'|\"|)+DBUSEAREA+(\ |\t|)+\(+.+TOPCONN+.+TCGENQRY/) !== -1 ||
                         linhaClean.search(/TCQUERY+(\ |\t)/) !== -1)) {
-                    objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0), localize(1, null), vscode.DiagnosticSeverity.Warning));
+                    objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0), localize('src.ValidaAdvpl.queryNoEmbedded', 'Use of Query IMPROPER without Embedded SQL.! \n Use: BeginSQL ... EndSQL.'), vscode.DiagnosticSeverity.Warning));
                     FromQuery = false;
                     cSelect = false;
                 }
                 if (linha.search(/(\ |\t|\'|\")+DELETE+(\ |\t)+FROM+(\ |\t)/) !== -1) {
-                    objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0), localize(2, null), vscode.DiagnosticSeverity.Warning));
+                    objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0), localize('src.ValidaAdvpl.deleteFrom', 'Use not allowed use of DELETE FROM!'), vscode.DiagnosticSeverity.Warning));
                 }
                 if (linhaClean.search(/MSGBOX\(/) !== -1) {
-                    objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0), localize(3, null), vscode.DiagnosticSeverity.Information));
+                    objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0), localize('src.ValidaAdvpl.msgBox', 'This feature has been deprecated in Protheus 12, use MessageBox()!'), vscode.DiagnosticSeverity.Information));
                 }
                 if (linha.search(/GETMV\(+(\ |\t|)+(\"|\')+MV_FOLMES+(\"|\')+(\ |\t|)\)/) !== -1) {
-                    objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0), localize(4, null), vscode.DiagnosticSeverity.Information));
+                    objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0), localize('src.ValidaAdvpl.folMes', 'This parameter has been deprecated in the Protheus 12!'), vscode.DiagnosticSeverity.Information));
                 }
                 if (linha.search("\\<\\<\\<\\<\\<\\<\\<\\ HEAD") !== -1) {
                     //Verifica linha onde terminou o conflito
@@ -301,13 +301,13 @@ class ValidaAdvpl {
                             nFim = key2;
                         }
                     }
-                    objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(nFim), 0), localize(5, null), vscode.DiagnosticSeverity.Error));
+                    objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(nFim), 0), localize('src.ValidaAdvpl.conflictMerge', 'There are merge conflicts, evaluate before continuing!'), vscode.DiagnosticSeverity.Error));
                 }
                 if (linha.search(/(\ |\t|\'|\"|)+SELECT+(\ |\t)/) !== -1 && linha.search("\\ \\*\\ ") !== -1) {
-                    objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0), localize(6, null), vscode.DiagnosticSeverity.Warning));
+                    objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0), localize('src.ValidaAdvpl.selectAll', 'Use not allowed use of SELECT with asterisk \n "*".!'), vscode.DiagnosticSeverity.Warning));
                 }
                 if (linha.search("CHR\\(13\\)") !== -1 && linha.search("CHR\\(10\\)") !== -1) {
-                    objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0), localize(7, null), vscode.DiagnosticSeverity.Warning));
+                    objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0), localize('src.ValidaAdvpl.crlf', 'It is recommended to use the expression CRLF.'), vscode.DiagnosticSeverity.Warning));
                 }
                 if (cSelect && linha.search("FROM") !== -1) {
                     FromQuery = true;
@@ -324,9 +324,9 @@ class ValidaAdvpl {
                 //Implementação para aceitar vários bancos de dados
                 ownerDb.forEach(banco => {
                     if (cSelect && FromQuery && linha.search(banco) !== -1) {
-                        objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0), localize(8, null)
+                        objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0), localize('src.ValidaAdvpl.noSchema', 'Use not allowed use of SHEMA ')
                             + banco +
-                            localize(9, null), vscode.DiagnosticSeverity.Error));
+                            localize('src.ValidaAdvpl.inQuery', ' in Query.'), vscode.DiagnosticSeverity.Error));
                     }
                 });
                 if (cSelect && (FromQuery || JoinQuery || linha.search("SET") !== -1) &&
@@ -339,7 +339,7 @@ class ValidaAdvpl {
                         let palavras = linha.replace(/\r/g, "").replace(/\t/g, "").split(" ");
                         palavras.forEach(palavra => {
                             if (palavra.search(empresa + "0") !== -1 && palavra.length === 6) {
-                                objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0), localize(10, null), vscode.DiagnosticSeverity.Error));
+                                objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0), localize('src.ValidaAdvpl.tableFixed', 'NOT ALLOWED Table in Query.'), vscode.DiagnosticSeverity.Error));
                             }
                         });
                     });
@@ -348,7 +348,7 @@ class ValidaAdvpl {
                     JoinQuery = false;
                 }
                 if (linhaClean.search(/CONOUT\(/) !== -1) {
-                    objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0), localize(11, null), vscode.DiagnosticSeverity.Warning));
+                    objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0), localize('src.ValidaAdvpl.conout', 'Use not allowed use of Conout. => Using the Default Log API (FWLogMsg).'), vscode.DiagnosticSeverity.Warning));
                 }
                 //recomendação para melhorar identificação de problemas em queryes
                 if ((linha.match(/(\ |\t|)+SELECT+(\ |\t)/) ||
@@ -367,7 +367,7 @@ class ValidaAdvpl {
                         addErro = addErro || linha.search("\\ " + item) !== -1;
                     });
                     if (addErro) {
-                        objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0), localize(12, null) +
+                        objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0), localize('src.ValidaAdvpl.bestAnalitc', 'To improve the analysis of this query put in different lines the clauses') +
                             ' SELECT, DELETE, UPDATE, JOIN, FROM, ON, WHERE.', vscode.DiagnosticSeverity.Information));
                     }
                 }
@@ -384,7 +384,7 @@ class ValidaAdvpl {
             comentariosFonte = comentariosFonte && linha.search(cExpressao) !== -1;
         }
         if (!comentariosFonte) {
-            objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(0, 0, 0, 0), localize(13, null), vscode.DiagnosticSeverity.Information));
+            objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(0, 0, 0, 0), localize('src.ValidaAdvpl.padComment', 'Check patterns of font comments!! => Use autocomplete docFuncao.'), vscode.DiagnosticSeverity.Information));
         }
         //Validação funções sem comentários
         funcoes.forEach(funcao => {
@@ -393,7 +393,7 @@ class ValidaAdvpl {
                 achou = achou || comentario[0] === funcao[0];
             });
             if (!achou) {
-                objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(funcao[1]), 0, parseInt(funcao[1]), 0), localize(14, null), vscode.DiagnosticSeverity.Warning));
+                objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(funcao[1]), 0, parseInt(funcao[1]), 0), localize('src.ValidaAdvpl.functionNoCommented', 'Function, Class, Method or WebService not commented!'), vscode.DiagnosticSeverity.Warning));
             }
         });
         //Validação comentários sem funções
@@ -403,7 +403,7 @@ class ValidaAdvpl {
                 achou = achou || comentario[0] === funcao[0];
             });
             if (!achou) {
-                objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(comentario[1]), 0, parseInt(comentario[1]), 0), localize(15, null), vscode.DiagnosticSeverity.Warning));
+                objeto.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(comentario[1]), 0, parseInt(comentario[1]), 0), localize('src.ValidaAdvpl.CommentNoFunction', 'Function comment without function!'), vscode.DiagnosticSeverity.Warning));
             }
         });
         //Validador de includes
@@ -432,5 +432,4 @@ class ValidaAdvpl {
     }
 }
 exports.ValidaAdvpl = ValidaAdvpl;
-
-//# sourceMappingURL=validaAdvpl.js.map
+//# sourceMappingURL=ValidaAdvpl.js.map

@@ -1,0 +1,39 @@
+{
+	"messages": [
+		"End of Project Review!",
+		"Use of Query IMPROPER without Embedded SQL.! \n Use: BeginSQL ... EndSQL.",
+		"Use not allowed use of DELETE FROM!",
+		"This feature has been deprecated in Protheus 12, use MessageBox()!",
+		"This parameter has been deprecated in the Protheus 12!",
+		"There are merge conflicts, evaluate before continuing!",
+		"Use not allowed use of SELECT with asterisk \n \"*\".!",
+		"It is recommended to use the expression CRLF.",
+		"Use not allowed use of SHEMA ",
+		" in Query.",
+		"NOT ALLOWED Table in Query.",
+		"Use not allowed use of Conout. => Using the Default Log API (FWLogMsg).",
+		"To improve the analysis of this query put in different lines the clauses",
+		"Check patterns of font comments!! => Use autocomplete docFuncao.",
+		"Function, Class, Method or WebService not commented!",
+		"Function comment without function!"
+	],
+	"keys": [
+		"src.ValidaAdvpl.finish",
+		"src.ValidaAdvpl.queryNoEmbedded",
+		"src.ValidaAdvpl.deleteFrom",
+		"src.ValidaAdvpl.msgBox",
+		"src.ValidaAdvpl.folMes",
+		"src.ValidaAdvpl.conflictMerge",
+		"src.ValidaAdvpl.selectAll",
+		"src.ValidaAdvpl.crlf",
+		"src.ValidaAdvpl.noSchema",
+		"src.ValidaAdvpl.inQuery",
+		"src.ValidaAdvpl.tableFixed",
+		"src.ValidaAdvpl.conout",
+		"src.ValidaAdvpl.bestAnalitc",
+		"src.ValidaAdvpl.padComment",
+		"src.ValidaAdvpl.functionNoCommented",
+		"src.ValidaAdvpl.CommentNoFunction"
+	],
+	"filePath": "src\\validaAdvpl"
+}

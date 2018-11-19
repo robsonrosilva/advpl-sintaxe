@@ -24,5 +24,4 @@ class Funcao {
     }
 }
 exports.Funcao = Funcao;
-
 //# sourceMappingURL=Fonte.js.map

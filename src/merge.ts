@@ -1,8 +1,8 @@
+import * as nls from 'vscode-nls';
+let localize = nls.loadMessageBundle();
+
 import * as vscode from 'vscode';
 import { ValidaAdvpl } from './ValidaAdvpl';
-import * as nls from 'vscode-nls';
-
-const localize = nls.loadMessageBundle();
 
 //Criação sincrona de funções do git
 async function gitCheckoutSync(objeto: MergeAdvpl, destino: string) {

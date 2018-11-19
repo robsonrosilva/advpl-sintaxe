@@ -1,0 +1,9 @@
+{
+	"messages": [
+		"Active ADVPL Validation!"
+	],
+	"keys": [
+		"src.extension.activeMessage"
+	],
+	"filePath": "src\\extension"
+}

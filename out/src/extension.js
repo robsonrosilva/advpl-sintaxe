@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -8,18 +8,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const nls = require("vscode-nls");
+let localize = nls.loadMessageBundle();
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 const vscode = require("vscode");
 const ValidaAdvpl_1 = require("./ValidaAdvpl");
 const Merge_1 = require("./Merge");
-const nls = require("vscode-nls");
-const localize = nls.loadMessageBundle(__filename);
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 function activate(context) {
     let validaAdvpl = new ValidaAdvpl_1.ValidaAdvpl();
-    vscode.window.showInformationMessage(localize(0, null));
+    vscode.window.showInformationMessage(localize('src.extension.activeMessage', 'Active ADVPL Validation!'));
     vscode.workspace.onDidChangeTextDocument(validaFonte);
     //Adiciona comando de envia para Validação
     context.subscriptions.push(vscode.commands.registerCommand('advpl-sintaxe.gitValidacao', () => {
@@ -96,5 +96,4 @@ function validaFonte(editor) {
 function deactivate() {
 }
 exports.deactivate = deactivate;
-
 //# sourceMappingURL=extension.js.map

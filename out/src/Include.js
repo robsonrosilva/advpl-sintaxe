@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const vscode = require("vscode");
 const nls = require("vscode-nls");
-const localize = nls.loadMessageBundle(__filename);
+let localize = nls.loadMessageBundle();
+const vscode = require("vscode");
 class Include {
     constructor() {
         this.includesObsoletos = [];
@@ -422,23 +422,23 @@ class Include {
         let includesFonte = objetoValidacao.includes.map((x) => x.include);
         let includesAnalise = this.includeExpressoes.map((x) => x.include);
         if (!objetoValidacao.includes.indexOf((x) => x.include === "TOTVS.CH")) {
-            objetoValidacao.aErros.push(new vscode.Diagnostic(new vscode.Range(0, 0, 0, 0), localize(0, null), vscode.DiagnosticSeverity.Warning));
+            objetoValidacao.aErros.push(new vscode.Diagnostic(new vscode.Range(0, 0, 0, 0), localize('src.Includes.faltaTOTVS', 'Missing TOTVS.CH !'), vscode.DiagnosticSeverity.Warning));
         }
         //Busca includes duplicados
         objetoValidacao.includes.forEach((include) => {
             //Verifica se o include é obsoleto
             if (this.includesObsoletos.indexOf(include.include) !== -1) {
-                objetoValidacao.aErros.push(new vscode.Diagnostic(new vscode.Range(include.linha, 0, include.linha, 0), localize(1, null)
+                objetoValidacao.aErros.push(new vscode.Diagnostic(new vscode.Range(include.linha, 0, include.linha, 0), localize('src.Includes.oInclude', 'The Include ')
                     + include.include +
-                    localize(2, null), vscode.DiagnosticSeverity.Warning));
+                    localize('src.Includes.SubstTOTVS', ' is obsolete, it has been replaced by TOTVS.CH!'), vscode.DiagnosticSeverity.Warning));
             }
             //Verifica se há o mesmo include em uma linha diferente do mesmo fonte
             if (objetoValidacao.includes.findIndex(function (x) {
                 return x.include === include.include && x.linha !== include.linha;
             }) !== -1) {
-                objetoValidacao.aErros.push(new vscode.Diagnostic(new vscode.Range(include.linha, 0, include.linha, 0), localize(3, null)
+                objetoValidacao.aErros.push(new vscode.Diagnostic(new vscode.Range(include.linha, 0, include.linha, 0), localize('src.Includes.oInclude', 'The Include ')
                     + include.include +
-                    localize(4, null), vscode.DiagnosticSeverity.Warning));
+                    localize('src.Includes.emDuplicidade', ' is in duplicity!'), vscode.DiagnosticSeverity.Warning));
             }
         });
         //valida necessidade de includes
@@ -452,7 +452,7 @@ class Include {
                         element.precisa = true;
                         //se não estiver na lista de includes 
                         if (includesFonte.indexOf(element.include) === -1) {
-                            objetoValidacao.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0), localize(5, null) + element.include + '!', vscode.DiagnosticSeverity.Error));
+                            objetoValidacao.aErros.push(new vscode.Diagnostic(new vscode.Range(parseInt(key), 0, parseInt(key), 0), localize('src.Includes.faltaInclude', 'Import missing include ') + element.include + '!', vscode.DiagnosticSeverity.Error));
                         }
                     }
                 });
@@ -464,15 +464,15 @@ class Include {
             let includeAnalise = this.includeExpressoes[includesAnalise.indexOf(include.include)];
             if (includeAnalise) {
                 if (!includeAnalise.precisa) {
-                    objetoValidacao.aErros.push(new vscode.Diagnostic(new vscode.Range(include.linha, 0, include.linha, 0), 'Include ' + include.include + localize(6, null), vscode.DiagnosticSeverity.Warning));
+                    objetoValidacao.aErros.push(new vscode.Diagnostic(new vscode.Range(include.linha, 0, include.linha, 0), 'Include ' + include.include + localize('src.Includes.desnecessario', ' not necessary!'), vscode.DiagnosticSeverity.Warning));
                 }
                 //Verifica se há algum include que está contido nesse INCLUDE
                 includeAnalise.includes.forEach((includeContido) => {
                     let includeAnaliseContido = objetoValidacao.includes[includesFonte.indexOf(includeContido)];
                     if (includeAnaliseContido) {
-                        objetoValidacao.aErros.push(new vscode.Diagnostic(new vscode.Range(includeAnaliseContido.linha, 0, includeAnaliseContido.linha, 0), localize(7, null) +
+                        objetoValidacao.aErros.push(new vscode.Diagnostic(new vscode.Range(includeAnaliseContido.linha, 0, includeAnaliseContido.linha, 0), localize('src.Includes.oInclude', 'The Include ') +
                             includeAnaliseContido.include +
-                            localize(8, null)
+                            localize('src.Includes.desnecessarioContido', ' unnecessary, is contained in the include ')
                             + include.include + '!', vscode.DiagnosticSeverity.Warning));
                     }
                 });
@@ -481,5 +481,4 @@ class Include {
     }
 }
 exports.Include = Include;
-
 //# sourceMappingURL=Include.js.map
