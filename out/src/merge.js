@@ -11,7 +11,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const nls = require("vscode-nls");
 let localize = nls.loadMessageBundle();
 const vscode = require("vscode");
-const ValidaAdvpl_1 = require("./ValidaAdvpl");
+const analise_advpl_1 = require("analise-advpl");
 //Criação sincrona de funções do git
 function gitCheckoutSync(objeto, destino) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -44,15 +44,18 @@ class MergeAdvpl {
         //Busca Configurações do Settings
         this.branchTeste = vscode.workspace.getConfiguration("advpl-sintaxe").get("branchTeste");
         if (!this.branchTeste) {
-            this.branchTeste = 'V11_Validacao';
+            this.falha(localize('src.Merge.noBranchTeste', 'To merge configure the Test branch!'));
+            return;
         }
         this.branchHomol = vscode.workspace.getConfiguration("advpl-sintaxe").get("branchHomologacao");
         if (!this.branchHomol) {
-            this.branchHomol = 'V11_Release';
+            this.falha(localize('src.Merge.noBranchHomolog', 'To merge configure the Homologation branch!'));
+            return;
         }
         this.branchProdu = vscode.workspace.getConfiguration("advpl-sintaxe").get("branchProducao");
         if (!this.branchProdu) {
-            this.branchProdu = 'master';
+            this.falha(localize('src.Merge.noBranchProd', 'To merge configure the Production branch!'));
+            return;
         }
         this.branchesControladas = Array();
         this.branchesControladas.push(this.branchHomol.toLocaleUpperCase.toString());
@@ -163,7 +166,7 @@ class MergeAdvpl {
             let objeto = this;
             console.log("TROCANDO PARA TAG " + tag);
             yield gitCheckoutSync(objeto, tag);
-            let validaAdvpl = new ValidaAdvpl_1.ValidaAdvpl();
+            let validaAdvpl = new analise_advpl_1.ValidaAdvpl();
             validaAdvpl.validaProjeto(nGeradas, tags, fileContent, branchAtual, objeto);
             console.log("VALIDANDO TAG " + tag);
         });
@@ -201,13 +204,13 @@ class MergeAdvpl {
         }
     }
     sucesso(value, rotina) {
-        let validaAdvpl = new ValidaAdvpl_1.ValidaAdvpl();
+        let validaAdvpl = new analise_advpl_1.ValidaAdvpl();
         vscode.window.showInformationMessage(localize('src.Merge.success', 'It worked ')
             + rotina + " [" + value + "]");
         validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);
     }
     falha(rotina) {
-        let validaAdvpl = new ValidaAdvpl_1.ValidaAdvpl();
+        let validaAdvpl = new analise_advpl_1.ValidaAdvpl();
         vscode.window.showErrorMessage('ERRO ' + rotina + "!");
         validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);
     }

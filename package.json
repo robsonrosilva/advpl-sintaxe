@@ -23,7 +23,29 @@
         "Other"
     ],
     "activationEvents": [
-        "*"
+        "onLanguage:advpl",
+        "onLanguage:4gl",
+        "onCommand:advpl.startSmartClient",
+        "onCommand:advpl.menucompile",
+        "onCommand:advpl.menucompileProjet",
+        "onCommand:advpl.menucompilemulti",
+        "onCommand:advpl.menucompiletextfile",
+        "onCommand:advpl.compile",
+        "onCommand:advpl.getProgramName",
+        "onCommand:advpl.getDebugInfos",
+        "onCommand:advpl.getAuthorizationId",
+        "onCommand:advpl.CipherPassword",
+        "onCommand:advpl.patch.apply",
+        "onCommand:advpl.patch.build",
+        "onCommand:advpl.patch.info",
+        "onCommand:advpl.monitor.getThreads",
+        "onCommand:advpl.monitor.getRpoInfos",
+        "onCommand:advpl.monitor.getRpoFunctions",
+        "onCommand:advpl.monitor.deleteSource",
+        "onCommand:advpl.monitor.defragRpo",
+        "onCommand:advpl.buildWSClient",
+        "onCommand:advpl.selectEnvironment",
+        "onUri:vscode://vscode.git/init"
     ],
     "main": "./out/src/extension",
     "contributes": {
@@ -102,6 +124,11 @@
                                 "default": "",
                                 "description": "%advpl-sintaxe.configuration.properties.comentFontPad.items%"
                             }
+                        },
+                        "validaProjeto": {
+                            "type": "boolean",
+                            "default": true,
+                            "description": "%advpl-sintaxe.configuration.properties.validaProjeto%"
                         }
                     }
                 }
@@ -141,22 +168,14 @@
     "devDependencies": {
         "@types/mocha": "^2.2.42",
         "@types/node": "^8.10.25",
-        "del": "^3.0.0",
-        "gulp": "^3.9.1",
-        "gulp-filter": "^5.0.1",
         "tslint": "^5.11.0",
         "typescript": "^2.6.1",
         "vscode": "^1.1.21",
         "vscode-nls-dev": "^3.2.3"
     },
     "dependencies": {
-        "event-stream": "^4.0.1",
+        "analise-advpl": "latest",
         "git": "^0.1.5",
-        "gulp-sourcemaps": "^2.6.4",
-        "gulp-typescript": "^5.0.0-alpha.3",
-        "run-sequence": "^2.2.1",
-        "spawn-command": "0.0.2-1",
-        "vsce": "^1.52.0",
         "vscode-nls": "^4.0.0"
     }
 }

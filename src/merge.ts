@@ -2,7 +2,7 @@ import * as nls from 'vscode-nls';
 let localize = nls.loadMessageBundle();
 
 import * as vscode from 'vscode';
-import { ValidaAdvpl } from './ValidaAdvpl';
+import { ValidaAdvpl } from 'analise-advpl';
 
 //Criação sincrona de funções do git
 async function gitCheckoutSync(objeto: MergeAdvpl, destino: string) {
@@ -32,15 +32,18 @@ export class MergeAdvpl {
         //Busca Configurações do Settings
         this.branchTeste = vscode.workspace.getConfiguration("advpl-sintaxe").get("branchTeste") as string;
         if (!this.branchTeste) {
-            this.branchTeste = 'V11_Validacao';
+            this.falha(localize('src.Merge.noBranchTeste', 'To merge configure the Test branch!'));
+            return;
         }
         this.branchHomol = vscode.workspace.getConfiguration("advpl-sintaxe").get("branchHomologacao") as string;
         if (!this.branchHomol) {
-            this.branchHomol = 'V11_Release';
+            this.falha(localize('src.Merge.noBranchHomolog', 'To merge configure the Homologation branch!'));
+            return;
         }
         this.branchProdu = vscode.workspace.getConfiguration("advpl-sintaxe").get("branchProducao") as string;
         if (!this.branchProdu) {
-            this.branchProdu = 'master';
+            this.falha(localize('src.Merge.noBranchProd', 'To merge configure the Production branch!'));
+            return;
         }
         this.branchesControladas = Array();
         this.branchesControladas.push(this.branchHomol.toLocaleUpperCase.toString());
