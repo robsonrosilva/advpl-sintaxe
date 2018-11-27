@@ -1,7 +1,0 @@
-{
-	"src.Merge.noBranchMerge":"This branch can not be used to merge!",
-	"src.Merge.noPush":"Post your branche before you merge it!",
-	"src.Merge.mergeFinish":"Merge of finalized ",
-	"src.Merge.noCommited":"Merge not done, there are uncommitted files!",
-	"src.Merge.success": "It worked "
-}

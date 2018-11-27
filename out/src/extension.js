@@ -8,10 +8,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const nls = require("vscode-nls");
-let localize = nls.loadMessageBundle();
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 const vscode = require("vscode");
 const Merge_1 = require("./Merge");
 const fileSystem = require("fs");
@@ -23,9 +19,10 @@ let comentFontPad = vscode.workspace
     .get("comentFontPad");
 if (!comentFontPad) {
     comentFontPad = [""];
-    vscode.window.showInformationMessage(localize("src.ValidaAdvpl.noCritizeComment", "The source comments will not be criticized, to critique them, create the default comment settings."));
+    vscode.window.showInformationMessage(traduz("extension.noCritizeComment"));
 }
-let validaAdvpl = new ValidaAdvpl(comentFontPad);
+const vscodeOptions = JSON.parse(process.env.VSCODE_NLS_CONFIG).locale.toLowerCase();
+let validaAdvpl = new ValidaAdvpl(comentFontPad, vscodeOptions);
 validaAdvpl.ownerDb = vscode.workspace
     .getConfiguration("advpl-sintaxe")
     .get("ownerDb");
@@ -41,7 +38,7 @@ if (!validaAdvpl.empresas) {
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 function activate(context) {
-    vscode.window.showInformationMessage(localize("src.extension.activeMessage", "Active ADVPL Validation!"));
+    vscode.window.showInformationMessage(traduz("extension.activeMessage"));
     vscode.workspace.onDidChangeTextDocument(validaFonte);
     //Adiciona comando de envia para Validação
     context.subscriptions.push(vscode.commands.registerCommand("advpl-sintaxe.gitValidacao", () => {
@@ -163,7 +160,7 @@ function validaProjeto(nGeradas = 0, tags = [], fileContent = "", branchAtual = 
             }
             //Se for o último arquivo verifica se deve gravar no arquivo LOG
             if (!fileContent && file === files[files.length - 1]) {
-                vscode.window.showInformationMessage(localize("src.ValidaAdvpl.finish", "End of Project Review!"));
+                vscode.window.showInformationMessage(traduz("extension.finish"));
             }
             else if (fileContent && file === files[files.length - 1]) {
                 fileContent = fileContent.replace(tag + "\t\t\t\t\n", validaAdvpl.padTag(tag, tags) +
@@ -174,7 +171,6 @@ function validaProjeto(nGeradas = 0, tags = [], fileContent = "", branchAtual = 
                     "\t" +
                     validaAdvpl.information +
                     "\t" +
-                    validaAdvpl.hint +
                     "\t" +
                     validaAdvpl.versao +
                     "\n");
@@ -187,5 +183,16 @@ function validaProjeto(nGeradas = 0, tags = [], fileContent = "", branchAtual = 
             }
         });
     });
+}
+function traduz(key) {
+    const vscodeOptions = JSON.parse(process.env.VSCODE_NLS_CONFIG).locale.toLowerCase();
+    let i18n = require("i18n");
+    let locales = ["en", "pt-br"];
+    i18n.configure({
+        locales: locales,
+        directory: __dirname.replace("\\out", "") + "/locales"
+    });
+    i18n.setLocale(locales.indexOf(vscodeOptions) + 1 ? vscodeOptions : "en");
+    return i18n.__(key);
 }
 //# sourceMappingURL=extension.js.map

@@ -16,5 +16,10 @@
     "advpl-sintaxe.configuration.properties.empresas": "Lista com os códigos de empresas.",
     "advpl-sintaxe.configuration.properties.empresas.items": "Códigos das empresas do Protheus para validação de queryes",
     "advpl-sintaxe.configuration.properties.comentFontPad": "Lista com as linhas de comentário de fonte.",
-    "advpl-sintaxe.configuration.properties.comentFontPad.items": "Linha do comentário de fonte. (Usar padrão de search TypeScript)"
+    "advpl-sintaxe.configuration.properties.comentFontPad.items": "Linha do comentário de fonte. (Usar padrão de search TypeScript)",
+    "advpl-sintaxe.configuration.snippets.advpl.mvc": "./i18n/ptb/snippets/advpl.mvc.json",
+    "advpl-sintaxe.configuration.snippets.advpl.treport": "./i18n/ptb/snippets/advpl.treport.json",
+    "advpl-sintaxe.configuration.snippets.advpl.webservices": "./i18n/ptb/snippets/advpl.webservices.json",
+    "advpl-sintaxe.configuration.snippets.advpl.webservicesrest": "./i18n/ptb/snippets/advpl.webservicesrest.json",
+    "advpl-sintaxe.configuration.snippets.advpl.comentarios": "./i18n/ptb/snippets/advpl.comentarios.json"
 }

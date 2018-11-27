@@ -84,6 +84,7 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
 ## Release Notes
 ### 0.6.0  
 - Foram removidos desse projeto os fontes de análise de advpl, pois segmentei em um projeto NPM. O projeto NPM visa possibilitar a análise de ADVPL via CI do GITLAB.
+- Mudança de forma de tradução.
 
 ### 0.5.5  - 2018-11-19
 - Ajuste de espaço na identificação de ProtheusDoc.

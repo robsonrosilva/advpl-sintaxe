@@ -1,0 +1,11 @@
+{
+	"merge.noBranchMerge": "This branch can not be used to merge!",
+	"merge.noPush": "Post your branche before you merge it!",
+	"merge.mergeFinish": "Merge of finalized ",
+	"merge.noCommited": "Merge not done, there are uncommitted files!",
+	"merge.success": "It worked ",
+	"extension.activeMessage": "Active ADVPL Validation!",
+	"extension.noCritizeComment": "Do not critize coments!",
+	"extension.finish": "End of Project Review!",
+	"merge.noBranch": "For merge configure branches in settings!"
+}

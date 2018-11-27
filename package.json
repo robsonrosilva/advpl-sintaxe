@@ -2,7 +2,7 @@
     "name": "advpl-sintaxe",
     "displayName": "ADVPL Análise, Snippets e GIT",
     "description": "Extensão de análise de qualidade e sintaxe e snippets ADVPL e que facilita a utilização do GIT.",
-    "version": "0.5.5",
+    "version": "0.6.1",
     "publisher": "robsonrosilva",
     "icon": "images/icone.png",
     "engines": {
@@ -137,23 +137,23 @@
         "snippets": [
             {
                 "language": "advpl",
-                "path": "./snippets/advpl.mvc.json"
+                "path": "./i18n/ptb/snippets/advpl.mvc.json"
             },
             {
                 "language": "advpl",
-                "path": "./snippets/advpl.treport.json"
+                "path": "./i18n/ptb/snippets/advpl.treport.json"
             },
             {
                 "language": "advpl",
-                "path": "./snippets/advpl.webservices.json"
+                "path": "./i18n/ptb/snippets/advpl.webservices.json"
             },
             {
                 "language": "advpl",
-                "path": "./snippets/advpl.webservicesrest.json"
+                "path": "./i18n/ptb/snippets/advpl.webservicesrest.json"
             },
             {
                 "language": "advpl",
-                "path": "./snippets/advpl.comentarios.json"
+                "path": "./i18n/ptb/snippets/advpl.comentarios.json"
             }
         ]
     },
@@ -169,13 +169,13 @@
         "@types/mocha": "^2.2.42",
         "@types/node": "^8.10.25",
         "tslint": "^5.11.0",
-        "typescript": "^2.6.1",
         "vscode": "^1.1.21",
         "vscode-nls-dev": "^3.2.3"
     },
     "dependencies": {
-        "analise-advpl": "latest",
+        "analise-advpl": "^2.0.3",
         "git": "^0.1.5",
+        "i18n": "^0.8.3",
         "vscode-nls": "^4.0.0"
     }
 }
