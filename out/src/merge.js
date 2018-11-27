@@ -245,7 +245,7 @@ function traduz(key) {
     let locales = ["en", "pt-br"];
     i18n.configure({
         locales: locales,
-        directory: __dirname.replace("\\out", "") + "/locales"
+        directory: __dirname + "/locales"
     });
     i18n.setLocale(locales.indexOf(vscodeOptions) + 1 ? vscodeOptions : "en");
     return i18n.__(key);

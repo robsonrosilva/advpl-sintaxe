@@ -33,7 +33,7 @@ if (!validaAdvpl.empresas) {
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-  vscode.window.showInformationMessage(traduz("extension.activeMessage"));
+  vscode.window.showInformationMessage(`Welcome ${traduz("extension.activeMessage")}`);
   vscode.workspace.onDidChangeTextDocument(validaFonte);
 
   //Adiciona comando de envia para Validação
@@ -225,7 +225,7 @@ function traduz(key) {
   let locales = ["en", "pt-br"];
   i18n.configure({
     locales: locales,
-    directory: __dirname.replace("\\out", "") + "/locales"
+    directory: __dirname + "/locales"
   });
   i18n.setLocale(locales.indexOf(vscodeOptions) + 1 ? vscodeOptions : "en");
   return i18n.__(key);

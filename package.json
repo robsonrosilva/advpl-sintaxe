@@ -2,7 +2,7 @@
     "name": "advpl-sintaxe",
     "displayName": "ADVPL Análise, Snippets e GIT",
     "description": "Extensão de análise de qualidade e sintaxe e snippets ADVPL e que facilita a utilização do GIT.",
-    "version": "0.6.1",
+    "version": "0.6.5",
     "publisher": "robsonrosilva",
     "icon": "images/icone.png",
     "engines": {
@@ -158,7 +158,7 @@
         ]
     },
     "scripts": {
-        "vscode:prepublish": "npm run compile",
+        "vscode:prepublish": "npm run compile && robocopy \"./src/locales\" \"./out/src/locales\" & exit 0",
         "resources": "gulp build",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./ && gulp build",
