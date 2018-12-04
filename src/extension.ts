@@ -1,9 +1,9 @@
 import * as vscode from "vscode";
 import { MergeAdvpl } from "./Merge";
 import * as fileSystem from "fs";
+import { ValidaAdvpl } from "analise-advpl";
 //Cria um colection para os erros ADVPL
 const collection = vscode.languages.createDiagnosticCollection("advpl");
-let ValidaAdvpl = require("analise-advpl");
 let comentFontPad = vscode.workspace
   .getConfiguration("advpl-sintaxe")
   .get("comentFontPad");
@@ -15,7 +15,7 @@ const vscodeOptions = JSON.parse(
   process.env.VSCODE_NLS_CONFIG
 ).locale.toLowerCase();
 
-let validaAdvpl = new ValidaAdvpl(comentFontPad,vscodeOptions);
+let validaAdvpl = new ValidaAdvpl(comentFontPad, vscodeOptions);
 validaAdvpl.ownerDb = vscode.workspace
   .getConfiguration("advpl-sintaxe")
   .get("ownerDb");
@@ -39,7 +39,7 @@ export function activate(context: vscode.ExtensionContext) {
   //Adiciona comando de envia para Validação
   context.subscriptions.push(
     vscode.commands.registerCommand("advpl-sintaxe.gitValidacao", () => {
-      let mergeAdvpl = new MergeAdvpl(false);
+      let mergeAdvpl = new MergeAdvpl(false, validaProjeto);
       let branchAtual = mergeAdvpl.repository.headLabel;
       try {
         mergeAdvpl.merge(
@@ -53,13 +53,12 @@ export function activate(context: vscode.ExtensionContext) {
         mergeAdvpl.falha(e.stdout);
       }
       mergeAdvpl.repository.checkout(branchAtual);
-      validaProjeto(undefined, undefined, undefined, undefined, undefined);
     })
   );
   //Adiciona comando de envia para Release
   context.subscriptions.push(
     vscode.commands.registerCommand("advpl-sintaxe.gitRelease", () => {
-      let mergeAdvpl = new MergeAdvpl(false);
+      let mergeAdvpl = new MergeAdvpl(false, validaProjeto);
       let branchAtual = mergeAdvpl.repository.headLabel;
       try {
         mergeAdvpl.merge(
@@ -73,13 +72,12 @@ export function activate(context: vscode.ExtensionContext) {
         mergeAdvpl.falha(e.stdout);
       }
       mergeAdvpl.repository.checkout(branchAtual);
-      validaProjeto(undefined, undefined, undefined, undefined, undefined);
     })
   );
   //Adiciona comando de envia para master
   context.subscriptions.push(
     vscode.commands.registerCommand("advpl-sintaxe.gitMaster", () => {
-      let mergeAdvpl = new MergeAdvpl(false);
+      let mergeAdvpl = new MergeAdvpl(false, validaProjeto);
       let branchAtual = mergeAdvpl.repository.headLabel;
       try {
         mergeAdvpl.merge(
@@ -93,13 +91,12 @@ export function activate(context: vscode.ExtensionContext) {
         mergeAdvpl.falha(e.stdout);
       }
       mergeAdvpl.repository.checkout(branchAtual);
-      validaProjeto(undefined, undefined, undefined, undefined, undefined);
     })
   );
   //Adiciona comando de envia para master
   context.subscriptions.push(
     vscode.commands.registerCommand("advpl-sintaxe.validaProjeto", () => {
-      let mergeAdvpl = new MergeAdvpl(true);
+      let mergeAdvpl = new MergeAdvpl(true, validaProjeto);
       try {
         validaProjeto(undefined, undefined, undefined, undefined, undefined);
       } catch (e) {
@@ -110,7 +107,7 @@ export function activate(context: vscode.ExtensionContext) {
   //Adiciona comando de envia para master
   context.subscriptions.push(
     vscode.commands.registerCommand("advpl-sintaxe.analisaTags", () => {
-      let mergeAdvpl = new MergeAdvpl(true);
+      let mergeAdvpl = new MergeAdvpl(true, validaProjeto);
       let branchAtual = mergeAdvpl.repository.headLabel;
       try {
         mergeAdvpl.analisaTags();
@@ -118,7 +115,6 @@ export function activate(context: vscode.ExtensionContext) {
         mergeAdvpl.falha(e.stdout);
       }
       mergeAdvpl.repository.checkout(branchAtual);
-      validaProjeto(undefined, undefined, undefined, undefined, undefined);
     })
   );
   if (
@@ -157,7 +153,7 @@ function errorVsCode(aErros: any) {
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }
 
 async function vscodeFindFilesSync() {
   return vscode.workspace.findFiles("**/*.*", "**/*.json");
@@ -195,16 +191,16 @@ async function validaProjeto(
       fileContent = fileContent.replace(
         tag + "\t\t\t\t\n",
         validaAdvpl.padTag(tag, tags) +
-          "\t" +
-          validaAdvpl.error +
-          "\t" +
-          validaAdvpl.warning +
-          "\t" +
-          validaAdvpl.information +
-          "\t" +
-          "\t" +
-          validaAdvpl.versao +
-          "\n"
+        "\t" +
+        validaAdvpl.error +
+        "\t" +
+        validaAdvpl.warning +
+        "\t" +
+        validaAdvpl.information +
+        "\t" +
+        "\t" +
+        validaAdvpl.versao +
+        "\n"
       );
 
       fileSystem.writeFileSync(fileLog, fileContent);

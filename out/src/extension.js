@@ -11,9 +11,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const vscode = require("vscode");
 const Merge_1 = require("./Merge");
 const fileSystem = require("fs");
+const analise_advpl_1 = require("analise-advpl");
 //Cria um colection para os erros ADVPL
 const collection = vscode.languages.createDiagnosticCollection("advpl");
-let ValidaAdvpl = require("analise-advpl");
 let comentFontPad = vscode.workspace
     .getConfiguration("advpl-sintaxe")
     .get("comentFontPad");
@@ -22,7 +22,7 @@ if (!comentFontPad) {
     vscode.window.showInformationMessage(traduz("extension.noCritizeComment"));
 }
 const vscodeOptions = JSON.parse(process.env.VSCODE_NLS_CONFIG).locale.toLowerCase();
-let validaAdvpl = new ValidaAdvpl(comentFontPad, vscodeOptions);
+let validaAdvpl = new analise_advpl_1.ValidaAdvpl(comentFontPad, vscodeOptions);
 validaAdvpl.ownerDb = vscode.workspace
     .getConfiguration("advpl-sintaxe")
     .get("ownerDb");
@@ -42,7 +42,7 @@ function activate(context) {
     vscode.workspace.onDidChangeTextDocument(validaFonte);
     //Adiciona comando de envia para Validação
     context.subscriptions.push(vscode.commands.registerCommand("advpl-sintaxe.gitValidacao", () => {
-        let mergeAdvpl = new Merge_1.MergeAdvpl(false);
+        let mergeAdvpl = new Merge_1.MergeAdvpl(false, validaProjeto);
         let branchAtual = mergeAdvpl.repository.headLabel;
         try {
             mergeAdvpl.merge(mergeAdvpl.repository, branchAtual, mergeAdvpl.branchTeste, false, false);
@@ -51,11 +51,10 @@ function activate(context) {
             mergeAdvpl.falha(e.stdout);
         }
         mergeAdvpl.repository.checkout(branchAtual);
-        validaProjeto(undefined, undefined, undefined, undefined, undefined);
     }));
     //Adiciona comando de envia para Release
     context.subscriptions.push(vscode.commands.registerCommand("advpl-sintaxe.gitRelease", () => {
-        let mergeAdvpl = new Merge_1.MergeAdvpl(false);
+        let mergeAdvpl = new Merge_1.MergeAdvpl(false, validaProjeto);
         let branchAtual = mergeAdvpl.repository.headLabel;
         try {
             mergeAdvpl.merge(mergeAdvpl.repository, branchAtual, mergeAdvpl.branchTeste, true, false);
@@ -64,11 +63,10 @@ function activate(context) {
             mergeAdvpl.falha(e.stdout);
         }
         mergeAdvpl.repository.checkout(branchAtual);
-        validaProjeto(undefined, undefined, undefined, undefined, undefined);
     }));
     //Adiciona comando de envia para master
     context.subscriptions.push(vscode.commands.registerCommand("advpl-sintaxe.gitMaster", () => {
-        let mergeAdvpl = new Merge_1.MergeAdvpl(false);
+        let mergeAdvpl = new Merge_1.MergeAdvpl(false, validaProjeto);
         let branchAtual = mergeAdvpl.repository.headLabel;
         try {
             mergeAdvpl.merge(mergeAdvpl.repository, branchAtual, mergeAdvpl.branchTeste, true, true);
@@ -77,11 +75,10 @@ function activate(context) {
             mergeAdvpl.falha(e.stdout);
         }
         mergeAdvpl.repository.checkout(branchAtual);
-        validaProjeto(undefined, undefined, undefined, undefined, undefined);
     }));
     //Adiciona comando de envia para master
     context.subscriptions.push(vscode.commands.registerCommand("advpl-sintaxe.validaProjeto", () => {
-        let mergeAdvpl = new Merge_1.MergeAdvpl(true);
+        let mergeAdvpl = new Merge_1.MergeAdvpl(true, validaProjeto);
         try {
             validaProjeto(undefined, undefined, undefined, undefined, undefined);
         }
@@ -91,7 +88,7 @@ function activate(context) {
     }));
     //Adiciona comando de envia para master
     context.subscriptions.push(vscode.commands.registerCommand("advpl-sintaxe.analisaTags", () => {
-        let mergeAdvpl = new Merge_1.MergeAdvpl(true);
+        let mergeAdvpl = new Merge_1.MergeAdvpl(true, validaProjeto);
         let branchAtual = mergeAdvpl.repository.headLabel;
         try {
             mergeAdvpl.analisaTags();
@@ -100,7 +97,6 @@ function activate(context) {
             mergeAdvpl.falha(e.stdout);
         }
         mergeAdvpl.repository.checkout(branchAtual);
-        validaProjeto(undefined, undefined, undefined, undefined, undefined);
     }));
     if (vscode.workspace.getConfiguration("advpl-sintaxe").get("validaProjeto") !==
         false) {

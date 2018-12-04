@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-let ValidaAdvpl = require("analise-advpl");
 
 //Criação sincrona de funções do git
 async function gitCheckoutSync(objeto: MergeAdvpl, destino: string) {
@@ -25,7 +24,9 @@ export class MergeAdvpl {
   public branchProdu: string;
   public branchesControladas: string[];
   public repository: any;
-  constructor(forca: boolean) {
+  private fnValidacao: Function;
+  constructor(forca: boolean, fnValidacao: Function) {
+    this.fnValidacao = fnValidacao;
     //Busca Configurações do Settings
     this.branchTeste = vscode.workspace
       .getConfiguration("advpl-sintaxe")
@@ -129,10 +130,10 @@ export class MergeAdvpl {
           await gitTagSync(
             repository,
             String(aUltimaTag[0]) +
-              "." +
-              String(aUltimaTag[1]) +
-              "." +
-              String(aUltimaTag[2])
+            "." +
+            String(aUltimaTag[1]) +
+            "." +
+            String(aUltimaTag[2])
           );
         }
       }
@@ -157,10 +158,10 @@ export class MergeAdvpl {
         objeto.sucesso(
           "",
           traduz("merge.mergeFinish") +
-            branchAtual +
-            " -> " +
-            branchdestino +
-            "."
+          branchAtual +
+          " -> " +
+          branchdestino +
+          "."
         );
       }
     }
@@ -201,19 +202,8 @@ export class MergeAdvpl {
 
     console.log("TROCANDO PARA TAG " + tag);
     await gitCheckoutSync(objeto, tag);
-    let comentFontPad = vscode.workspace
-      .getConfiguration("advpl-sintaxe")
-      .get("comentFontPad");
-    if (!comentFontPad) {
-      comentFontPad = [""];
-      vscode.window.showInformationMessage(traduz("extension.noCritizeComment"));
-    }
-    let vscodeOptions = JSON.parse(
-      process.env.VSCODE_NLS_CONFIG
-    ).locale.toLowerCase();
-    
-    let validaAdvpl = new ValidaAdvpl(comentFontPad,vscodeOptions);
-    validaAdvpl.validaProjeto(nGeradas, tags, fileContent, branchAtual, objeto);
+
+    this.fnValidacao(nGeradas, tags, fileContent, branchAtual, objeto);
     console.log("VALIDANDO TAG " + tag);
   }
 
@@ -257,11 +247,10 @@ export class MergeAdvpl {
     }
   }
   protected sucesso(value: any, rotina: String) {
-    let validaAdvpl = new ValidaAdvpl();
     vscode.window.showInformationMessage(
       traduz("merge.success") + rotina + " [" + value + "]"
     );
-    validaAdvpl.validaProjeto(
+    this.fnValidacao(
       undefined,
       undefined,
       undefined,
@@ -270,9 +259,8 @@ export class MergeAdvpl {
     );
   }
   public falha(rotina: String) {
-    let validaAdvpl = new ValidaAdvpl();
     vscode.window.showErrorMessage("ERRO " + rotina + "!");
-    validaAdvpl.validaProjeto(
+    this.fnValidacao(
       undefined,
       undefined,
       undefined,

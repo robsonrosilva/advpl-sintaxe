@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const vscode = require("vscode");
-let ValidaAdvpl = require("analise-advpl");
 //Criação sincrona de funções do git
 function gitCheckoutSync(objeto, destino) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -38,7 +37,8 @@ function gitPullSync(repository) {
     });
 }
 class MergeAdvpl {
-    constructor(forca) {
+    constructor(forca, fnValidacao) {
+        this.fnValidacao = fnValidacao;
         //Busca Configurações do Settings
         this.branchTeste = vscode.workspace
             .getConfiguration("advpl-sintaxe")
@@ -182,16 +182,7 @@ class MergeAdvpl {
             let objeto = this;
             console.log("TROCANDO PARA TAG " + tag);
             yield gitCheckoutSync(objeto, tag);
-            let comentFontPad = vscode.workspace
-                .getConfiguration("advpl-sintaxe")
-                .get("comentFontPad");
-            if (!comentFontPad) {
-                comentFontPad = [""];
-                vscode.window.showInformationMessage(traduz("extension.noCritizeComment"));
-            }
-            let vscodeOptions = JSON.parse(process.env.VSCODE_NLS_CONFIG).locale.toLowerCase();
-            let validaAdvpl = new ValidaAdvpl(comentFontPad, vscodeOptions);
-            validaAdvpl.validaProjeto(nGeradas, tags, fileContent, branchAtual, objeto);
+            this.fnValidacao(nGeradas, tags, fileContent, branchAtual, objeto);
             console.log("VALIDANDO TAG " + tag);
         });
     }
@@ -228,14 +219,12 @@ class MergeAdvpl {
         }
     }
     sucesso(value, rotina) {
-        let validaAdvpl = new ValidaAdvpl();
         vscode.window.showInformationMessage(traduz("merge.success") + rotina + " [" + value + "]");
-        validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);
+        this.fnValidacao(undefined, undefined, undefined, undefined, undefined);
     }
     falha(rotina) {
-        let validaAdvpl = new ValidaAdvpl();
         vscode.window.showErrorMessage("ERRO " + rotina + "!");
-        validaAdvpl.validaProjeto(undefined, undefined, undefined, undefined, undefined);
+        this.fnValidacao(undefined, undefined, undefined, undefined, undefined);
     }
 }
 exports.MergeAdvpl = MergeAdvpl;

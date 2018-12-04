@@ -82,6 +82,9 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
  * **WsResponseFalseREST** - Retorno negativo para a operação para WebServices REST.
 
 ## Release Notes
+### 0.6.6  
+- Foram removidas as chamadas da validação de projeto para utilizar um só independentemente de onde chama a rotina.
+
 ### 0.6.5  
 - Foram removidos desse projeto os fontes de análise de advpl, pois segmentei em um projeto NPM. O projeto NPM visa possibilitar a análise de ADVPL via CI do GITLAB.
 - Mudança de forma de tradução.
