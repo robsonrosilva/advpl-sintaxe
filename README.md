@@ -82,6 +82,9 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
  * **WsResponseFalseREST** - Retorno negativo para a operação para WebServices REST.
 
 ## Release Notes
+### 0.6.7  
+- Remoção de mensagem Welcome.
+
 ### 0.6.6  
 - Foram removidas as chamadas da validação de projeto para utilizar um só independentemente de onde chama a rotina.
 

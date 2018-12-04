@@ -2,7 +2,7 @@
     "name": "advpl-sintaxe",
     "displayName": "ADVPL Análise, Snippets e GIT",
     "description": "Extensão de análise de qualidade e sintaxe e snippets ADVPL e que facilita a utilização do GIT.",
-    "version": "0.6.6",
+    "version": "0.6.8",
     "publisher": "robsonrosilva",
     "icon": "images/icone.png",
     "engines": {
@@ -169,7 +169,10 @@
         "@types/mocha": "^2.2.48",
         "@types/node": "^8.10.38",
         "tslint": "^5.11.0",
-        "vscode": "^1.1.22",
+        "typescript": "^2.0.3",
+        "vsce": "^1.32.0",
+        "vscode": "^1.1.10",
+        "vscode-debugadapter-testsupport": "^1.29.0",
         "vscode-nls-dev": "^3.2.3"
     },
     "dependencies": {

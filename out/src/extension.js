@@ -38,7 +38,7 @@ if (!validaAdvpl.empresas) {
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 function activate(context) {
-    vscode.window.showInformationMessage(`Welcome ${traduz("extension.activeMessage")}`);
+    vscode.window.showInformationMessage(traduz("extension.activeMessage"));
     vscode.workspace.onDidChangeTextDocument(validaFonte);
     //Adiciona comando de envia para Validação
     context.subscriptions.push(vscode.commands.registerCommand("advpl-sintaxe.gitValidacao", () => {
