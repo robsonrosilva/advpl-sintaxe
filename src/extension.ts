@@ -184,7 +184,7 @@ async function validaProjeto(
   let advplExtensions = ["prw", "prx", "prg", "apw", "apl", "tlpp"];
   let files = await vscodeFindFilesSync();
   projeto = [];
-  listaDuplicados = [];  
+  listaDuplicados = [];
   files.forEach((file: vscode.Uri) => {
     let re = /(?:\.([^.]+))?$/;
     let extensao = re.exec(file.fsPath);
@@ -234,11 +234,21 @@ function verificaDuplicados() {
   let startTime: any = new Date();
   let duplicadosAtual = [];
   //faz a análise de funções ou classes duplicadas em fontes diferentes
+  let duplicados = [];
   projeto.forEach((fonte: Fonte) => {
     fonte.funcoes.forEach((funcao: Funcao) => {
       if (listaFuncoes.indexOf((funcao.nome + funcao.tipo).toUpperCase()) === -1) {
         listaFuncoes.push((funcao.nome + funcao.tipo).toUpperCase());
       } else {
+        duplicados.push((funcao.nome + funcao.tipo).toUpperCase());
+      }
+    });
+  });
+
+  //guarda lista com os fontes que tem funções duplicadas
+  projeto.forEach((fonte: Fonte) => {
+    fonte.funcoes.forEach((funcao: Funcao) => {
+      if (duplicados.indexOf((funcao.nome + funcao.tipo).toUpperCase()) !== -1) {
         //procura a funcao nos duplicados
         let posicao = duplicadosAtual.map(x => x.funcao + x.tipo).indexOf((funcao.nome + funcao.tipo).toUpperCase());
         if (posicao === -1) {
@@ -283,14 +293,14 @@ function verificaDuplicados() {
             )
           );
         });
-        
+
         //Limpa as mensagens do colection
         collection.delete(fonte.fonte);
         collection.set(fonte.fonte, erros);
       });
     });
 
-    
+
     //remove erros corrigidos
     excluidos.forEach(funcaoCorrigida => {
       console.log(` funcaoCorrigida  ${funcaoCorrigida}`);
@@ -304,7 +314,7 @@ function verificaDuplicados() {
           console.log(` funcao  ${funcao.nome}`);
           erros.splice(erros.map(X => X.range._start._line).indexOf(funcao.linha));
         });
-        
+
         //Limpa as mensagens do colection
         collection.delete(fonte.fonte);
         collection.set(fonte.fonte, erros);

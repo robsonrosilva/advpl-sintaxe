@@ -201,12 +201,21 @@ function verificaDuplicados() {
     let startTime = new Date();
     let duplicadosAtual = [];
     //faz a análise de funções ou classes duplicadas em fontes diferentes
+    let duplicados = [];
     projeto.forEach((fonte) => {
         fonte.funcoes.forEach((funcao) => {
             if (listaFuncoes.indexOf((funcao.nome + funcao.tipo).toUpperCase()) === -1) {
                 listaFuncoes.push((funcao.nome + funcao.tipo).toUpperCase());
             }
             else {
+                duplicados.push((funcao.nome + funcao.tipo).toUpperCase());
+            }
+        });
+    });
+    //guarda lista com os fontes que tem funções duplicadas
+    projeto.forEach((fonte) => {
+        fonte.funcoes.forEach((funcao) => {
+            if (duplicados.indexOf((funcao.nome + funcao.tipo).toUpperCase()) !== -1) {
                 //procura a funcao nos duplicados
                 let posicao = duplicadosAtual.map(x => x.funcao + x.tipo).indexOf((funcao.nome + funcao.tipo).toUpperCase());
                 if (posicao === -1) {
