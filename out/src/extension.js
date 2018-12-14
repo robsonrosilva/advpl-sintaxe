@@ -122,9 +122,17 @@ function validaFonte(editor) {
                     else {
                         projeto[posicao] = validaAdvpl.fonte;
                     }
+                    let errosOld = Object.assign([], collection.get(validaAdvpl.fonte.fonte));
+                    //recupera os erros de duplicidade eles não são criticados no validaAdvpl
+                    let errosNew = errorVsCode(validaAdvpl.aErros);
+                    errosOld.forEach(erro => {
+                        if (erro.message === traduz("extension.functionDuplicate")) {
+                            errosNew.push(erro);
+                        }
+                    });
                     //Limpa as mensagens do colection
                     collection.delete(editor.document.uri);
-                    collection.set(editor.document.uri, errorVsCode(validaAdvpl.aErros));
+                    collection.set(editor.document.uri, errosNew);
                     verificaDuplicados();
                 }
             }
