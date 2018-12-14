@@ -7,5 +7,6 @@
 	"extension.activeMessage": "Validação ADVPL Ativa!",
 	"extension.noCritizeComment": "Não serão criticados os comentários!",
 	"extension.finish": "Análise de projeto finalizada!",
-	"merge.noBranch": "Para efetuar merge configure suas branches no settings!"
+	"merge.noBranch": "Para efetuar merge configure suas branches no settings!",
+	"extension.functionDuplicate": "Esta função está duplicada no projeto!"
 }

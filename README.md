@@ -82,6 +82,12 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
  * **WsResponseFalseREST** - Retorno negativo para a operação para WebServices REST.
 
 ## Release Notes
+### 0.6.11  
+- Melhoria de performance de atualização de duplicados.
+
+### 0.6.8  
+- Crítica de funções ou classes duplicadas no projeto.
+
 ### 0.6.7  
 - Remoção de mensagem Welcome.
 

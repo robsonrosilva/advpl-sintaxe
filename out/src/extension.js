@@ -14,6 +14,8 @@ const fileSystem = require("fs");
 const analise_advpl_1 = require("analise-advpl");
 //Cria um colection para os erros ADVPL
 const collection = vscode.languages.createDiagnosticCollection("advpl");
+let listaDuplicados = [];
+let projeto = [];
 let comentFontPad = vscode.workspace
     .getConfiguration("advpl-sintaxe")
     .get("comentFontPad");
@@ -111,9 +113,19 @@ function validaFonte(editor) {
             if (editor.document.languageId === "advpl") {
                 if (editor.document.getText()) {
                     validaAdvpl.validacao(editor.document.getText(), editor.document.uri);
+                    //verifica se o fonte já existe no projeto se não adiciona
+                    let pos = projeto.map(function (e) { return e.fonte.fsPath; });
+                    let posicao = pos.indexOf(editor.document.uri.fsPath);
+                    if (posicao === -1) {
+                        projeto.push(validaAdvpl.fonte);
+                    }
+                    else {
+                        projeto[posicao] = validaAdvpl.fonte;
+                    }
                     //Limpa as mensagens do colection
                     collection.delete(editor.document.uri);
                     collection.set(editor.document.uri, errorVsCode(validaAdvpl.aErros));
+                    verificaDuplicados();
                 }
             }
         }
@@ -141,6 +153,8 @@ function validaProjeto(nGeradas = 0, tags = [], fileContent = "", branchAtual = 
         //percorre todos os fontes do Workspace e valida se for ADVPL
         let advplExtensions = ["prw", "prx", "prg", "apw", "apl", "tlpp"];
         let files = yield vscodeFindFilesSync();
+        projeto = [];
+        listaDuplicados = [];
         files.forEach((file) => {
             let re = /(?:\.([^.]+))?$/;
             let extensao = re.exec(file.fsPath);
@@ -149,6 +163,7 @@ function validaProjeto(nGeradas = 0, tags = [], fileContent = "", branchAtual = 
                 let conteudo = fileSystem.readFileSync(file.fsPath, "latin1");
                 if (conteudo) {
                     validaAdvpl.validacao(conteudo, file);
+                    projeto.push(validaAdvpl.fonte);
                     //Limpa as mensagens do colection
                     collection.delete(file);
                     collection.set(file, errorVsCode(validaAdvpl.aErros));
@@ -156,6 +171,7 @@ function validaProjeto(nGeradas = 0, tags = [], fileContent = "", branchAtual = 
             }
             //Se for o último arquivo verifica se deve gravar no arquivo LOG
             if (!fileContent && file === files[files.length - 1]) {
+                verificaDuplicados();
                 vscode.window.showInformationMessage(traduz("extension.finish"));
             }
             else if (fileContent && file === files[files.length - 1]) {
@@ -179,6 +195,86 @@ function validaProjeto(nGeradas = 0, tags = [], fileContent = "", branchAtual = 
             }
         });
     });
+}
+function verificaDuplicados() {
+    let listaFuncoes = [];
+    let startTime = new Date();
+    let duplicadosAtual = [];
+    //faz a análise de funções ou classes duplicadas em fontes diferentes
+    projeto.forEach((fonte) => {
+        fonte.funcoes.forEach((funcao) => {
+            if (listaFuncoes.indexOf((funcao.nome + funcao.tipo).toUpperCase()) === -1) {
+                listaFuncoes.push((funcao.nome + funcao.tipo).toUpperCase());
+            }
+            else {
+                //procura a funcao nos duplicados
+                let posicao = duplicadosAtual.map(x => x.funcao + x.tipo).indexOf((funcao.nome + funcao.tipo).toUpperCase());
+                if (posicao === -1) {
+                    duplicadosAtual.push({
+                        "funcao": (funcao.nome).toUpperCase(),
+                        "tipo": funcao.tipo,
+                        "fontes": [fonte]
+                    });
+                }
+                else {
+                    duplicadosAtual[posicao].fontes.push(fonte);
+                }
+            }
+        });
+    });
+    //verifica se mudou a lista de funções duplicadas
+    let listDuplicAtual = duplicadosAtual.map(x => x.funcao + x.tipo);
+    let listDuplicOld = listaDuplicados.map(x => x.funcao + x.tipo);
+    if (listDuplicAtual.toString() !== listDuplicOld.map(x => x.funcao + x.tipo).toString()) {
+        //Procura o que mudou
+        let incluidos = listDuplicAtual.filter(x => listDuplicOld.indexOf(x) === -1);
+        let excluidos = listDuplicOld.filter(x => listDuplicAtual.indexOf(x) === -1);
+        //adicina novos erros
+        incluidos.forEach(funcaoDuplicada => {
+            console.log(` funcaoDuplicada  ${funcaoDuplicada}`);
+            //encontra nos fontes a funcao
+            let incluido = duplicadosAtual[listDuplicAtual.indexOf(funcaoDuplicada)];
+            incluido.fontes.forEach(fonte => {
+                console.log(` fonte  ${fonte.fonte}`);
+                //busca os erros que estão no fonte
+                let erros = Object.assign([], collection.get(fonte.fonte));
+                fonte.funcoes.forEach(funcao => {
+                    console.log(` funcao  ${funcao.nome}`);
+                    erros.push(new vscode.Diagnostic(new vscode.Range(funcao.linha, 0, funcao.linha, 0), traduz("extension.functionDuplicate"), vscode.DiagnosticSeverity.Error));
+                });
+                //Limpa as mensagens do colection
+                collection.delete(fonte.fonte);
+                collection.set(fonte.fonte, erros);
+            });
+        });
+        //remove erros corrigidos
+        excluidos.forEach(funcaoCorrigida => {
+            console.log(` funcaoCorrigida  ${funcaoCorrigida}`);
+            //encontra nos fontes a funcao
+            let excuido = listaDuplicados[listDuplicOld.indexOf(funcaoCorrigida)];
+            excuido.fontes.forEach(fonte => {
+                console.log(` fonte  ${fonte.fonte}`);
+                //busca os erros que estão no fonte
+                let erros = Object.assign([], collection.get(fonte.fonte));
+                fonte.funcoes.forEach(funcao => {
+                    console.log(` funcao  ${funcao.nome}`);
+                    erros.splice(erros.map(X => X.range._start._line).indexOf(funcao.linha));
+                });
+                //Limpa as mensagens do colection
+                collection.delete(fonte.fonte);
+                collection.set(fonte.fonte, erros);
+            });
+        });
+    }
+    //atualiza lista
+    listaDuplicados = duplicadosAtual;
+    let endTime = new Date();
+    var timeDiff = endTime - startTime; //in ms
+    // strip the ms
+    timeDiff /= 1000;
+    // get seconds 
+    var seconds = Math.round(timeDiff);
+    console.log(seconds + " seconds");
 }
 function traduz(key) {
     const vscodeOptions = JSON.parse(process.env.VSCODE_NLS_CONFIG).locale.toLowerCase();
