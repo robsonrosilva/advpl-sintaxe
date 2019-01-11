@@ -82,6 +82,10 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
  * **WsResponseFalseREST** - Retorno negativo para a operação para WebServices REST.
 
 ## Release Notes
+
+### 0.6.14
+- Atualização de pacote de análise de advpl, para implementação de correção de análise de includes para WebServices REST.
+
 ### 0.6.13
 - Correção de limpeza indevida de erro de duplicidade.
 
