@@ -1,3 +1,5 @@
+![Version](https://vsmarketplacebadge.apphb.com/version/robsonrosilva.advpl-sintaxe.svg) ![Installs](https://vsmarketplacebadge.apphb.com/installs/robsonrosilva.advpl-sintaxe.svg) ![Rating](https://vsmarketplacebadge.apphb.com/rating-short/robsonrosilva.advpl-sintaxe.svg)
+
 # Leia-me
 ## Visual Studio Code ADVPL Análise e GIT
  
