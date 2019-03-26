@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { MergeAdvpl } from './_Merge';
+import { MergeAdvpl } from './Merge';
 import * as fileSystem from 'fs';
 import { ValidaAdvpl, Fonte, Funcao } from 'analise-advpl';
 //Cria um colection para os erros ADVPL
