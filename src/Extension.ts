@@ -126,7 +126,7 @@ export function activate(context: vscode.ExtensionContext) {
       let mergeAdvpl = new MergeAdvpl(true, validaProjeto);
       let branchAtual = mergeAdvpl.repository.headLabel;
       try {
-        mergeAdvpl.atualiza(mergeAdvpl.repository, branchAtual);
+        mergeAdvpl.atualiza(mergeAdvpl.repository, branchAtual, true);
       } catch (e) {
         mergeAdvpl.falha(e.stdout);
       }
@@ -265,10 +265,10 @@ async function verificaDuplicados() {
     //verifica se o fonte ainda existe
     try {
       fileSystem.statSync(fonte.fonte.fsPath);
-    }catch (e){
-      if (e.code ===  "ENOENT"){
+    } catch (e) {
+      if (e.code === 'ENOENT') {
         collection.delete(fonte.fonte);
-        fonte = new Fonte;
+        fonte = new Fonte();
       }
     }
 
@@ -391,7 +391,7 @@ function traduz(key) {
   let locales = ['en', 'pt-br'];
   i18n.configure({
     locales: locales,
-    directory: __dirname + '/locales'
+    directory: __dirname + '\\locales'
   });
   i18n.setLocale(locales.indexOf(vscodeOptions) + 1 ? vscodeOptions : 'en');
   return i18n.__(key);

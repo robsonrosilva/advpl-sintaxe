@@ -105,7 +105,7 @@ function activate(context) {
         let mergeAdvpl = new Merge_1.MergeAdvpl(true, validaProjeto);
         let branchAtual = mergeAdvpl.repository.headLabel;
         try {
-            mergeAdvpl.atualiza(mergeAdvpl.repository, branchAtual);
+            mergeAdvpl.atualiza(mergeAdvpl.repository, branchAtual, true);
         }
         catch (e) {
             mergeAdvpl.falha(e.stdout);
@@ -231,9 +231,9 @@ function verificaDuplicados() {
                 fileSystem.statSync(fonte.fonte.fsPath);
             }
             catch (e) {
-                if (e.code === "ENOENT") {
+                if (e.code === 'ENOENT') {
                     collection.delete(fonte.fonte);
-                    fonte = new analise_advpl_1.Fonte;
+                    fonte = new analise_advpl_1.Fonte();
                 }
             }
             fonte.funcoes.forEach((funcao) => {
@@ -328,7 +328,7 @@ function traduz(key) {
     let locales = ['en', 'pt-br'];
     i18n.configure({
         locales: locales,
-        directory: __dirname + '/locales'
+        directory: __dirname + '\\locales'
     });
     i18n.setLocale(locales.indexOf(vscodeOptions) + 1 ? vscodeOptions : 'en');
     return i18n.__(key);
