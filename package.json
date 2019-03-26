@@ -2,7 +2,7 @@
     "name": "advpl-sintaxe",
     "displayName": "ADVPL Análise, Snippets e GIT",
     "description": "Extensão de análise de qualidade e sintaxe e snippets ADVPL e que facilita a utilização do GIT.",
-    "version": "0.6.14",
+    "version": "0.7.0",
     "publisher": "robsonrosilva",
     "icon": "images/icone.png",
     "engines": {
@@ -49,7 +49,8 @@
         "onCommand:advpl-sintaxe.gitRelease",
         "onCommand:advpl-sintaxe.gitMaster",
         "onCommand:advpl-sintaxe.validaProjeto",
-        "onCommand:advpl-sintaxe.analisaTags"
+        "onCommand:advpl-sintaxe.analisaTags",
+        "onCommand:advpl-sintaxe.atualizaBranch"
     ],
     "main": "./out/src/extension",
     "contributes": {
@@ -73,6 +74,10 @@
             {
                 "command": "advpl-sintaxe.analisaTags",
                 "title": "%advpl-sintaxe.commands.validacao.tags%"
+            },
+            {
+                "command": "advpl-sintaxe.atualizaBranch",
+                "title": "%advpl-sintaxe.commands.git.atualizaBranch%"
             }
         ],
         "configuration": {

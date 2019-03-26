@@ -85,6 +85,12 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
 
 ## Release Notes
 
+### 0.7.0
+- Adição de mensagens que faltavam em alguns processamentos de Merge.
+- Implementação de atualização da branch corrente antes de enviar para release.
+- Melhoria de rotina funcionalidades de Merge para otimização de checkOuts.
+- Correção de erros que ficavam quando o fonte era renomeado ou deletado.
+
 ### 0.6.14
 - Atualização de pacote de análise de advpl, para implementação de correção de análise de includes para WebServices REST.
 

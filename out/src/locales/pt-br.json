@@ -8,5 +8,11 @@
 	"extension.noCritizeComment": "Não serão criticados os comentários!",
 	"extension.finish": "Análise de projeto finalizada!",
 	"merge.noBranch": "Para efetuar merge configure suas branches no settings!",
+	"merge.atualizacaoFinish": "A branch foi atualizada com sucesso!",
+	"merge.checkoutError":"Erro na execução do Checkout!",
+	"merge.mergeError":"Erro na execução do Merge!",
+	"merge.pullError":"Erro na execução do Pull!",
+	"merge.pushError":"Erro na execução do Push!",
+	"merge.tagError":"Erro na criação da Tag!",
 	"extension.functionDuplicate": "Esta função está duplicada no projeto!"
 }

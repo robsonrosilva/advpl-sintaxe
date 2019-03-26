@@ -6,6 +6,7 @@
     "advpl-sintaxe.commands.git.producao": "advpl-sintaxe - Send the commits to the PRODUCTION branch!",
     "advpl-sintaxe.commands.validacao.projeto": "advpl-sintaxe - Valid Project!",
     "advpl-sintaxe.commands.validacao.tags": "advpl-sintaxe - Analysis of TAGS!",
+    "advpl-sintaxe.commands.git.atualizaBranch": "advpl-sintaxe - Update current Branch!",
     "advpl-sintaxe.configuration.title": "Configuration of Advpl Sintax",
     "advpl-sintaxe.configuration.properties.description": "Extension settings Advpl Sintax.",
     "advpl-sintaxe.configuration.properties.branchTeste": "GIT branch name of the Test environment.",

@@ -4,6 +4,7 @@
     "advpl-sintaxe.commands.git.teste": "advpl-sintaxe - Envia os commits para a branche de VALIDAÇÃO!",
     "advpl-sintaxe.commands.git.homologacao": "advpl-sintaxe - Envia os commits para a branche de RELEASE!",
     "advpl-sintaxe.commands.git.producao": "advpl-sintaxe - Envia os commits para a branche de PRODUÇÃO!",
+    "advpl-sintaxe.commands.git.atualizaBranch": "advpl-sintaxe - Atualiza Branch Atual!",
     "advpl-sintaxe.commands.validacao.projeto": "advpl-sintaxe - Valida Projeto!",
     "advpl-sintaxe.commands.validacao.tags": "advpl-sintaxe - Análise de TAGS!",
     "advpl-sintaxe.configuration.title": "Configuração de Advpl Sintax",

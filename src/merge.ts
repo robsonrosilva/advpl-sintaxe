@@ -71,6 +71,7 @@ export class MergeAdvpl {
   ) {
     //guarda objeto this
     let objeto = this;
+    let tagName: string = "";
     //verifica se não está numa branch controlada
     if (objeto.branchesControladas.indexOf(branchAtual.toUpperCase()) !== -1) {
       vscode.window.showErrorMessage(traduz("merge.noBranchMerge"));
@@ -81,9 +82,38 @@ export class MergeAdvpl {
         vscode.window.showErrorMessage(traduz("merge.noPush"));
         return;
       }
-      await gitPushSync(repository);
-      await gitCheckoutSync(objeto, branchdestino);
-      await gitPullSync(repository);
+      // se estiver na branche inicial efetua a atualização antes de iniciar o merge
+      if (objeto.getRepository(true).headLabel === branchAtual){
+        try {
+          await objeto.atualiza(objeto.repository, branchAtual);
+        } catch (e) {
+          return;
+        }
+      }
+      try {
+        await gitPushSync(repository);
+      } catch (e) {
+        vscode.window.showErrorMessage(
+          traduz("merge.pushError") + "\n" + e.stdout
+        );
+        return;
+      }
+      try {
+        await gitCheckoutSync(objeto, branchdestino);
+      } catch (e) {
+        vscode.window.showErrorMessage(
+          traduz("merge.checkoutError") + "\n" + e.stdout
+        );
+        return;
+      }
+      try {
+        await gitPullSync(repository);
+      } catch (e) {
+        vscode.window.showErrorMessage(
+          traduz("merge.pullError") + "\n" + e.stdout
+        );
+        return;
+      }
 
       let branchOriginal: any = undefined;
       //se for merge para produção usa no merge a branch de homologação
@@ -91,8 +121,14 @@ export class MergeAdvpl {
         branchOriginal = branchAtual;
         branchAtual = objeto.branchHomol;
       }
-
-      await gitMergeSync(repository, branchAtual);
+      try {
+        await gitMergeSync(repository, branchAtual);
+      } catch (e) {
+        vscode.window.showErrorMessage(
+          traduz("merge.mergeError") + "\n" + e.stdout
+        );
+        return;
+      }
       //Se a branch destino for a master precisa criar tag
       if (branchdestino === objeto.branchProdu) {
         let aUltimaTag = [0, 0, 0];
@@ -127,23 +163,34 @@ export class MergeAdvpl {
           aUltimaTag[2]++;
         }
         if (commit !== repository.HEAD.commit) {
-          await gitTagSync(
-            repository,
-            String(aUltimaTag[0]) +
-            "." +
-            String(aUltimaTag[1]) +
-            "." +
-            String(aUltimaTag[2])
-          );
+          try {
+            tagName =
+              String(aUltimaTag[0]) +
+              "." +
+              String(aUltimaTag[1]) +
+              "." +
+              String(aUltimaTag[2]);
+            await gitTagSync(repository, tagName);
+          } catch (e) {
+            vscode.window.showErrorMessage(
+              traduz("merge.tagError") + "\n" + e.stdout
+            );
+            return;
+          }
         }
       }
-
-      await gitPushSync(repository);
+      try {
+        await gitPushSync(repository);
+      } catch (e) {
+        vscode.window.showErrorMessage(
+          traduz("merge.pushError") + "\n" + e.stdout
+        );
+        return;
+      }
       //se for usou a branche de homologação volta o conteúdo original
       if (branchOriginal) {
         branchAtual = branchOriginal;
       }
-      await gitCheckoutSync(repository, branchAtual);
       if (enviaHomolog) {
         objeto.merge(
           repository,
@@ -155,18 +202,70 @@ export class MergeAdvpl {
       } else if (enviaMaster) {
         objeto.merge(repository, branchAtual, objeto.branchProdu, false, false);
       } else {
+        try {
+          await gitCheckoutSync(repository, branchAtual);
+        } catch (e) {
+          vscode.window.showErrorMessage(
+            traduz("merge.checkoutError") + "\n" + e.stdout
+          );
+          return;
+        }
         objeto.sucesso(
-          "",
+          tagName,
           traduz("merge.mergeFinish") +
-          branchAtual +
-          " -> " +
-          branchdestino +
-          "."
+            branchAtual +
+            " -> " +
+            branchdestino +
+            "."
         );
       }
     }
   }
 
+  public async atualiza(repository: any, branchAtual: any) {
+    //guarda objeto this
+    let objeto = this;
+    //verifica se não está numa branch controlada
+    if (objeto.branchesControladas.indexOf(branchAtual.toUpperCase()) !== -1) {
+      vscode.window.showErrorMessage(traduz("merge.noBranchMerge"));
+      return;
+    } else {
+      try {
+        await gitCheckoutSync(objeto, objeto.branchHomol);
+      } catch (e) {
+        vscode.window.showErrorMessage(
+          traduz("merge.checkoutError") + "\n" + e.stdout
+        );
+        return;
+      }
+      try {
+        await gitPullSync(repository);
+      } catch (e) {
+        vscode.window.showErrorMessage(
+          traduz("merge.pullError") + "\n" + e.stdout
+        );
+        return;
+      }
+      try {
+        await gitCheckoutSync(objeto, branchAtual);
+      } catch (e) {
+        vscode.window.showErrorMessage(
+          traduz("merge.checkoutError") + "\n" + e.stdout
+        );
+        return;
+      }
+      try {
+        await gitMergeSync(repository, objeto.branchHomol);
+      } catch (e) {
+        vscode.window.showErrorMessage(
+          traduz("merge.mergeError") + "\n" + e.stdout
+        );
+        return;
+      }
+
+      objeto.sucesso("", traduz("merge.atualizacaoFinish"));
+    }
+  }
   public analisaTags() {
     let fileContent =
       "TAG\tError\tWarning\tInformation\tHint\tExtension Version\n";
@@ -250,23 +349,11 @@ export class MergeAdvpl {
     vscode.window.showInformationMessage(
       traduz("merge.success") + rotina + " [" + value + "]"
     );
-    this.fnValidacao(
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined
-    );
+    this.fnValidacao(undefined, undefined, undefined, undefined, undefined);
   }
   public falha(rotina: String) {
     vscode.window.showErrorMessage("ERRO " + rotina + "!");
-    this.fnValidacao(
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined
-    );
+    this.fnValidacao(undefined, undefined, undefined, undefined, undefined);
   }
 }
 
