@@ -22,79 +22,97 @@ const inlineSource = false;
 const outDest = 'out';
 
 // If all VS Code langaues are support you can use nls.coreLanguages
-const languages = ['enu','ptb'];
+const languages = [
+  { folderName: 'ptb', id: 'pt-br' },
+  { folderName: 'enu', id: 'en' }
+];
 
 gulp.task('default', function(callback) {
-	runSequence('build', callback);
+  runSequence('build', callback);
 });
 
 gulp.task('compile', function(callback) {
-	runSequence('clean', 'internal-compile', callback);
+  runSequence('clean', 'internal-compile', callback);
 });
 
 gulp.task('build', function(callback) {
-	runSequence('clean', 'internal-nls-compile', 'add-i18n','add-i18n-snippets', callback);
+  runSequence(
+    'clean',
+    'internal-nls-compile',
+    'add-i18n',
+    'add-i18n-snippets',
+    callback
+  );
 });
 
 gulp.task('publish', function(callback) {
-	runSequence('build', 'vsce:publish', callback);
+  runSequence('build', 'vsce:publish', callback);
 });
 
 gulp.task('package', function(callback) {
-	runSequence('build', 'vsce:package', callback);
+  runSequence('build', 'vsce:package', callback);
 });
 
 gulp.task('clean', function() {
-	return del(['out/**', '*.nls.*.json','snippets/*.nls.*.json', 'i18n-sample*.vsix']);
-})
+  return del(['out/**', '*.nls.*.json', 'snippets/*.nls.*.json']);
+});
 
 //---- internal
 
 function compile(buildNls) {
-	var r = tsProject.src()
-		.pipe(sourcemaps.init())
-		.pipe(tsProject()).js
-		.pipe(buildNls ? nls.rewriteLocalizeCalls() : es.through())
-		.pipe(buildNls ? nls.createAdditionalLanguageFiles(languages, 'i18n', 'out') : es.through());
+  var r = tsProject
+    .src()
+    .pipe(sourcemaps.init())
+    .pipe(tsProject())
+    .js.pipe(buildNls ? nls.rewriteLocalizeCalls() : es.through())
+    .pipe(
+      buildNls
+        ? nls.createAdditionalLanguageFiles(languages, 'i18n', 'out')
+        : es.through()
+    );
 
-	if (inlineMap && inlineSource) {
-		r = r.pipe(sourcemaps.write());
-	} else {
-		r = r.pipe(sourcemaps.write("../out", {
-			// no inlined source
-			includeContent: inlineSource,
-			// Return relative source map root directories per file.
-			sourceRoot: "../src"
-		}));
-	}
+  if (inlineMap && inlineSource) {
+    r = r.pipe(sourcemaps.write());
+  } else {
+    r = r.pipe(
+      sourcemaps.write('../out', {
+        // no inlined source
+        includeContent: inlineSource,
+        // Return relative source map root directories per file.
+        sourceRoot: '../src'
+      })
+    );
+  }
 
-	return r.pipe(gulp.dest(outDest));
+  return r.pipe(gulp.dest(outDest));
 }
 
 gulp.task('internal-compile', function() {
-	return compile(false);
+  return compile(false);
 });
 
 gulp.task('internal-nls-compile', function() {
-	return compile(true);
+  return compile(true);
 });
 
 gulp.task('add-i18n', function() {
-	return gulp.src(['package.nls.json'])
-		.pipe(nls.createAdditionalLanguageFiles(languages, 'i18n'))
-		.pipe(gulp.dest('.'));
+  return gulp
+    .src(['package.nls.json'])
+    .pipe(nls.createAdditionalLanguageFiles(languages, 'i18n'))
+    .pipe(gulp.dest('.'));
 });
 
 gulp.task('add-i18n-snippets', function() {
-	return gulp.src(['snippets/advpl.comentarios.nls.json'])
-		.pipe(nls.createAdditionalLanguageFiles(languages, 'i18n'))
-		.pipe(gulp.dest('./snippets'));
+  return gulp
+    .src(['snippets/advpl.comentarios.nls.json'])
+    .pipe(nls.createAdditionalLanguageFiles(languages, 'i18n'))
+    .pipe(gulp.dest('./snippets'));
 });
 
 gulp.task('vsce:publish', function() {
-	return vsce.publish();
+  return vsce.publish();
 });
 
 gulp.task('vsce:package', function() {
-	return vsce.createVSIX();
+  return vsce.createVSIX();
 });

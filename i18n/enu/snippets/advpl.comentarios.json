@@ -1,34 +1,34 @@
 {
-    "docSource": {
-        "prefix": "Source Documentation",
-        "body": [
-            "/*//#########################################################################################",
-            "Project  : ${project}",
-            "Module   : ${module}",
-            "Source   : ${TM_FILENAME_BASE}",
-            "Objective: ${objective}",
-            "*///#########################################################################################",
-            "",
-            "#INCLUDE 'TOTVS.CH'",
-            ""
-        ]
-    },
-    "docFunction": {
-        "prefix": "Function Documentation",
-        "body": [
-            "",
-            "/*/{Protheus.doc} ${Function}",
-            "",
-            "   ${Description}",
-            "",
-            "   @author  ${Name}",
-            "   @example ${Exemple}",
-            "   @param   [${Parameter_Name}],${Parameter_type},${Parameter_Description}",
-            "   @return  ${Return}",
-            "   @table   ${Tables}",
-            "   @since   ${CURRENT_DATE}-${CURRENT_MONTH}-${CURRENT_YEAR}",
-            "/*/",
-            ""
-        ]
-    }
+  "docSource": {
+    "prefix": "Source Documentation",
+    "body": [
+      "/*//#########################################################################################",
+      "Project  : ${project}",
+      "Module   : ${module}",
+      "Source   : ${TM_FILENAME_BASE}",
+      "Objective: ${objective}",
+      "*///#########################################################################################",
+      "",
+      "#INCLUDE 'TOTVS.CH'",
+      ""
+    ]
+  },
+  "docFunction": {
+    "prefix": "Function Documentation",
+    "body": [
+      "",
+      "/*/{Protheus.doc} ${Function}",
+      "",
+      "   ${Description}",
+      "",
+      "   @author  ${Name}",
+      "   @example ${Exemple}",
+      "   @param   [${Parameter_Name}],${Parameter_type},${Parameter_Description}",
+      "   @return  ${Return}",
+      "   @table   ${Tables}",
+      "   @since   ${CURRENT_DATE}-${CURRENT_MONTH}-${CURRENT_YEAR}",
+      "/*/",
+      ""
+    ]
+  }
 }

@@ -2,7 +2,7 @@
   "name": "advpl-sintaxe",
   "displayName": "ADVPL Análise, Snippets e GIT",
   "description": "Extensão de análise de qualidade e sintaxe e snippets ADVPL e que facilita a utilização do GIT.",
-  "version": "0.7.1",
+  "version": "0.7.3",
   "publisher": "robsonrosilva",
   "icon": "images/icone.png",
   "engines": {
@@ -52,7 +52,7 @@
     "onCommand:advpl-sintaxe.analisaTags",
     "onCommand:advpl-sintaxe.atualizaBranch"
   ],
-  "main": "./out/src/extension",
+  "main": "./out/src/Extension",
   "contributes": {
     "commands": [
       {
@@ -146,37 +146,45 @@
     "snippets": [
       {
         "language": "advpl",
-        "path": "./i18n/ptb/snippets/advpl.mvc.json"
+        "path": "%advpl-sintaxe.configuration.snippets.advpl.mvc%"
       },
       {
         "language": "advpl",
-        "path": "./i18n/ptb/snippets/advpl.treport.json"
+        "path": "%advpl-sintaxe.configuration.snippets.advpl.treport%"
       },
       {
         "language": "advpl",
-        "path": "./i18n/ptb/snippets/advpl.webservices.json"
+        "path": "%advpl-sintaxe.configuration.snippets.advpl.webservices%"
       },
       {
         "language": "advpl",
-        "path": "./i18n/ptb/snippets/advpl.webservicesrest.json"
+        "path": "%advpl-sintaxe.configuration.snippets.advpl.webservicesrest%"
       },
       {
         "language": "advpl",
-        "path": "./i18n/ptb/snippets/advpl.comentarios.json"
+        "path": "%advpl-sintaxe.configuration.snippets.advpl.comentarios%"
       }
     ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "resources": "gulp build",
-    "compile": "tsc -p ./  && robocopy \".\\src\\locales\" \".\\out\\src\\locales\" & exit 0",
-    "watch": "tsc -watch -p ./ && gulp build",
+    "clean": "gulp clean",
+    "compile": "gulp build && tsc -p ./ && robocopy \".\\src\\locales\" \".\\out\\src\\locales\" & exit 0",
+    "watch": "npm run compile",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "test": "npm run compile && node ./node_modules/vscode/bin/test"
   },
   "devDependencies": {
     "@types/mocha": "^2.2.48",
     "@types/node": "^8.10.45",
+    "del": "^3.0.0",
+    "event-stream": "^3.3.4",
+    "gulp": "^3.9.1",
+    "gulp-filter": "^5.0.1",
+    "gulp-sourcemaps": "^2.6.5",
+    "gulp-typescript": "3.2.2",
+    "run-sequence": "^2.2.1",
     "tslint": "^5.14.0",
     "typescript": "^2.9.2",
     "vsce": "^1.59.0",
@@ -185,14 +193,8 @@
     "vscode-nls-dev": "^3.2.6"
   },
   "dependencies": {
-    "analise-advpl": "^2.0.12",
-    "del": "^4.0.0",
+    "analise-advpl": "^2.0.13",
     "git": "^0.1.5",
-    "gulp": "^3.9.1",
-    "gulp-sourcemaps": "^2.6.5",
-    "gulp-typescript": "^5.0.1",
-    "i18n": "^0.8.3",
-    "run-sequence": "^2.2.1",
     "vscode-nls": "^4.1.0"
   }
 }

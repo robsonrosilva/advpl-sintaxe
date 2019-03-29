@@ -13,5 +13,5 @@
         "node_modules",
         ".vscode-test"
     ],
-    "compileOnSave": false
+    "compileOnSave": true
 }

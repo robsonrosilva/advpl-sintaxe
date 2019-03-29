@@ -1,18 +1,21 @@
-import * as vscode from 'vscode';
-import { MergeAdvpl } from './Merge';
-import * as fileSystem from 'fs';
-import { ValidaAdvpl, Fonte, Funcao } from 'analise-advpl';
+import * as vscode from "vscode";
+
+import { MergeAdvpl } from "./Merge";
+import * as fileSystem from "fs";
+import { ValidaAdvpl, Fonte, Funcao } from "analise-advpl";
 //Cria um colection para os erros ADVPL
-const collection = vscode.languages.createDiagnosticCollection('advpl');
+const collection = vscode.languages.createDiagnosticCollection("advpl");
 
 let listaDuplicados = [];
 let projeto: Fonte[] = [];
 let comentFontPad = vscode.workspace
-  .getConfiguration('advpl-sintaxe')
-  .get('comentFontPad');
+  .getConfiguration("advpl-sintaxe")
+  .get("comentFontPad");
 if (!comentFontPad) {
-  comentFontPad = [''];
-  vscode.window.showInformationMessage(traduz('extension.noCritizeComment'));
+  comentFontPad = [""];
+  vscode.window.showInformationMessage(
+    localize("extension.noCritizeComment", "Do not critize coments!")
+  );
 }
 const vscodeOptions = JSON.parse(
   process.env.VSCODE_NLS_CONFIG
@@ -20,11 +23,11 @@ const vscodeOptions = JSON.parse(
 
 let validaAdvpl = new ValidaAdvpl(comentFontPad, vscodeOptions);
 validaAdvpl.ownerDb = vscode.workspace
-  .getConfiguration('advpl-sintaxe')
-  .get('ownerDb');
+  .getConfiguration("advpl-sintaxe")
+  .get("ownerDb");
 validaAdvpl.empresas = vscode.workspace
-  .getConfiguration('advpl-sintaxe')
-  .get('empresas');
+  .getConfiguration("advpl-sintaxe")
+  .get("empresas");
 
 if (!validaAdvpl.ownerDb) {
   validaAdvpl.ownerDb = [];
@@ -36,12 +39,15 @@ if (!validaAdvpl.empresas) {
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-  vscode.window.showInformationMessage(traduz('extension.activeMessage'));
+  //console.log(localize('extension.activeMessage', 'não funcionou'));
+  vscode.window.showInformationMessage(
+    localize("extension.activeMessage", "Active ADVPL Validation!")
+  );
   vscode.workspace.onDidChangeTextDocument(validaFonte);
 
   //Adiciona comando de envia para Validação
   context.subscriptions.push(
-    vscode.commands.registerCommand('advpl-sintaxe.gitValidacao', () => {
+    vscode.commands.registerCommand("advpl-sintaxe.gitValidacao", () => {
       let mergeAdvpl = new MergeAdvpl(false, validaProjeto);
       let branchAtual = mergeAdvpl.repository.headLabel;
       try {
@@ -60,7 +66,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
   //Adiciona comando de envia para Release
   context.subscriptions.push(
-    vscode.commands.registerCommand('advpl-sintaxe.gitRelease', () => {
+    vscode.commands.registerCommand("advpl-sintaxe.gitRelease", () => {
       let mergeAdvpl = new MergeAdvpl(false, validaProjeto);
       let branchAtual = mergeAdvpl.repository.headLabel;
       try {
@@ -79,7 +85,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
   //Adiciona comando de envia para master
   context.subscriptions.push(
-    vscode.commands.registerCommand('advpl-sintaxe.gitMaster', () => {
+    vscode.commands.registerCommand("advpl-sintaxe.gitMaster", () => {
       let mergeAdvpl = new MergeAdvpl(false, validaProjeto);
       let branchAtual = mergeAdvpl.repository.headLabel;
       try {
@@ -98,7 +104,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
   //Adiciona comando de envia para master
   context.subscriptions.push(
-    vscode.commands.registerCommand('advpl-sintaxe.validaProjeto', () => {
+    vscode.commands.registerCommand("advpl-sintaxe.validaProjeto", () => {
       let mergeAdvpl = new MergeAdvpl(true, validaProjeto);
       try {
         validaProjeto(undefined, undefined, undefined, undefined, undefined);
@@ -109,7 +115,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
   //Adiciona comando de envia para master
   context.subscriptions.push(
-    vscode.commands.registerCommand('advpl-sintaxe.analisaTags', () => {
+    vscode.commands.registerCommand("advpl-sintaxe.analisaTags", () => {
       let mergeAdvpl = new MergeAdvpl(true, validaProjeto);
       let branchAtual = mergeAdvpl.repository.headLabel;
       try {
@@ -122,7 +128,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
   //Adiciona comando de Atualiza Branch
   context.subscriptions.push(
-    vscode.commands.registerCommand('advpl-sintaxe.atualizaBranch', () => {
+    vscode.commands.registerCommand("advpl-sintaxe.atualizaBranch", () => {
       let mergeAdvpl = new MergeAdvpl(true, validaProjeto);
       let branchAtual = mergeAdvpl.repository.headLabel;
       try {
@@ -134,7 +140,7 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
   if (
-    vscode.workspace.getConfiguration('advpl-sintaxe').get('validaProjeto') !==
+    vscode.workspace.getConfiguration("advpl-sintaxe").get("validaProjeto") !==
     false
   ) {
     validaProjeto(undefined, undefined, undefined, undefined, undefined);
@@ -143,7 +149,7 @@ export function activate(context: vscode.ExtensionContext) {
 async function validaFonte(editor: any) {
   if (editor) {
     //verifica se a linguagem é ADVPL
-    if (editor.document.languageId === 'advpl') {
+    if (editor.document.languageId === "advpl") {
       if (editor.document.getText()) {
         validaAdvpl.validacao(editor.document.getText(), editor.document.uri);
         //verifica se o fonte já existe no projeto se não adiciona
@@ -163,7 +169,13 @@ async function validaFonte(editor: any) {
         //recupera os erros de duplicidade eles não são criticados no validaAdvpl
         let errosNew = errorVsCode(validaAdvpl.aErros);
         errosOld.forEach(erro => {
-          if (erro.message === traduz('extension.functionDuplicate')) {
+          if (
+            erro.message ===
+            localize(
+              "extension.functionDuplicate",
+              "This function is duplicated in the project!"
+            )
+          ) {
             errosNew.push(erro);
           }
         });
@@ -193,60 +205,65 @@ function errorVsCode(aErros: any) {
 // this method is called when your extension is deactivated
 export function deactivate() {}
 
-async function vscodeFindFilesSync() {
-  return vscode.workspace.findFiles('**/*.*', '**/*.json');
+async function vscodeFindFilesSync(advplExtensions) {
+  let allFiles = [];
+  for (var i = 0; i < advplExtensions.length; i++) {
+    //console.log(`**/*.${advplExtensions[i]}`);
+    let novos = await vscode.workspace.findFiles(`**/*.${advplExtensions[i]}`);
+    //console.log(novos);
+    allFiles = allFiles.concat(novos);
+  }
+  return allFiles;
 }
 
 async function validaProjeto(
   nGeradas: number = 0,
   tags: string[] = [],
-  fileContent: string = '',
-  branchAtual: string = '',
+  fileContent: string = "",
+  branchAtual: string = "",
   objetoMerge: any
 ) {
   let tag = tags[nGeradas];
-  let fileLog = vscode.workspace.rootPath + '/AnaliseProjeto.csv';
+  let fileLog = vscode.workspace.rootPath + "/AnaliseProjeto.csv";
   //percorre todos os fontes do Workspace e valida se for ADVPL
-  let advplExtensions = ['prw', 'prx', 'prg', 'apw', 'apl', 'tlpp'];
-  let files = await vscodeFindFilesSync();
+  let advplExtensions = ["prw", "prx", "prg", "apw", "apl", "tlpp"];
+  let files = await vscodeFindFilesSync(advplExtensions);
   projeto = [];
   listaDuplicados = [];
   files.forEach((file: vscode.Uri) => {
-    let re = /(?:\.([^.]+))?$/;
-    let extensao = re.exec(file.fsPath);
-    if (extensao && advplExtensions.indexOf(extensao[1].toLowerCase()) !== -1) {
-      console.log('Validando  ' + file.fsPath);
-      let conteudo = fileSystem.readFileSync(file.fsPath, 'latin1');
-      if (conteudo) {
-        validaAdvpl.validacao(conteudo, file);
-        projeto.push(validaAdvpl.fonte);
-        //Limpa as mensagens do colection
-        collection.delete(file);
-        collection.set(file, errorVsCode(validaAdvpl.aErros));
-      }
+    console.log("Validando  " + file.fsPath);
+    let conteudo = fileSystem.readFileSync(file.fsPath, "latin1");
+    if (conteudo) {
+      validaAdvpl.validacao(conteudo, file);
+      projeto.push(validaAdvpl.fonte);
+      //Limpa as mensagens do colection
+      collection.delete(file);
+      collection.set(file, errorVsCode(validaAdvpl.aErros));
     }
     //Se for o último arquivo verifica se deve gravar no arquivo LOG
     if (!fileContent && file === files[files.length - 1]) {
       verificaDuplicados();
-      vscode.window.showInformationMessage(traduz('extension.finish'));
+      vscode.window.showInformationMessage(
+        localize("extension.finish", "End of Project Review!")
+      );
     } else if (fileContent && file === files[files.length - 1]) {
       fileContent = fileContent.replace(
-        tag + '\t\t\t\t\n',
+        tag + "\t\t\t\t\n",
         validaAdvpl.padTag(tag, tags) +
-          '\t' +
+          "\t" +
           validaAdvpl.error +
-          '\t' +
+          "\t" +
           validaAdvpl.warning +
-          '\t' +
+          "\t" +
           validaAdvpl.information +
-          '\t' +
-          '\t' +
+          "\t" +
+          "\t" +
           validaAdvpl.versao +
-          '\n'
+          "\n"
       );
 
       fileSystem.writeFileSync(fileLog, fileContent);
-      console.log('Gerou TAG ' + tag);
+      console.log("Gerou TAG " + tag);
       nGeradas++;
       if (tags[nGeradas]) {
         objetoMerge.geraRelatorio(nGeradas, tags, fileContent, branchAtual);
@@ -266,7 +283,7 @@ async function verificaDuplicados() {
     try {
       fileSystem.statSync(fonte.fonte.fsPath);
     } catch (e) {
-      if (e.code === 'ENOENT') {
+      if (e.code === "ENOENT") {
         collection.delete(fonte.fonte);
         fonte = new Fonte();
       }
@@ -323,19 +340,22 @@ async function verificaDuplicados() {
 
     //adicina novos erros
     incluidos.forEach(funcaoDuplicada => {
-      console.log(` funcaoDuplicada  ${funcaoDuplicada}`);
+      //console.log(` funcaoDuplicada  ${funcaoDuplicada}`);
       //encontra nos fontes a funcao
       let incluido = duplicadosAtual[listDuplicAtual.indexOf(funcaoDuplicada)];
       incluido.fontes.forEach(fonte => {
-        console.log(` fonte  ${fonte.fonte}`);
+        //console.log(` fonte  ${fonte.fonte}`);
         //busca os erros que estão no fonte
         let erros = Object.assign([], collection.get(fonte.fonte));
         fonte.funcoes.forEach(funcao => {
-          console.log(` funcao  ${funcao.nome}`);
+          //console.log(` funcao  ${funcao.nome}`);
           erros.push(
             new vscode.Diagnostic(
               new vscode.Range(funcao.linha, 0, funcao.linha, 0),
-              traduz('extension.functionDuplicate'),
+              localize(
+                "extension.functionDuplicate",
+                "This function is duplicated in the project!"
+              ),
               vscode.DiagnosticSeverity.Error
             )
           );
@@ -349,15 +369,15 @@ async function verificaDuplicados() {
 
     //remove erros corrigidos
     excluidos.forEach(funcaoCorrigida => {
-      console.log(` funcaoCorrigida  ${funcaoCorrigida}`);
+      //console.log(` funcaoCorrigida  ${funcaoCorrigida}`);
       //encontra nos fontes a funcao
       let excuido = listaDuplicados[listDuplicOld.indexOf(funcaoCorrigida)];
       excuido.fontes.forEach(fonte => {
-        console.log(` fonte  ${fonte.fonte}`);
+        //console.log(` fonte  ${fonte.fonte}`);
         //busca os erros que estão no fonte
         let erros = Object.assign([], collection.get(fonte.fonte));
         fonte.funcoes.forEach(funcao => {
-          console.log(` funcao  ${funcao.nome}`);
+          ///console.log(` funcao  ${funcao.nome}`);
           erros.splice(
             erros.map(X => X.range._start._line).indexOf(funcao.linha)
           );
@@ -380,19 +400,19 @@ async function verificaDuplicados() {
 
   // get seconds
   var seconds = Math.round(timeDiff);
-  console.log(seconds + ' seconds');
+  console.log(seconds + " seconds");
 }
 
-function traduz(key) {
+function localize(key: string, text?: string) {
   const vscodeOptions = JSON.parse(
     process.env.VSCODE_NLS_CONFIG
   ).locale.toLowerCase();
-  let i18n = require('i18n');
-  let locales = ['en', 'pt-br'];
+  let i18n = require("i18n");
+  let locales = ["en", "pt-br"];
   i18n.configure({
     locales: locales,
-    directory: __dirname + '\\locales'
+    directory: __dirname + "\\locales"
   });
-  i18n.setLocale(locales.indexOf(vscodeOptions) + 1 ? vscodeOptions : 'en');
+  i18n.setLocale(locales.indexOf(vscodeOptions) + 1 ? vscodeOptions : "en");
   return i18n.__(key);
 }

@@ -99,6 +99,11 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
 
 ## Release Notes
 
+### 0.7.3
+
+- Correção de internacionalização de package.json.
+- Inicio de implementação de internacionalização de snippets.
+
 ### 0.7.1
 
 - Ajuste para não analisar o projeto no meio do merge.

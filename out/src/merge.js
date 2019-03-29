@@ -44,21 +44,21 @@ class MergeAdvpl {
             .getConfiguration('advpl-sintaxe')
             .get('branchTeste');
         if (!this.branchTeste) {
-            this.falha(traduz('merge.noBranch'));
+            this.falha(localize('merge.noBranch'));
             return;
         }
         this.branchHomol = vscode.workspace
             .getConfiguration('advpl-sintaxe')
             .get('branchHomologacao');
         if (!this.branchHomol) {
-            this.falha(traduz('merge.noBranch'));
+            this.falha(localize('merge.noBranch'));
             return;
         }
         this.branchProdu = vscode.workspace
             .getConfiguration('advpl-sintaxe')
             .get('branchProducao');
         if (!this.branchProdu) {
-            this.falha(traduz('merge.noBranch'));
+            this.falha(localize('merge.noBranch'));
             return;
         }
         this.branchesControladas = Array();
@@ -74,13 +74,13 @@ class MergeAdvpl {
             let tagName = '';
             //verifica se não está numa branch controlada
             if (objeto.branchesControladas.indexOf(branchAtual.toUpperCase()) !== -1) {
-                vscode.window.showErrorMessage(traduz('merge.noBranchMerge'));
+                vscode.window.showErrorMessage(localize('merge.noBranchMerge'));
                 return;
             }
             else {
                 //Trata quando a branche ainda não subiu para o GIT
                 if (!repository.HEAD.upstream) {
-                    vscode.window.showErrorMessage(traduz('merge.noPush'));
+                    vscode.window.showErrorMessage(localize('merge.noPush'));
                     return;
                 }
                 // se estiver na branche inicial efetua a atualização antes de iniciar o merge
@@ -96,21 +96,21 @@ class MergeAdvpl {
                     yield gitPushSync(repository);
                 }
                 catch (e) {
-                    vscode.window.showErrorMessage(traduz('merge.pushError') + '\n' + e.stdout);
+                    vscode.window.showErrorMessage(localize('merge.pushError') + '\n' + e.stdout);
                     return;
                 }
                 try {
                     yield gitCheckoutSync(objeto, branchdestino);
                 }
                 catch (e) {
-                    vscode.window.showErrorMessage(traduz('merge.checkoutError') + '\n' + e.stdout);
+                    vscode.window.showErrorMessage(localize('merge.checkoutError') + '\n' + e.stdout);
                     return;
                 }
                 try {
                     yield gitPullSync(repository);
                 }
                 catch (e) {
-                    vscode.window.showErrorMessage(traduz('merge.pullError') + '\n' + e.stdout);
+                    vscode.window.showErrorMessage(localize('merge.pullError') + '\n' + e.stdout);
                     return;
                 }
                 let branchOriginal = undefined;
@@ -123,7 +123,7 @@ class MergeAdvpl {
                     yield gitMergeSync(repository, branchAtual);
                 }
                 catch (e) {
-                    vscode.window.showErrorMessage(traduz('merge.mergeError') + '\n' + e.stdout);
+                    vscode.window.showErrorMessage(localize('merge.mergeError') + '\n' + e.stdout);
                     return;
                 }
                 //Se a branch destino for a master precisa criar tag
@@ -171,7 +171,7 @@ class MergeAdvpl {
                             yield gitTagSync(repository, tagName);
                         }
                         catch (e) {
-                            vscode.window.showErrorMessage(traduz('merge.tagError') + '\n' + e.stdout);
+                            vscode.window.showErrorMessage(localize('merge.tagError') + '\n' + e.stdout);
                             return;
                         }
                     }
@@ -180,7 +180,7 @@ class MergeAdvpl {
                     yield gitPushSync(repository);
                 }
                 catch (e) {
-                    vscode.window.showErrorMessage(traduz('merge.pushError') + '\n' + e.stdout);
+                    vscode.window.showErrorMessage(localize('merge.pushError') + '\n' + e.stdout);
                     return;
                 }
                 //se for usou a branche de homologação volta o conteúdo original
@@ -198,10 +198,10 @@ class MergeAdvpl {
                         yield gitCheckoutSync(repository, branchAtual);
                     }
                     catch (e) {
-                        vscode.window.showErrorMessage(traduz('merge.checkoutError') + '\n' + e.stdout);
+                        vscode.window.showErrorMessage(localize('merge.checkoutError') + '\n' + e.stdout);
                         return;
                     }
-                    objeto.sucesso(tagName, traduz('merge.mergeFinish') +
+                    objeto.sucesso(tagName, localize('merge.mergeFinish') +
                         branchAtual +
                         ' -> ' +
                         branchdestino +
@@ -216,7 +216,7 @@ class MergeAdvpl {
             let objeto = this;
             //verifica se não está numa branch controlada
             if (objeto.branchesControladas.indexOf(branchAtual.toUpperCase()) !== -1) {
-                vscode.window.showErrorMessage(traduz('merge.noBranchMerge'));
+                vscode.window.showErrorMessage(localize('merge.noBranchMerge'));
                 return;
             }
             else {
@@ -224,32 +224,32 @@ class MergeAdvpl {
                     yield gitCheckoutSync(objeto, objeto.branchHomol);
                 }
                 catch (e) {
-                    vscode.window.showErrorMessage(traduz('merge.checkoutError') + '\n' + e.stdout);
+                    vscode.window.showErrorMessage(localize('merge.checkoutError') + '\n' + e.stdout);
                     return;
                 }
                 try {
                     yield gitPullSync(repository);
                 }
                 catch (e) {
-                    vscode.window.showErrorMessage(traduz('merge.pullError') + '\n' + e.stdout);
+                    vscode.window.showErrorMessage(localize('merge.pullError') + '\n' + e.stdout);
                     return;
                 }
                 try {
                     yield gitCheckoutSync(objeto, branchAtual);
                 }
                 catch (e) {
-                    vscode.window.showErrorMessage(traduz('merge.checkoutError') + '\n' + e.stdout);
+                    vscode.window.showErrorMessage(localize('merge.checkoutError') + '\n' + e.stdout);
                     return;
                 }
                 try {
                     yield gitMergeSync(repository, objeto.branchHomol);
                 }
                 catch (e) {
-                    vscode.window.showErrorMessage(traduz('merge.mergeError') + '\n' + e.stdout);
+                    vscode.window.showErrorMessage(localize('merge.mergeError') + '\n' + e.stdout);
                     return;
                 }
                 if (showMessage) {
-                    vscode.window.showInformationMessage(traduz('merge.atualizacaoFinish'));
+                    vscode.window.showInformationMessage(localize('merge.atualizacaoFinish'));
                 }
             }
         });
@@ -292,11 +292,15 @@ class MergeAdvpl {
                     if (vscode.window.activeTextEditor) {
                         let repository = git.exports._model.getRepository(vscode.window.activeTextEditor.document.uri);
                         // set resource groups
+                        if (!repository) {
+                            vscode.window.showErrorMessage(localize('Erro ao obter Repositório!'));
+                            return;
+                        }
                         if ((repository.mergeGroup.resourceStates.length !== 0 ||
                             repository.indexGroup.resourceStates.length !== 0 ||
                             repository.workingTreeGroup.resourceStates.length !== 0) &&
                             !forca) {
-                            vscode.window.showErrorMessage(traduz('merge.noCommited'));
+                            vscode.window.showErrorMessage(localize('merge.noCommited'));
                             return;
                         }
                         return repository;
@@ -307,7 +311,7 @@ class MergeAdvpl {
                         if (repository.mergeGroup.resourceStates.length !== 0 ||
                             repository.indexGroup.resourceStates.length !== 0 ||
                             repository.workingTreeGroup.resourceStates.length !== 0) {
-                            vscode.window.showErrorMessage(traduz('merge.noCommited'));
+                            vscode.window.showErrorMessage(localize('merge.noCommited'));
                             return;
                         }
                         return repository;
@@ -317,7 +321,7 @@ class MergeAdvpl {
         }
     }
     sucesso(value, rotina) {
-        vscode.window.showInformationMessage(traduz('merge.success') + rotina + ' [' + value + ']');
+        vscode.window.showInformationMessage(localize('merge.success') + rotina + ' [' + value + ']');
         this.fnValidacao(undefined, undefined, undefined, undefined, undefined);
     }
     falha(rotina) {
@@ -326,13 +330,13 @@ class MergeAdvpl {
     }
 }
 exports.MergeAdvpl = MergeAdvpl;
-function traduz(key) {
+function localize(key, text) {
     const vscodeOptions = JSON.parse(process.env.VSCODE_NLS_CONFIG).locale.toLowerCase();
     let i18n = require('i18n');
     let locales = ['en', 'pt-br'];
     i18n.configure({
         locales: locales,
-        directory: __dirname + '/locales'
+        directory: __dirname + '\\locales'
     });
     i18n.setLocale(locales.indexOf(vscodeOptions) + 1 ? vscodeOptions : 'en');
     return i18n.__(key);
