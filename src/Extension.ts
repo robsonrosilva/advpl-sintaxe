@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import { MergeAdvpl } from "./Merge";
 import * as fileSystem from "fs";
 import { ValidaAdvpl, Fonte, Funcao } from "analise-advpl";
+import globby = require('globby');
 //Cria um colection para os erros ADVPL
 const collection = vscode.languages.createDiagnosticCollection("advpl");
 
@@ -206,14 +207,11 @@ function errorVsCode(aErros: any) {
 export function deactivate() {}
 
 async function vscodeFindFilesSync(advplExtensions) {
-  let allFiles = [];
+  let globexp: any[] = [];
   for (var i = 0; i < advplExtensions.length; i++) {
-    //console.log(`**/*.${advplExtensions[i]}`);
-    let novos = await vscode.workspace.findFiles(`**/*.${advplExtensions[i]}`);
-    //console.log(novos);
-    allFiles = allFiles.concat(novos);
+    globexp.push(`**/*.${advplExtensions[i]}`);
   }
-  return allFiles;
+  return await globby(globexp, { cwd: vscode.workspace.rootPath, nocase: true });
 }
 
 async function validaProjeto(
@@ -224,14 +222,17 @@ async function validaProjeto(
   objetoMerge: any
 ) {
   let tag = tags[nGeradas];
-  let fileLog = vscode.workspace.rootPath + "/AnaliseProjeto.csv";
   //percorre todos os fontes do Workspace e valida se for ADVPL
   let advplExtensions = ["prw", "prx", "prg", "apw", "apl", "tlpp"];
+  let start = new Date().getTime();
   let files = await vscodeFindFilesSync(advplExtensions);
+  console.log("TEMPO GASTO  " + (new Date().getTime() - start));
   projeto = [];
   listaDuplicados = [];
-  files.forEach((file: vscode.Uri) => {
-    console.log("Validando  " + file.fsPath);
+  files.forEach((fileName: string) => {
+    let file: vscode.Uri = vscode.Uri.file(vscode.workspace.rootPath + '\\' + fileName);
+    start = new Date().getTime();
+    console.log("Validando  " + vscode.workspace.rootPath + '\\' + file.fsPath);
     let conteudo = fileSystem.readFileSync(file.fsPath, "latin1");
     if (conteudo) {
       validaAdvpl.validacao(conteudo, file);
@@ -240,13 +241,16 @@ async function validaProjeto(
       collection.delete(file);
       collection.set(file, errorVsCode(validaAdvpl.aErros));
     }
+
+    console.log("TEMPO GASTO  " + (new Date().getTime() - start));
+
     //Se for o último arquivo verifica se deve gravar no arquivo LOG
-    if (!fileContent && file === files[files.length - 1]) {
+    if (!fileContent && fileName === files[files.length - 1]) {
       verificaDuplicados();
       vscode.window.showInformationMessage(
         localize("extension.finish", "End of Project Review!")
       );
-    } else if (fileContent && file === files[files.length - 1]) {
+    } else if (fileContent && fileName === files[files.length - 1]) {
       fileContent = fileContent.replace(
         tag + "\t\t\t\t\n",
         validaAdvpl.padTag(tag, tags) +
@@ -262,6 +266,7 @@ async function validaProjeto(
           "\n"
       );
 
+      let fileLog = vscode.workspace.rootPath + "/AnaliseProjeto.csv";
       fileSystem.writeFileSync(fileLog, fileContent);
       console.log("Gerou TAG " + tag);
       nGeradas++;
