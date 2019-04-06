@@ -9,14 +9,11 @@
 	"extension.finish": "End of Project Review!",
 	"merge.noBranch": "For merge configure branches in settings!",
 	"merge.atualizacaoFinish": "The branch has been updated successfully!",
-	"merge.checkoutError": "Error in Checkout!",
-	"merge.mergeError": "Error in Merge!",
-	"merge.pullError": "Error in Pull!",
-	"merge.pushError": "Error in Push!",
-	"merge.tagError": "Tag creation error!",
-	"merge.noRepository": "Repository Git not found!",
-	"extension.functionDuplicate": "This function is duplicated in the project!",
-	"validaAdvpl.padComment": "validaAdvpl.padComment",
-	"validaAdvpl.functionNoCommented": "validaAdvpl.functionNoCommented",
-	"validaAdvpl.foundFile": "validaAdvpl.foundFile"
+	"merge.checkoutError":"Error in Checkout!",
+	"merge.mergeError":"Error in Merge!",
+	"merge.pullError":"Error in Pull!",
+	"merge.pushError":"Error in Push!",
+	"merge.tagError":"Tag creation error!",
+	"merge.noRepository":"Repository Git not found!",
+	"extension.functionDuplicate": "This function is duplicated in the project!"
 }
