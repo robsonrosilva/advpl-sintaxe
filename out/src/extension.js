@@ -116,7 +116,15 @@ function activate(context) {
     }));
     if (vscode.workspace.getConfiguration("advpl-sintaxe").get("validaProjeto") !==
         false) {
+        let startTime = new Date();
         validaProjeto(undefined, undefined, undefined, undefined, undefined);
+        let endTime = new Date();
+        var timeDiff = endTime - startTime; //in ms
+        // strip the ms
+        timeDiff /= 1000;
+        // get seconds
+        var seconds = Math.round(timeDiff);
+        console.log("Tempo gasto validacao " + seconds + " seconds");
     }
 }
 exports.activate = activate;
@@ -172,55 +180,65 @@ function vscodeFindFilesSync(advplExtensions) {
         for (var i = 0; i < advplExtensions.length; i++) {
             globexp.push(`**/*.${advplExtensions[i]}`);
         }
-        return yield globby(globexp, { cwd: vscode.workspace.rootPath, nocase: true });
+        return yield globby(globexp, {
+            cwd: vscode.workspace.rootPath,
+            nocase: true
+        });
     });
 }
 function validaProjeto(nGeradas = 0, tags = [], fileContent = "", branchAtual = "", objetoMerge) {
     return __awaiter(this, void 0, void 0, function* () {
+        let objeto = this;
         let tag = tags[nGeradas];
         //percorre todos os fontes do Workspace e valida se for ADVPL
         let advplExtensions = ["prw", "prx", "prg", "apw", "apl", "tlpp"];
-        let start = new Date().getTime();
+        let start = new Date();
         let files = yield vscodeFindFilesSync(advplExtensions);
-        console.log("TEMPO GASTO  " + (new Date().getTime() - start));
+        let endTime = new Date();
+        var timeDiff = endTime - start; //in ms
+        // strip the ms
+        timeDiff /= 1000;
+        // get seconds
+        var seconds = Math.round(timeDiff);
+        console.log("Tempo gasto buscando arquivos " + seconds + " seconds");
         projeto = [];
         listaDuplicados = [];
         files.forEach((fileName) => {
-            let file = vscode.Uri.file(vscode.workspace.rootPath + '\\' + fileName);
-            start = new Date().getTime();
-            console.log("Validando  " + vscode.workspace.rootPath + '\\' + file.fsPath);
+            let file = vscode.Uri.file(vscode.workspace.rootPath + "\\" + fileName);
+            console.log("Validando  " + vscode.workspace.rootPath + "\\" + file.fsPath);
             let conteudo = fileSystem.readFileSync(file.fsPath, "latin1");
             if (conteudo) {
+                let start = new Date();
                 validaAdvpl.validacao(conteudo, file);
+                let endTime = new Date();
+                var timeDiff = endTime - start; //in ms
+                // strip the ms
+                timeDiff /= 1000;
+                // get seconds
+                var seconds = Math.round(timeDiff);
+                console.log("Tempo gasto analisando " + seconds + " seconds");
                 projeto.push(validaAdvpl.fonte);
                 //Limpa as mensagens do colection
                 collection.delete(file);
                 collection.set(file, errorVsCode(validaAdvpl.aErros));
+                if (!fileContent && projeto.length === files.length) {
+                    start = new Date();
+                    verificaDuplicados();
+                    let endTime = new Date();
+                    timeDiff = endTime - start; //in ms
+                    // strip the ms
+                    timeDiff /= 1000;
+                    // get seconds
+                    seconds = Math.round(timeDiff);
+                    console.log("Tempo gasto verificando duplicados " + seconds + " seconds");
+                    vscode.window.showInformationMessage(localize("extension.finish", "End of Project Review!"));
+                }
             }
-            console.log("TEMPO GASTO  " + (new Date().getTime() - start));
-            //Se for o último arquivo verifica se deve gravar no arquivo LOG
-            if (!fileContent && fileName === files[files.length - 1]) {
-                verificaDuplicados();
-                vscode.window.showInformationMessage(localize("extension.finish", "End of Project Review!"));
-            }
-            else if (fileContent && fileName === files[files.length - 1]) {
-                fileContent = fileContent.replace(tag + "\t\t\t\t\n", validaAdvpl.padTag(tag, tags) +
-                    "\t" +
-                    validaAdvpl.error +
-                    "\t" +
-                    validaAdvpl.warning +
-                    "\t" +
-                    validaAdvpl.information +
-                    "\t" +
-                    "\t" +
-                    validaAdvpl.versao +
-                    "\n");
-                let fileLog = vscode.workspace.rootPath + "/AnaliseProjeto.csv";
-                fileSystem.writeFileSync(fileLog, fileContent);
-                console.log("Gerou TAG " + tag);
-                nGeradas++;
-                if (tags[nGeradas]) {
-                    objetoMerge.geraRelatorio(nGeradas, tags, fileContent, branchAtual);
+            else {
+                projeto.push(new analise_advpl_1.Fonte(file));
+                if (!fileContent && projeto.length === files.length) {
+                    verificaDuplicados();
+                    vscode.window.showInformationMessage(localize("extension.finish", "End of Project Review!"));
                 }
             }
         });
@@ -241,7 +259,7 @@ function verificaDuplicados() {
             catch (e) {
                 if (e.code === "ENOENT") {
                     collection.delete(fonte.fonte);
-                    fonte = new analise_advpl_1.Fonte();
+                    fonte = new analise_advpl_1.Fonte(new vscode.Uri());
                 }
             }
             fonte.funcoes.forEach((funcao) => {
@@ -341,4 +359,5 @@ function localize(key, text) {
     i18n.setLocale(locales.indexOf(vscodeOptions) + 1 ? vscodeOptions : "en");
     return i18n.__(key);
 }
+
 //# sourceMappingURL=Extension.js.map

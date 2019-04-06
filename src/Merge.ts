@@ -318,41 +318,36 @@ export class MergeAdvpl {
       let git = vscode.extensions.getExtension('vscode.git');
       if (git) {
         if (git.isActive) {
-          if (vscode.window.activeTextEditor) {
-            let repository = git.exports._model.getRepository(
+          let repository;
+          // se houver mais de um repositório git aberto e se houver um editor
+          if (git.exports._model.repositories.length > 1 && vscode.window.activeTextEditor) {
+            repository = git.exports._model.getRepository(
               vscode.window.activeTextEditor.document.uri
             );
-            // set resource groups
-            if (!repository) {
-              vscode.window.showErrorMessage(localize('Erro ao obter Repositório!'));
-              return;
-            }
-
-            if (
-              (repository.mergeGroup.resourceStates.length !== 0 ||
-                repository.indexGroup.resourceStates.length !== 0 ||
-                repository.workingTreeGroup.resourceStates.length !== 0) &&
-              !forca
-            ) {
-              vscode.window.showErrorMessage(localize('merge.noCommited'));
-              return;
-            }
-            return repository;
+          } else if(git.exports._model.repositories.length === 1){
+            repository = git.exports._model.repositories[0];
           } else {
             let repository = git.exports._model.getRepository(
               vscode.workspace.rootPath
             );
-            // set resource groups
-            if (
-              repository.mergeGroup.resourceStates.length !== 0 ||
-              repository.indexGroup.resourceStates.length !== 0 ||
-              repository.workingTreeGroup.resourceStates.length !== 0
-            ) {
-              vscode.window.showErrorMessage(localize('merge.noCommited'));
-              return;
-            }
-            return repository;
           }
+          // set resource groups
+          if (!repository) {
+            vscode.window.showErrorMessage(localize('merge.noRepository'));
+            return;
+          }
+
+          // set resource groups
+          if (
+            repository.mergeGroup.resourceStates.length !== 0 ||
+            repository.indexGroup.resourceStates.length !== 0 ||
+            repository.workingTreeGroup.resourceStates.length !== 0
+          ) {
+            vscode.window.showErrorMessage(localize('merge.noCommited'));
+            return;
+          }
+
+          return repository;
         }
       }
     }

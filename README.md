@@ -99,8 +99,12 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
 
 ## Release Notes
 
-### 0.7.4
+### 0.7.5
+- Melhoria de rotina que busca arquivos no projeto para uma mais rápida(globby).
+- Compactação de projeto para melhorar performance.
+- Correção de busca de repositório quando não há fontes abertos.
 
+### 0.7.4
 - Alteração de mecanismo de busca de arquivos para dentificar de forma incasesensitive.
 - Mudanas de LOOP para melhorar performance.
 - Atualização de módulo advpl.

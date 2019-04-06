@@ -14,5 +14,6 @@
 	"merge.pullError":"Error in Pull!",
 	"merge.pushError":"Error in Push!",
 	"merge.tagError":"Tag creation error!",
+	"merge.noRepository":"Repository Git not found!",
 	"extension.functionDuplicate": "This function is duplicated in the project!"
 }
