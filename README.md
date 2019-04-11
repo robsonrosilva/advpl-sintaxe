@@ -9,7 +9,6 @@ Esta extensão adiciona no visual code [VsCode MarketPlace](https://marketplace.
 - Snippets da linguagem.
 - Funcionalidades para promover os desenvolvimentos utilizando git de forma a enviar para homologação e produção de forma simples, gerando TAGS ao mergear para a branch de produção.
 - Análise de qualidade e sintaxe de programas ADVPL.
-- Comando para análise de evolução de qualidade por TAGS.
 
 Caso você encontre algum problema ou queira dar alguma sugestão de melhoria, por favor abra uma issue no [GitHub](https://github.com/robsonrosilva/advpl-sintaxe/issues).
 
@@ -43,12 +42,6 @@ Verifica se estão sendo utilizados padrões básicos de qualidade como:
 - Schema (banco de dados) fixo na query.
 
 ![Análise de Fontes](images/analiseFontes.png?raw=true 'Análise de Fontes')
-
-## ANÁLISE DE TAGS
-
-Essa funcionalidade faz uma análise de todas as tags com padrão N.N.N gravando em um arquivo na raiz do projeto a quantidade de críticas em cada tag.
-
-![Análise de TAGS](images/analiseTags.png?raw=true 'Análise de TAGS')
 
 # GIT
 
@@ -97,12 +90,11 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
 - **WsResponseTrueREST** - Retorno positivo para a operação para WebServices REST.
 - **WsResponseFalseREST** - Retorno negativo para a operação para WebServices REST.
 
-## Release Notes
+## VERSÃO ATUAL
 
-### 0.7.5
-- Melhoria de rotina que busca arquivos no projeto para uma mais rápida(globby).
-- Compactação de projeto para melhorar performance.
-- Correção de busca de repositório quando não há fontes abertos.
+### 0.7.6
+- Criação de cache para acelerar revalidações de fontes.
+- Correção de tradução de modulo de validação advpl.
 
 # Código
 

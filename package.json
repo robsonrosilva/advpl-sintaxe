@@ -2,7 +2,7 @@
   "name": "advpl-sintaxe",
   "displayName": "ADVPL Análise, Snippets e GIT",
   "description": "Extensão de análise de qualidade e sintaxe e snippets ADVPL e que facilita a utilização do GIT.",
-  "version": "0.7.5",
+  "version": "0.7.6",
   "publisher": "robsonrosilva",
   "icon": "images/icone.png",
   "engines": {
@@ -70,10 +70,6 @@
       {
         "command": "advpl-sintaxe.validaProjeto",
         "title": "%advpl-sintaxe.commands.validacao.projeto%"
-      },
-      {
-        "command": "advpl-sintaxe.analisaTags",
-        "title": "%advpl-sintaxe.commands.validacao.tags%"
       },
       {
         "command": "advpl-sintaxe.atualizaBranch",
@@ -179,14 +175,14 @@
     "@types/mocha": "^2.2.48",
     "@types/node": "^8.10.45",
     "del": "^3.0.0",
-    "event-stream": "^3.3.4",
+    "event-stream": "^3.3.5",
     "gulp": "^3.9.1",
-    "gulp-filter": "^5.0.1",
+    "gulp-filter": "^5.1.0",
     "gulp-sourcemaps": "^2.6.5",
-    "gulp-typescript": "3.2.2",
+    "gulp-typescript": "^3.2.2",
     "run-sequence": "^2.2.1",
     "ts-loader": "^5.3.3",
-    "tslint": "^5.14.0",
+    "tslint": "^5.15.0",
     "typescript": "^2.9.2",
     "vsce": "^1.59.0",
     "vscode": "^1.1.33",
@@ -196,7 +192,7 @@
     "webpack-cli": "^3.3.0"
   },
   "dependencies": {
-    "analise-advpl": "^4.0.0",
+    "analise-advpl": "^4.0.2",
     "git": "^0.1.5",
     "globby": "^9.2.0",
     "vscode-nls": "^4.1.0"
