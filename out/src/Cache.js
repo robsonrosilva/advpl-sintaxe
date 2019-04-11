@@ -6,13 +6,19 @@ class Cache {
     constructor(fileCache) {
         this.fileCache = fileCache;
         this.tmpFolder = os.tmpdir();
-        this.fileCache = this.fileCache.replace(/\\/g, '').replace(/\:/g, '').replace(/\//g, '') + '.cache';
+        this.fileCache =
+            this.fileCache
+                .replace(/\\/g, '')
+                .replace(/\:/g, '')
+                .replace(/\//g, '') + '.cache';
         let content;
         try {
             if (!fileSystem.existsSync(this.tmpFolder + '\\' + this.fileCache)) {
-                fileSystem.writeFileSync(this.tmpFolder + '\\' + this.fileCache, '', { mode: 0o755 });
+                fileSystem.writeFileSync(this.tmpFolder + '\\' + this.fileCache, '', {
+                    mode: 0o755
+                });
             }
-            content = fileSystem.readFileSync(this.tmpFolder + '\\' + this.fileCache, "utf8");
+            content = fileSystem.readFileSync(this.tmpFolder + '\\' + this.fileCache, 'utf8');
         }
         catch (err) {
             // An error occurred
@@ -27,6 +33,10 @@ class Cache {
     }
     //adiciona o item e grava em cache
     addFile(file) {
+        // limita o chace em 500 arquivos
+        if (this.filesInCache.length >= 500) {
+            return;
+        }
         // Faz uma cópia do objeto pois como uso sempre o mesmo evito maiores problemas
         file.validaAdvpl = JSON.parse(JSON.stringify(file.validaAdvpl));
         this.filesInCache.push(file);

@@ -109,24 +109,24 @@ const Merge_1 = __webpack_require__(236);
 const analise_advpl_1 = __webpack_require__(255);
 const util_1 = __webpack_require__(17);
 //Cria um colection para os erros ADVPL
-const collection = vscode_1.languages.createDiagnosticCollection("advpl");
+const collection = vscode_1.languages.createDiagnosticCollection('advpl');
 let listaDuplicados = [];
 let projeto = [];
 let comentFontPad = vscode_1.workspace
-    .getConfiguration("advpl-sintaxe")
-    .get("comentFontPad");
+    .getConfiguration('advpl-sintaxe')
+    .get('comentFontPad');
 if (!comentFontPad) {
-    comentFontPad = [""];
-    vscode_1.window.showInformationMessage(localize("extension.noCritizeComment", "Do not critize coments!"));
+    comentFontPad = [''];
+    vscode_1.window.showInformationMessage(localize('extension.noCritizeComment', 'Do not critize coments!'));
 }
 const vscodeOptions = JSON.parse(process.env.VSCODE_NLS_CONFIG).locale.toLowerCase();
 let validaAdvpl = new analise_advpl_1.ValidaAdvpl(comentFontPad, vscodeOptions, false);
 validaAdvpl.ownerDb = vscode_1.workspace
-    .getConfiguration("advpl-sintaxe")
-    .get("ownerDb");
+    .getConfiguration('advpl-sintaxe')
+    .get('ownerDb');
 validaAdvpl.empresas = vscode_1.workspace
-    .getConfiguration("advpl-sintaxe")
-    .get("empresas");
+    .getConfiguration('advpl-sintaxe')
+    .get('empresas');
 if (!validaAdvpl.ownerDb) {
     validaAdvpl.ownerDb = [];
 }
@@ -137,10 +137,10 @@ if (!validaAdvpl.empresas) {
 // your extension is activated the very first time the command is executed
 function activate(context) {
     //debuglog(localize('extension.activeMessage', 'não funcionou'));
-    vscode_1.window.showInformationMessage(localize("extension.activeMessage", "Active ADVPL Validation!"));
+    vscode_1.window.showInformationMessage(localize('extension.activeMessage', 'Active ADVPL Validation!'));
     vscode_1.workspace.onDidChangeTextDocument(validaFonte);
     //Adiciona comando de envia para Validação
-    context.subscriptions.push(vscode_1.commands.registerCommand("advpl-sintaxe.gitValidacao", () => {
+    context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.gitValidacao', () => {
         let mergeAdvpl = new Merge_1.MergeAdvpl(false, validaProjeto);
         let branchAtual = mergeAdvpl.repository.headLabel;
         try {
@@ -152,7 +152,7 @@ function activate(context) {
         mergeAdvpl.repository.checkout(branchAtual);
     }));
     //Adiciona comando de envia para Release
-    context.subscriptions.push(vscode_1.commands.registerCommand("advpl-sintaxe.gitRelease", () => {
+    context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.gitRelease', () => {
         let mergeAdvpl = new Merge_1.MergeAdvpl(false, validaProjeto);
         let branchAtual = mergeAdvpl.repository.headLabel;
         try {
@@ -164,7 +164,7 @@ function activate(context) {
         mergeAdvpl.repository.checkout(branchAtual);
     }));
     //Adiciona comando de envia para master
-    context.subscriptions.push(vscode_1.commands.registerCommand("advpl-sintaxe.gitMaster", () => {
+    context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.gitMaster', () => {
         let mergeAdvpl = new Merge_1.MergeAdvpl(false, validaProjeto);
         let branchAtual = mergeAdvpl.repository.headLabel;
         try {
@@ -176,7 +176,7 @@ function activate(context) {
         mergeAdvpl.repository.checkout(branchAtual);
     }));
     //Adiciona comando de envia para master
-    context.subscriptions.push(vscode_1.commands.registerCommand("advpl-sintaxe.validaProjeto", () => {
+    context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.validaProjeto', () => {
         let mergeAdvpl = new Merge_1.MergeAdvpl(true, validaProjeto);
         try {
             validaProjeto(undefined, undefined, undefined, undefined, undefined);
@@ -186,7 +186,7 @@ function activate(context) {
         }
     }));
     //Adiciona comando de envia para master
-    context.subscriptions.push(vscode_1.commands.registerCommand("advpl-sintaxe.analisaTags", () => {
+    context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.analisaTags', () => {
         let mergeAdvpl = new Merge_1.MergeAdvpl(true, validaProjeto);
         let branchAtual = mergeAdvpl.repository.headLabel;
         try {
@@ -198,7 +198,7 @@ function activate(context) {
         mergeAdvpl.repository.checkout(branchAtual);
     }));
     //Adiciona comando de Atualiza Branch
-    context.subscriptions.push(vscode_1.commands.registerCommand("advpl-sintaxe.atualizaBranch", () => {
+    context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.atualizaBranch', () => {
         let mergeAdvpl = new Merge_1.MergeAdvpl(true, validaProjeto);
         let branchAtual = mergeAdvpl.repository.headLabel;
         try {
@@ -209,7 +209,7 @@ function activate(context) {
         }
         mergeAdvpl.repository.checkout(branchAtual);
     }));
-    if (vscode_1.workspace.getConfiguration("advpl-sintaxe").get("validaProjeto") !== false) {
+    if (vscode_1.workspace.getConfiguration('advpl-sintaxe').get('validaProjeto') !== false) {
         let startTime = new Date();
         validaProjeto(undefined, undefined, undefined, undefined, undefined);
         let endTime = new Date();
@@ -218,7 +218,7 @@ function activate(context) {
         timeDiff /= 1000;
         // get seconds
         var seconds = Math.round(timeDiff);
-        util_1.debuglog("Tempo gasto validacao " + seconds + " seconds");
+        util_1.debuglog('Tempo gasto validacao ' + seconds + ' seconds');
     }
 }
 exports.activate = activate;
@@ -227,7 +227,7 @@ function validaFonte(editor) {
         let cache = new Cache_1.Cache(vscode_1.workspace.rootPath);
         if (editor) {
             //verifica se a linguagem é ADVPL
-            if (editor.document.languageId === "advpl") {
+            if (editor.document.languageId === 'advpl') {
                 if (editor.document.getText()) {
                     validaAdvpl.validacao(editor.document.getText(), editor.document.uri);
                     //verifica se o fonte já existe no projeto se não adiciona
@@ -246,7 +246,7 @@ function validaFonte(editor) {
                     let errosNew = errorVsCode(validaAdvpl.aErros);
                     errosOld.forEach(erro => {
                         if (erro.message ===
-                            localize("extension.functionDuplicate", "This function is duplicated in the project!")) {
+                            localize('extension.functionDuplicate', 'This function is duplicated in the project!')) {
                             errosNew.push(erro);
                         }
                     });
@@ -281,7 +281,7 @@ function vscodeFindFilesSync(advplExtensions) {
         });
     });
 }
-function validaProjeto(nGeradas = 0, tags = [], fileContent = "", branchAtual = "", objetoMerge, maxCache = 100) {
+function validaProjeto(nGeradas = 0, tags = [], fileContent = '', branchAtual = '', objetoMerge, maxCache = 500) {
     return __awaiter(this, void 0, void 0, function* () {
         let cache = new Cache_1.Cache(vscode_1.workspace.rootPath);
         // se a versão é diferente apaga do cache
@@ -290,7 +290,7 @@ function validaProjeto(nGeradas = 0, tags = [], fileContent = "", branchAtual = 
         let objeto = this;
         let tag = tags[nGeradas];
         //percorre todos os fontes do Workspace e valida se for ADVPL
-        let advplExtensions = ["prw", "prx", "prg", "apw", "apl", "tlpp"];
+        let advplExtensions = ['prw', 'prx', 'prg', 'apw', 'apl', 'tlpp'];
         let start = new Date();
         let files = yield vscodeFindFilesSync(advplExtensions);
         let endTime = new Date();
@@ -299,13 +299,13 @@ function validaProjeto(nGeradas = 0, tags = [], fileContent = "", branchAtual = 
         timeDiff /= 1000;
         // get seconds
         var seconds = Math.round(timeDiff);
-        util_1.debuglog("Tempo gasto buscando arquivos " + seconds + " seconds");
+        util_1.debuglog('Tempo gasto buscando arquivos ' + seconds + ' seconds');
         projeto = [];
         listaDuplicados = [];
         files.forEach((fileName) => {
-            let file = vscode_1.Uri.file(vscode_1.workspace.rootPath + "\\" + fileName);
-            util_1.debuglog("Validando  " + vscode_1.workspace.rootPath + "\\" + file.fsPath);
-            let conteudo = fileSystem.readFileSync(file.fsPath, "latin1");
+            let file = vscode_1.Uri.file(vscode_1.workspace.rootPath + '\\' + fileName);
+            util_1.debuglog('Validando  ' + vscode_1.workspace.rootPath + '\\' + file.fsPath);
+            let conteudo = fileSystem.readFileSync(file.fsPath, 'latin1');
             // pepara objeto para o cache
             let fileForCache = new FileCache_1.FileCache();
             fileForCache.file = file;
@@ -319,7 +319,7 @@ function validaProjeto(nGeradas = 0, tags = [], fileContent = "", branchAtual = 
                 // se há o arquivo no cache compara o conteúdo e versão do cache com o atual
                 if (fileCache.file.fsPath === file.fsPath) {
                     if (fileCache.content === conteudo) {
-                        util_1.debuglog("usando cache");
+                        util_1.debuglog('usando cache');
                         // se for igual carrega a validação em cache
                         fileForCache.validaAdvpl = fileCache.validaAdvpl;
                     }
@@ -357,7 +357,7 @@ function validaProjeto(nGeradas = 0, tags = [], fileContent = "", branchAtual = 
             if (!fileContent && projeto.length === files.length) {
                 verificaDuplicados();
                 util_1.debuglog(seconds.toString());
-                vscode_1.window.showInformationMessage(localize("extension.finish"));
+                vscode_1.window.showInformationMessage(localize('extension.finish'));
             }
         });
     });
@@ -375,7 +375,7 @@ function verificaDuplicados() {
                 fileSystem.statSync(fonte.fonte.fsPath);
             }
             catch (e) {
-                if (e.code === "ENOENT") {
+                if (e.code === 'ENOENT') {
                     collection.delete(fonte.fonte);
                     fonte = new analise_advpl_1.Fonte();
                 }
@@ -429,7 +429,7 @@ function verificaDuplicados() {
                     let erros = Object.assign([], collection.get(fonte.fonte));
                     fonte.funcoes.forEach(funcao => {
                         //debuglog(` funcao  ${funcao.nome}`);
-                        erros.push(new vscode_1.Diagnostic(new vscode_1.Range(funcao.linha, 0, funcao.linha, 0), localize("extension.functionDuplicate", "This function is duplicated in the project!"), vscode_1.DiagnosticSeverity.Error));
+                        erros.push(new vscode_1.Diagnostic(new vscode_1.Range(funcao.linha, 0, funcao.linha, 0), localize('extension.functionDuplicate', 'This function is duplicated in the project!'), vscode_1.DiagnosticSeverity.Error));
                     });
                     //Limpa as mensagens do colection
                     collection.delete(fonte.fonte);
@@ -463,18 +463,18 @@ function verificaDuplicados() {
         timeDiff /= 1000;
         // get seconds
         var seconds = Math.round(timeDiff);
-        util_1.debuglog(seconds + " seconds");
+        util_1.debuglog(seconds + ' seconds');
     });
 }
 function localize(key, text) {
     const vscodeOptions = JSON.parse(process.env.VSCODE_NLS_CONFIG).locale.toLowerCase();
     let i18n = __webpack_require__(237);
-    let locales = ["en", "pt-br"];
+    let locales = ['en', 'pt-br'];
     i18n.configure({
         locales: locales,
-        directory: __dirname + "\\locales"
+        directory: __dirname + '\\locales'
     });
-    i18n.setLocale(locales.indexOf(vscodeOptions) + 1 ? vscodeOptions : "en");
+    i18n.setLocale(locales.indexOf(vscodeOptions) + 1 ? vscodeOptions : 'en');
     return i18n.__(key);
 }
 
@@ -492,13 +492,19 @@ class Cache {
     constructor(fileCache) {
         this.fileCache = fileCache;
         this.tmpFolder = os.tmpdir();
-        this.fileCache = this.fileCache.replace(/\\/g, '').replace(/\:/g, '').replace(/\//g, '') + '.cache';
+        this.fileCache =
+            this.fileCache
+                .replace(/\\/g, '')
+                .replace(/\:/g, '')
+                .replace(/\//g, '') + '.cache';
         let content;
         try {
             if (!fileSystem.existsSync(this.tmpFolder + '\\' + this.fileCache)) {
-                fileSystem.writeFileSync(this.tmpFolder + '\\' + this.fileCache, '', { mode: 0o755 });
+                fileSystem.writeFileSync(this.tmpFolder + '\\' + this.fileCache, '', {
+                    mode: 0o755
+                });
             }
-            content = fileSystem.readFileSync(this.tmpFolder + '\\' + this.fileCache, "utf8");
+            content = fileSystem.readFileSync(this.tmpFolder + '\\' + this.fileCache, 'utf8');
         }
         catch (err) {
             // An error occurred
@@ -513,6 +519,10 @@ class Cache {
     }
     //adiciona o item e grava em cache
     addFile(file) {
+        // limita o chace em 500 arquivos
+        if (this.filesInCache.length >= 500) {
+            return;
+        }
         // Faz uma cópia do objeto pois como uso sempre o mesmo evito maiores problemas
         file.validaAdvpl = JSON.parse(JSON.stringify(file.validaAdvpl));
         this.filesInCache.push(file);
@@ -29646,12 +29656,12 @@ function gitCheckoutSync(objeto, destino) {
 }
 function gitMergeSync(repository, branchOrigem) {
     return __awaiter(this, void 0, void 0, function* () {
-        return repository.merge(branchOrigem, "");
+        return repository.merge(branchOrigem, '');
     });
 }
 function gitTagSync(repository, tag) {
     return __awaiter(this, void 0, void 0, function* () {
-        return repository.tag(tag, "");
+        return repository.tag(tag, '');
     });
 }
 function gitPushSync(repository) {
@@ -29670,24 +29680,24 @@ class MergeAdvpl {
         this.fnValidacao = fnValidacao;
         //Busca Configurações do Settings
         this.branchTeste = vscode_1.workspace
-            .getConfiguration("advpl-sintaxe")
-            .get("branchTeste");
+            .getConfiguration('advpl-sintaxe')
+            .get('branchTeste');
         if (!this.branchTeste) {
-            this.falha(localize("merge.noBranch"));
+            this.falha(localize('merge.noBranch'));
             return;
         }
         this.branchHomol = vscode_1.workspace
-            .getConfiguration("advpl-sintaxe")
-            .get("branchHomologacao");
+            .getConfiguration('advpl-sintaxe')
+            .get('branchHomologacao');
         if (!this.branchHomol) {
-            this.falha(localize("merge.noBranch"));
+            this.falha(localize('merge.noBranch'));
             return;
         }
         this.branchProdu = vscode_1.workspace
-            .getConfiguration("advpl-sintaxe")
-            .get("branchProducao");
+            .getConfiguration('advpl-sintaxe')
+            .get('branchProducao');
         if (!this.branchProdu) {
-            this.falha(localize("merge.noBranch"));
+            this.falha(localize('merge.noBranch'));
             return;
         }
         this.branchesControladas = Array();
@@ -29700,16 +29710,16 @@ class MergeAdvpl {
         return __awaiter(this, void 0, void 0, function* () {
             //guarda objeto this
             let objeto = this;
-            let tagName = "";
+            let tagName = '';
             //verifica se não está numa branch controlada
             if (objeto.branchesControladas.indexOf(branchAtual.toUpperCase()) !== -1) {
-                vscode_1.window.showErrorMessage(localize("merge.noBranchMerge"));
+                vscode_1.window.showErrorMessage(localize('merge.noBranchMerge'));
                 return;
             }
             else {
                 //Trata quando a branche ainda não subiu para o GIT
                 if (!repository.HEAD.upstream) {
-                    vscode_1.window.showErrorMessage(localize("merge.noPush"));
+                    vscode_1.window.showErrorMessage(localize('merge.noPush'));
                     return;
                 }
                 // se estiver na branche inicial efetua a atualização antes de iniciar o merge
@@ -29725,21 +29735,21 @@ class MergeAdvpl {
                     yield gitPushSync(repository);
                 }
                 catch (e) {
-                    vscode_1.window.showErrorMessage(localize("merge.pushError") + "\n" + e.stdout);
+                    vscode_1.window.showErrorMessage(localize('merge.pushError') + '\n' + e.stdout);
                     return;
                 }
                 try {
                     yield gitCheckoutSync(objeto, branchdestino);
                 }
                 catch (e) {
-                    vscode_1.window.showErrorMessage(localize("merge.checkoutError") + "\n" + e.stdout);
+                    vscode_1.window.showErrorMessage(localize('merge.checkoutError') + '\n' + e.stdout);
                     return;
                 }
                 try {
                     yield gitPullSync(repository);
                 }
                 catch (e) {
-                    vscode_1.window.showErrorMessage(localize("merge.pullError") + "\n" + e.stdout);
+                    vscode_1.window.showErrorMessage(localize('merge.pullError') + '\n' + e.stdout);
                     return;
                 }
                 let branchOriginal = undefined;
@@ -29752,7 +29762,7 @@ class MergeAdvpl {
                     yield gitMergeSync(repository, branchAtual);
                 }
                 catch (e) {
-                    vscode_1.window.showErrorMessage(localize("merge.mergeError") + "\n" + e.stdout);
+                    vscode_1.window.showErrorMessage(localize('merge.mergeError') + '\n' + e.stdout);
                     return;
                 }
                 //Se a branch destino for a master precisa criar tag
@@ -29764,7 +29774,7 @@ class MergeAdvpl {
                         //verifica se é TAG
                         if (item.type === 2) {
                             //Verifica se é padrão de numeração
-                            let aNiveis = item.name.split(".");
+                            let aNiveis = item.name.split('.');
                             if (aNiveis.length === 3) {
                                 let aTag = [
                                     Number(aNiveis[0]),
@@ -29793,14 +29803,14 @@ class MergeAdvpl {
                         try {
                             tagName =
                                 String(aUltimaTag[0]) +
-                                    "." +
+                                    '.' +
                                     String(aUltimaTag[1]) +
-                                    "." +
+                                    '.' +
                                     String(aUltimaTag[2]);
                             yield gitTagSync(repository, tagName);
                         }
                         catch (e) {
-                            vscode_1.window.showErrorMessage(localize("merge.tagError") + "\n" + e.stdout);
+                            vscode_1.window.showErrorMessage(localize('merge.tagError') + '\n' + e.stdout);
                             return;
                         }
                     }
@@ -29809,7 +29819,7 @@ class MergeAdvpl {
                     yield gitPushSync(repository);
                 }
                 catch (e) {
-                    vscode_1.window.showErrorMessage(localize("merge.pushError") + "\n" + e.stdout);
+                    vscode_1.window.showErrorMessage(localize('merge.pushError') + '\n' + e.stdout);
                     return;
                 }
                 //se for usou a branche de homologação volta o conteúdo original
@@ -29827,14 +29837,14 @@ class MergeAdvpl {
                         yield gitCheckoutSync(repository, branchAtual);
                     }
                     catch (e) {
-                        vscode_1.window.showErrorMessage(localize("merge.checkoutError") + "\n" + e.stdout);
+                        vscode_1.window.showErrorMessage(localize('merge.checkoutError') + '\n' + e.stdout);
                         return;
                     }
-                    objeto.sucesso(tagName, localize("merge.mergeFinish") +
+                    objeto.sucesso(tagName, localize('merge.mergeFinish') +
                         branchAtual +
-                        " -> " +
+                        ' -> ' +
                         branchdestino +
-                        ".");
+                        '.');
                 }
             }
         });
@@ -29845,7 +29855,7 @@ class MergeAdvpl {
             let objeto = this;
             //verifica se não está numa branch controlada
             if (objeto.branchesControladas.indexOf(branchAtual.toUpperCase()) !== -1) {
-                vscode_1.window.showErrorMessage(localize("merge.noBranchMerge"));
+                vscode_1.window.showErrorMessage(localize('merge.noBranchMerge'));
                 return;
             }
             else {
@@ -29853,38 +29863,38 @@ class MergeAdvpl {
                     yield gitCheckoutSync(objeto, objeto.branchHomol);
                 }
                 catch (e) {
-                    vscode_1.window.showErrorMessage(localize("merge.checkoutError") + "\n" + e.stdout);
+                    vscode_1.window.showErrorMessage(localize('merge.checkoutError') + '\n' + e.stdout);
                     return;
                 }
                 try {
                     yield gitPullSync(repository);
                 }
                 catch (e) {
-                    vscode_1.window.showErrorMessage(localize("merge.pullError") + "\n" + e.stdout);
+                    vscode_1.window.showErrorMessage(localize('merge.pullError') + '\n' + e.stdout);
                     return;
                 }
                 try {
                     yield gitCheckoutSync(objeto, branchAtual);
                 }
                 catch (e) {
-                    vscode_1.window.showErrorMessage(localize("merge.checkoutError") + "\n" + e.stdout);
+                    vscode_1.window.showErrorMessage(localize('merge.checkoutError') + '\n' + e.stdout);
                     return;
                 }
                 try {
                     yield gitMergeSync(repository, objeto.branchHomol);
                 }
                 catch (e) {
-                    vscode_1.window.showErrorMessage(localize("merge.mergeError") + "\n" + e.stdout);
+                    vscode_1.window.showErrorMessage(localize('merge.mergeError') + '\n' + e.stdout);
                     return;
                 }
                 if (showMessage) {
-                    vscode_1.window.showInformationMessage(localize("merge.atualizacaoFinish"));
+                    vscode_1.window.showInformationMessage(localize('merge.atualizacaoFinish'));
                 }
             }
         });
     }
     analisaTags() {
-        let fileContent = "TAG\tError\tWarning\tInformation\tHint\tExtension Version\n";
+        let fileContent = 'TAG\tError\tWarning\tInformation\tHint\tExtension Version\n';
         let branchAtual = this.repository.headLabel;
         let objeto = this;
         let tags = [];
@@ -29894,9 +29904,9 @@ class MergeAdvpl {
             //verifica se é TAG
             if (item.type === 2) {
                 //Verifica se é padrão de numeração
-                let aNiveis = item.name.split(".");
+                let aNiveis = item.name.split('.');
                 if (aNiveis.length === 3) {
-                    fileContent += item.name + "\t\t\t\t\n";
+                    fileContent += item.name + '\t\t\t\t\n';
                     tags.push(item.name);
                 }
             }
@@ -29907,14 +29917,14 @@ class MergeAdvpl {
         return __awaiter(this, void 0, void 0, function* () {
             let tag = tags[nGeradas];
             let objeto = this;
-            console.log("TROCANDO PARA TAG " + tag);
+            console.log('TROCANDO PARA TAG ' + tag);
             yield gitCheckoutSync(objeto, tag);
             this.fnValidacao(nGeradas, tags, fileContent, branchAtual, objeto);
-            console.log("VALIDANDO TAG " + tag);
+            console.log('VALIDANDO TAG ' + tag);
         });
     }
     getRepository(forca) {
-        let git = vscode_1.extensions.getExtension("git");
+        let git = vscode_1.extensions.getExtension('vscode.git');
         if (git) {
             if (git.isActive) {
                 let repository;
@@ -29931,14 +29941,14 @@ class MergeAdvpl {
                 }
                 // set resource groups
                 if (!repository) {
-                    vscode_1.window.showErrorMessage(localize("merge.noRepository"));
+                    vscode_1.window.showErrorMessage(localize('merge.noRepository'));
                     return;
                 }
                 // set resource groups
                 if (repository.mergeGroup.resourceStates.length !== 0 ||
                     repository.indexGroup.resourceStates.length !== 0 ||
                     repository.workingTreeGroup.resourceStates.length !== 0) {
-                    vscode_1.window.showErrorMessage(localize("merge.noCommited"));
+                    vscode_1.window.showErrorMessage(localize('merge.noCommited'));
                     return;
                 }
                 return repository;
@@ -29946,11 +29956,11 @@ class MergeAdvpl {
         }
     }
     sucesso(value, rotina) {
-        vscode_1.window.showInformationMessage(localize("merge.success") + rotina + " [" + value + "]");
+        vscode_1.window.showInformationMessage(localize('merge.success') + rotina + ' [' + value + ']');
         this.fnValidacao(undefined, undefined, undefined, undefined, undefined);
     }
     falha(rotina) {
-        vscode_1.window.showErrorMessage("ERRO " + rotina + "!");
+        vscode_1.window.showErrorMessage('ERRO ' + rotina + '!');
         this.fnValidacao(undefined, undefined, undefined, undefined, undefined);
     }
 }
@@ -29958,12 +29968,12 @@ exports.MergeAdvpl = MergeAdvpl;
 function localize(key, text) {
     const vscodeOptions = JSON.parse(process.env.VSCODE_NLS_CONFIG).locale.toLowerCase();
     let i18n = __webpack_require__(237);
-    let locales = ["en", "pt-br"];
+    let locales = ['en', 'pt-br'];
     i18n.configure({
         locales: locales,
-        directory: __dirname + "\\locales"
+        directory: __dirname + '\\locales'
     });
-    i18n.setLocale(locales.indexOf(vscodeOptions) + 1 ? vscodeOptions : "en");
+    i18n.setLocale(locales.indexOf(vscodeOptions) + 1 ? vscodeOptions : 'en');
     return i18n.__(key);
 }
 

@@ -92,9 +92,10 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
 
 ## VERSÃO ATUAL
 
-### 0.7.6
-- Criação de cache para acelerar revalidações de fontes.
-- Correção de tradução de modulo de validação advpl.
+### 0.7.7
+
+- Melhoria de cache, mas ainda limitando a 500 fontes.
+- Correção de obtenção de repositório GIT após a mudança no vscode.
 
 # Código
 

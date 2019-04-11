@@ -1,15 +1,25 @@
 # ChangeLog
+
 ## Release Notes
+
+### 0.7.7
+
+- Melhoria de cache, mas ainda limitando a 500 fontes.
+- Correção de obtenção de repositório GIT após a mudança no vscode.
+
 ### 0.7.6
+
 - Criação de cache para acelerar revalidações de fontes.
 - Correção de tradução de modulo de validação advpl.
 
 ### 0.7.5
+
 - Melhoria de rotina que busca arquivos no projeto para uma mais rápida(globby).
 - Compactação de projeto para melhorar performance.
 - Correção de busca de repositório quando não há fontes abertos.
 
 ### 0.7.4
+
 - Alteração de mecanismo de busca de arquivos para dentificar de forma incasesensitive.
 - Mudanas de LOOP para melhorar performance.
 - Atualização de módulo advpl.

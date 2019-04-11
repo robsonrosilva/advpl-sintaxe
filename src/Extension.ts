@@ -1,4 +1,4 @@
-import { Cache } from "./Cache";
+import { Cache } from './Cache';
 import {
   Uri,
   languages,
@@ -9,26 +9,26 @@ import {
   Diagnostic,
   Range,
   DiagnosticSeverity
-} from "vscode";
-import * as fileSystem from "fs";
-import globby = require("globby");
+} from 'vscode';
+import * as fileSystem from 'fs';
+import globby = require('globby');
 
-import { FileCache } from "./model/FileCache";
-import { MergeAdvpl } from "./Merge";
-import { ValidaAdvpl, Fonte, Funcao } from "analise-advpl";
-import { debuglog } from "util";
+import { FileCache } from './model/FileCache';
+import { MergeAdvpl } from './Merge';
+import { ValidaAdvpl, Fonte, Funcao } from 'analise-advpl';
+import { debuglog } from 'util';
 //Cria um colection para os erros ADVPL
-const collection = languages.createDiagnosticCollection("advpl");
+const collection = languages.createDiagnosticCollection('advpl');
 
 let listaDuplicados = [];
 let projeto: Fonte[] = [];
 let comentFontPad: string[] = workspace
-  .getConfiguration("advpl-sintaxe")
-  .get("comentFontPad") as string[];
+  .getConfiguration('advpl-sintaxe')
+  .get('comentFontPad') as string[];
 if (!comentFontPad) {
-  comentFontPad = [""];
+  comentFontPad = [''];
   window.showInformationMessage(
-    localize("extension.noCritizeComment", "Do not critize coments!")
+    localize('extension.noCritizeComment', 'Do not critize coments!')
   );
 }
 const vscodeOptions = JSON.parse(
@@ -37,11 +37,11 @@ const vscodeOptions = JSON.parse(
 
 let validaAdvpl = new ValidaAdvpl(comentFontPad, vscodeOptions, false);
 validaAdvpl.ownerDb = workspace
-  .getConfiguration("advpl-sintaxe")
-  .get("ownerDb");
+  .getConfiguration('advpl-sintaxe')
+  .get('ownerDb');
 validaAdvpl.empresas = workspace
-  .getConfiguration("advpl-sintaxe")
-  .get("empresas");
+  .getConfiguration('advpl-sintaxe')
+  .get('empresas');
 
 if (!validaAdvpl.ownerDb) {
   validaAdvpl.ownerDb = [];
@@ -55,13 +55,13 @@ if (!validaAdvpl.empresas) {
 export function activate(context: ExtensionContext) {
   //debuglog(localize('extension.activeMessage', 'não funcionou'));
   window.showInformationMessage(
-    localize("extension.activeMessage", "Active ADVPL Validation!")
+    localize('extension.activeMessage', 'Active ADVPL Validation!')
   );
   workspace.onDidChangeTextDocument(validaFonte);
 
   //Adiciona comando de envia para Validação
   context.subscriptions.push(
-    commands.registerCommand("advpl-sintaxe.gitValidacao", () => {
+    commands.registerCommand('advpl-sintaxe.gitValidacao', () => {
       let mergeAdvpl = new MergeAdvpl(false, validaProjeto);
       let branchAtual = mergeAdvpl.repository.headLabel;
       try {
@@ -80,7 +80,7 @@ export function activate(context: ExtensionContext) {
   );
   //Adiciona comando de envia para Release
   context.subscriptions.push(
-    commands.registerCommand("advpl-sintaxe.gitRelease", () => {
+    commands.registerCommand('advpl-sintaxe.gitRelease', () => {
       let mergeAdvpl = new MergeAdvpl(false, validaProjeto);
       let branchAtual = mergeAdvpl.repository.headLabel;
       try {
@@ -99,7 +99,7 @@ export function activate(context: ExtensionContext) {
   );
   //Adiciona comando de envia para master
   context.subscriptions.push(
-    commands.registerCommand("advpl-sintaxe.gitMaster", () => {
+    commands.registerCommand('advpl-sintaxe.gitMaster', () => {
       let mergeAdvpl = new MergeAdvpl(false, validaProjeto);
       let branchAtual = mergeAdvpl.repository.headLabel;
       try {
@@ -118,7 +118,7 @@ export function activate(context: ExtensionContext) {
   );
   //Adiciona comando de envia para master
   context.subscriptions.push(
-    commands.registerCommand("advpl-sintaxe.validaProjeto", () => {
+    commands.registerCommand('advpl-sintaxe.validaProjeto', () => {
       let mergeAdvpl = new MergeAdvpl(true, validaProjeto);
       try {
         validaProjeto(undefined, undefined, undefined, undefined, undefined);
@@ -129,7 +129,7 @@ export function activate(context: ExtensionContext) {
   );
   //Adiciona comando de envia para master
   context.subscriptions.push(
-    commands.registerCommand("advpl-sintaxe.analisaTags", () => {
+    commands.registerCommand('advpl-sintaxe.analisaTags', () => {
       let mergeAdvpl = new MergeAdvpl(true, validaProjeto);
       let branchAtual = mergeAdvpl.repository.headLabel;
       try {
@@ -142,7 +142,7 @@ export function activate(context: ExtensionContext) {
   );
   //Adiciona comando de Atualiza Branch
   context.subscriptions.push(
-    commands.registerCommand("advpl-sintaxe.atualizaBranch", () => {
+    commands.registerCommand('advpl-sintaxe.atualizaBranch', () => {
       let mergeAdvpl = new MergeAdvpl(true, validaProjeto);
       let branchAtual = mergeAdvpl.repository.headLabel;
       try {
@@ -154,7 +154,7 @@ export function activate(context: ExtensionContext) {
     })
   );
   if (
-    workspace.getConfiguration("advpl-sintaxe").get("validaProjeto") !== false
+    workspace.getConfiguration('advpl-sintaxe').get('validaProjeto') !== false
   ) {
     let startTime: any = new Date();
 
@@ -167,14 +167,14 @@ export function activate(context: ExtensionContext) {
 
     // get seconds
     var seconds = Math.round(timeDiff);
-    debuglog("Tempo gasto validacao " + seconds + " seconds");
+    debuglog('Tempo gasto validacao ' + seconds + ' seconds');
   }
 }
 async function validaFonte(editor: any) {
   let cache: Cache = new Cache(workspace.rootPath);
   if (editor) {
     //verifica se a linguagem é ADVPL
-    if (editor.document.languageId === "advpl") {
+    if (editor.document.languageId === 'advpl') {
       if (editor.document.getText()) {
         validaAdvpl.validacao(editor.document.getText(), editor.document.uri);
         //verifica se o fonte já existe no projeto se não adiciona
@@ -197,8 +197,8 @@ async function validaFonte(editor: any) {
           if (
             erro.message ===
             localize(
-              "extension.functionDuplicate",
-              "This function is duplicated in the project!"
+              'extension.functionDuplicate',
+              'This function is duplicated in the project!'
             )
           ) {
             errosNew.push(erro);
@@ -244,10 +244,10 @@ async function vscodeFindFilesSync(advplExtensions): Promise<string[]> {
 async function validaProjeto(
   nGeradas: number = 0,
   tags: string[] = [],
-  fileContent: string = "",
-  branchAtual: string = "",
+  fileContent: string = '',
+  branchAtual: string = '',
   objetoMerge: any,
-  maxCache: number = 100
+  maxCache: number = 500
 ) {
   let cache: Cache = new Cache(workspace.rootPath);
   // se a versão é diferente apaga do cache
@@ -258,7 +258,7 @@ async function validaProjeto(
   let objeto = this;
   let tag = tags[nGeradas];
   //percorre todos os fontes do Workspace e valida se for ADVPL
-  let advplExtensions = ["prw", "prx", "prg", "apw", "apl", "tlpp"];
+  let advplExtensions = ['prw', 'prx', 'prg', 'apw', 'apl', 'tlpp'];
 
   let start: any = new Date();
   let files: string[] = await vscodeFindFilesSync(advplExtensions);
@@ -269,15 +269,15 @@ async function validaProjeto(
 
   // get seconds
   var seconds = Math.round(timeDiff);
-  debuglog("Tempo gasto buscando arquivos " + seconds + " seconds");
+  debuglog('Tempo gasto buscando arquivos ' + seconds + ' seconds');
 
   projeto = [];
   listaDuplicados = [];
   files.forEach((fileName: string) => {
-    let file: Uri = Uri.file(workspace.rootPath + "\\" + fileName);
+    let file: Uri = Uri.file(workspace.rootPath + '\\' + fileName);
 
-    debuglog("Validando  " + workspace.rootPath + "\\" + file.fsPath);
-    let conteudo = fileSystem.readFileSync(file.fsPath, "latin1");
+    debuglog('Validando  ' + workspace.rootPath + '\\' + file.fsPath);
+    let conteudo = fileSystem.readFileSync(file.fsPath, 'latin1');
     // pepara objeto para o cache
     let fileForCache: FileCache = new FileCache();
     fileForCache.file = file;
@@ -292,7 +292,7 @@ async function validaProjeto(
       // se há o arquivo no cache compara o conteúdo e versão do cache com o atual
       if (fileCache.file.fsPath === file.fsPath) {
         if (fileCache.content === conteudo) {
-          debuglog("usando cache");
+          debuglog('usando cache');
           // se for igual carrega a validação em cache
           fileForCache.validaAdvpl = fileCache.validaAdvpl;
         } else {
@@ -332,7 +332,7 @@ async function validaProjeto(
     if (!fileContent && projeto.length === files.length) {
       verificaDuplicados();
       debuglog(seconds.toString());
-      window.showInformationMessage(localize("extension.finish"));
+      window.showInformationMessage(localize('extension.finish'));
     }
   });
 }
@@ -348,7 +348,7 @@ async function verificaDuplicados() {
     try {
       fileSystem.statSync(fonte.fonte.fsPath);
     } catch (e) {
-      if (e.code === "ENOENT") {
+      if (e.code === 'ENOENT') {
         collection.delete(fonte.fonte);
         fonte = new Fonte();
       }
@@ -418,8 +418,8 @@ async function verificaDuplicados() {
             new Diagnostic(
               new Range(funcao.linha, 0, funcao.linha, 0),
               localize(
-                "extension.functionDuplicate",
-                "This function is duplicated in the project!"
+                'extension.functionDuplicate',
+                'This function is duplicated in the project!'
               ),
               DiagnosticSeverity.Error
             )
@@ -465,19 +465,19 @@ async function verificaDuplicados() {
 
   // get seconds
   var seconds = Math.round(timeDiff);
-  debuglog(seconds + " seconds");
+  debuglog(seconds + ' seconds');
 }
 
 function localize(key: string, text?: string) {
   const vscodeOptions = JSON.parse(
     process.env.VSCODE_NLS_CONFIG
   ).locale.toLowerCase();
-  let i18n = require("i18n");
-  let locales = ["en", "pt-br"];
+  let i18n = require('i18n');
+  let locales = ['en', 'pt-br'];
   i18n.configure({
     locales: locales,
-    directory: __dirname + "\\locales"
+    directory: __dirname + '\\locales'
   });
-  i18n.setLocale(locales.indexOf(vscodeOptions) + 1 ? vscodeOptions : "en");
+  i18n.setLocale(locales.indexOf(vscodeOptions) + 1 ? vscodeOptions : 'en');
   return i18n.__(key);
 }
