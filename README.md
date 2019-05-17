@@ -50,6 +50,7 @@ Verifica se estão sendo utilizados padrões básicos de qualidade como:
 - **Merge para Teste** Branch de Teste é uma branch onde todas as features e hotfixes serão enviados para submeter aos primeiros testes.
 - **Merge para Homologação** Branch de Homologação é uma branch onde são enviadas todas as implementações que estão testadas e aprovadas.
 - **Merge para Produção** Branch de Produção é destinada a ser aplicada em ambiente de produção onde sempre se deve taguear a versão a ser aplicada.
+- **Atualiza Branche** Atualiza a Branche Release e faz um merge para a branche atual.
 
 ## FLUXO
 
@@ -89,6 +90,14 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
 - **WsMethodDeleteREST** - Estrutura do método DELETE para WebServices REST.
 - **WsResponseTrueREST** - Retorno positivo para a operação para WebServices REST.
 - **WsResponseFalseREST** - Retorno negativo para a operação para WebServices REST.
+
+4. Linguagem
+
+- **WHILETB** - While para Tabela.
+- **FOR** - For convencional.
+- **CASE** - Case completo.
+- **IF** - If convencional.
+- **BEGINSQL** - Modelo de EmbededSql.
 
 ## VERSÃO ATUAL
 

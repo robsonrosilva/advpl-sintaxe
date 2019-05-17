@@ -13,7 +13,7 @@
     "body": [
       "\tFor ${var} := 1 to Len(${array}) ",
       "\t\t${processamento}",
-      "\tNext"
+      "\tNext ${var}"
     ]
   },
   "CASE": {
