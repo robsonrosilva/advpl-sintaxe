@@ -33,13 +33,13 @@ Verifica se estão sendo utilizados padrões básicos de qualidade como:
 - Includes desnecessários.
 - Includes que faltam.
 - Comentários desnecessários.
-- Padrões de comentários.
+- Padrões de comentários.(Necessário configurar o settings)
 - Comentários de todas as funções, métodos, webservices e classes.
 - Critica de uso de Connout.
 - Critica de conflitos de merge.
 - Utilização de CHR(13) + CHR(10) em vez da variável CRLF.
-- Tabelas fixas nas queries.
-- Schema (banco de dados) fixo na query.
+- Tabelas fixas nas queries.(Necessário configurar o settings)
+- Schema (banco de dados) fixo na query.(Necessário configurar o settings)
 
 ![Análise de Fontes](images/analiseFontes.png?raw=true 'Análise de Fontes')
 
