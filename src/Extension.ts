@@ -11,7 +11,7 @@ import {
   DiagnosticSeverity
 } from 'vscode';
 import * as fileSystem from 'fs';
-import globby = require('globby');
+import * as globby from 'globby';
 
 import { FileCache } from './model/FileCache';
 import { MergeAdvpl } from './Merge';
@@ -119,11 +119,10 @@ export function activate(context: ExtensionContext) {
   //Adiciona comando de envia para master
   context.subscriptions.push(
     commands.registerCommand('advpl-sintaxe.validaProjeto', () => {
-      let mergeAdvpl = new MergeAdvpl(true, validaProjeto);
       try {
-        validaProjeto(undefined, undefined, undefined, undefined, undefined);
+        validaProjeto();
       } catch (e) {
-        mergeAdvpl.falha(e.stdout);
+        window.showInformationMessage(e.stdout);
       }
     })
   );
@@ -158,7 +157,7 @@ export function activate(context: ExtensionContext) {
   ) {
     let startTime: any = new Date();
 
-    validaProjeto(undefined, undefined, undefined, undefined, undefined);
+    validaProjeto();
 
     let endTime: any = new Date();
     var timeDiff = endTime - startTime; //in ms
@@ -246,7 +245,7 @@ async function validaProjeto(
   tags: string[] = [],
   fileContent: string = '',
   branchAtual: string = '',
-  objetoMerge: any,
+  objetoMerge: any = undefined,
   maxCache: number = 500
 ) {
   let cache: Cache = new Cache(workspace.rootPath);
@@ -286,7 +285,7 @@ async function validaProjeto(
     // verifica se o arquivo está em cache se estiver compara o conteúdo
     cache.filesInCache.forEach((fileCache: FileCache) => {
       // se a versão é diferente apaga o arquivo
-      if (fileCache.validaAdvpl.versao !== validaAdvpl.versao) {
+      if (fileCache.validaAdvpl.version !== validaAdvpl.version) {
         cache.delFile(fileCache.file.fsPath);
       }
       // se há o arquivo no cache compara o conteúdo e versão do cache com o atual
@@ -311,12 +310,17 @@ async function validaProjeto(
 
     // só analisa se há conteúdo e se a validacao estiver vazia(não houver cache ou estiver inválido)
     if (conteudo && !fileForCache.validaAdvpl) {
-      validaAdvpl.validacao(conteudo, file);
-      fileForCache.validaAdvpl = validaAdvpl;
-      // limita a quantidade de arquivos adicionados em cache
-      if (totalAddCache <= maxCache) {
-        totalAddCache++;
-        cache.addFile(fileForCache);
+      try {
+        validaAdvpl.validacao(conteudo, file);
+        fileForCache.validaAdvpl = validaAdvpl;
+        // limita a quantidade de arquivos adicionados em cache
+        if (totalAddCache <= maxCache) {
+          totalAddCache++;
+          cache.addFile(fileForCache);
+        }
+      } catch {
+        console.log('Erro na validação do fonte.');
+        conteudo = undefined;
       }
     }
 

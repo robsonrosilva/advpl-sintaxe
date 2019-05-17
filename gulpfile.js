@@ -27,15 +27,15 @@ const languages = [
   { folderName: 'enu', id: 'en' }
 ];
 
-gulp.task('default', function (callback) {
+gulp.task('default', function(callback) {
   runSequence('build', callback);
 });
 
-gulp.task('compile', function (callback) {
+gulp.task('compile', function(callback) {
   runSequence('clean', 'internal-compile', callback);
 });
 
-gulp.task('build', function (callback) {
+gulp.task('build', function(callback) {
   runSequence(
     'clean',
     'internal-nls-compile',
@@ -45,15 +45,15 @@ gulp.task('build', function (callback) {
   );
 });
 
-gulp.task('publish', function (callback) {
+gulp.task('publish', function(callback) {
   runSequence('build', 'vsce:publish', callback);
 });
 
-gulp.task('package', function (callback) {
+gulp.task('package', function(callback) {
   runSequence('build', 'vsce:package', callback);
 });
 
-gulp.task('clean', function () {
+gulp.task('clean', function() {
   return del(['out/**', '*.nls.*.json', 'snippets/*.nls.*.json']);
 });
 
@@ -87,32 +87,32 @@ function compile(buildNls) {
   return r.pipe(gulp.dest(outDest));
 }
 
-gulp.task('internal-compile', function () {
+gulp.task('internal-compile', function() {
   return compile(false);
 });
 
-gulp.task('internal-nls-compile', function () {
+gulp.task('internal-nls-compile', function() {
   return compile(true);
 });
 
-gulp.task('add-i18n', function () {
+gulp.task('add-i18n', function() {
   return gulp
     .src(['package.nls.json'])
     .pipe(nls.createAdditionalLanguageFiles(languages, 'i18n'))
     .pipe(gulp.dest('.'));
 });
 
-gulp.task('add-i18n-snippets', function () {
+gulp.task('add-i18n-snippets', function() {
   return gulp
-    .src(['snippets/advpl.comentarios.nls.json'])
+    .src(['./snippets/advpl.language.nls.json'])
     .pipe(nls.createAdditionalLanguageFiles(languages, 'i18n'))
     .pipe(gulp.dest('./snippets'));
 });
 
-gulp.task('vsce:publish', function () {
+gulp.task('vsce:publish', function() {
   return vsce.publish();
 });
 
-gulp.task('vsce:package', function () {
+gulp.task('vsce:package', function() {
   return vsce.createVSIX();
 });

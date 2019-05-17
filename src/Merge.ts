@@ -341,11 +341,11 @@ export class MergeAdvpl {
     window.showInformationMessage(
       localize('merge.success') + rotina + ' [' + value + ']'
     );
-    this.fnValidacao(undefined, undefined, undefined, undefined, undefined);
+    this.fnValidacao();
   }
   public falha(rotina: String) {
     window.showErrorMessage('ERRO ' + rotina + '!');
-    this.fnValidacao(undefined, undefined, undefined, undefined, undefined);
+    this.fnValidacao();
   }
 }
 

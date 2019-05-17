@@ -1,0 +1,48 @@
+{
+  "WHILETB": {
+    "prefix": "While em Tabela ADVPL",
+    "body": [
+      "\tWhile ${tabela}->(! Eof())",
+      "\t\t${processamento}",
+      "\t\t${tabela}->(DbSkip())",
+      "\tEndDo"
+    ]
+  },
+  "FOR": {
+    "prefix": "For ADVPL",
+    "body": [
+      "\tFor ${var} := 1 to Len(${array}) ",
+      "\t\t${processamento}",
+      "\tNext"
+    ]
+  },
+  "CASE": {
+    "prefix": "Case ADVPL",
+    "body": [
+      "\tDo Case",
+      "\t\tCase ${condicao1}",
+      "\t\tCase ${condicao2}",
+      "\t\tCase ${condicao3}",
+      "\t\tCase ${condicao4}",
+      "\t\tOtherWise",
+      "\tEndCase"
+    ]
+  },
+  "IF": {
+    "prefix": "If ADVPL",
+    "body": ["\tIf ${condicao1}", "\tElseIf ${condicao2}", "\tElse", "\tEndIf"]
+  },
+  "BeginSql": {
+    "prefix": "BeginSql",
+    "body": [
+      "\tBeginSql Alias ${tabela}",
+      "\t\tSELECT",
+      "\t\t\t${campos}",
+      "\t\tFROM ${alias}",
+      "\t\tWHERE D_E_L_E_T_ = ' '",
+      "\t\t${demaisCondicoes}",
+      "\t\tORDER BY ${orderBy}",
+      "\tEndSql"
+    ]
+  }
+}

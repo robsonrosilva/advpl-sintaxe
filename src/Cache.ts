@@ -35,9 +35,9 @@ export class Cache {
   //adiciona o item e grava em cache
   addFile(file: FileCache) {
     // limita o chace em 500 arquivos
-    if (this.filesInCache.length >= 500) {
-      return;
-    }
+    //if (this.filesInCache.length >= 999999) {
+    //  return;
+    //}
     // Faz uma cópia do objeto pois como uso sempre o mesmo evito maiores problemas
     file.validaAdvpl = JSON.parse(JSON.stringify(file.validaAdvpl));
     this.filesInCache.push(file);

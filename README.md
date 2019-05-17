@@ -92,10 +92,12 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
 
 ## VERSÃO ATUAL
 
-### 0.7.7
+### 0.7.8
 
-- Melhoria de cache, mas ainda limitando a 500 fontes.
-- Correção de obtenção de repositório GIT após a mudança no vscode.
+- Tratamento de erros de validação.
+- Remoção de limite de cache.
+- Atualização de análise de Advpl.
+- Criação de Snippets de Linguagem.
 
 # Código
 

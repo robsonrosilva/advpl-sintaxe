@@ -85,12 +85,11 @@ function activate(context) {
     }));
     //Adiciona comando de envia para master
     context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.validaProjeto', () => {
-        let mergeAdvpl = new Merge_1.MergeAdvpl(true, validaProjeto);
         try {
-            validaProjeto(undefined, undefined, undefined, undefined, undefined);
+            validaProjeto();
         }
         catch (e) {
-            mergeAdvpl.falha(e.stdout);
+            vscode_1.window.showInformationMessage(e.stdout);
         }
     }));
     //Adiciona comando de envia para master
@@ -119,7 +118,7 @@ function activate(context) {
     }));
     if (vscode_1.workspace.getConfiguration('advpl-sintaxe').get('validaProjeto') !== false) {
         let startTime = new Date();
-        validaProjeto(undefined, undefined, undefined, undefined, undefined);
+        validaProjeto();
         let endTime = new Date();
         var timeDiff = endTime - startTime; //in ms
         // strip the ms
@@ -189,7 +188,7 @@ function vscodeFindFilesSync(advplExtensions) {
         });
     });
 }
-function validaProjeto(nGeradas = 0, tags = [], fileContent = '', branchAtual = '', objetoMerge, maxCache = 500) {
+function validaProjeto(nGeradas = 0, tags = [], fileContent = '', branchAtual = '', objetoMerge = undefined, maxCache = 500) {
     return __awaiter(this, void 0, void 0, function* () {
         let cache = new Cache_1.Cache(vscode_1.workspace.rootPath);
         // se a versão é diferente apaga do cache
@@ -221,7 +220,7 @@ function validaProjeto(nGeradas = 0, tags = [], fileContent = '', branchAtual = 
             // verifica se o arquivo está em cache se estiver compara o conteúdo
             cache.filesInCache.forEach((fileCache) => {
                 // se a versão é diferente apaga o arquivo
-                if (fileCache.validaAdvpl.versao !== validaAdvpl.versao) {
+                if (fileCache.validaAdvpl.version !== validaAdvpl.version) {
                     cache.delFile(fileCache.file.fsPath);
                 }
                 // se há o arquivo no cache compara o conteúdo e versão do cache com o atual
@@ -245,12 +244,18 @@ function validaProjeto(nGeradas = 0, tags = [], fileContent = '', branchAtual = 
             seconds = Math.round(timeDiff);
             // só analisa se há conteúdo e se a validacao estiver vazia(não houver cache ou estiver inválido)
             if (conteudo && !fileForCache.validaAdvpl) {
-                validaAdvpl.validacao(conteudo, file);
-                fileForCache.validaAdvpl = validaAdvpl;
-                // limita a quantidade de arquivos adicionados em cache
-                if (totalAddCache <= maxCache) {
-                    totalAddCache++;
-                    cache.addFile(fileForCache);
+                try {
+                    validaAdvpl.validacao(conteudo, file);
+                    fileForCache.validaAdvpl = validaAdvpl;
+                    // limita a quantidade de arquivos adicionados em cache
+                    if (totalAddCache <= maxCache) {
+                        totalAddCache++;
+                        cache.addFile(fileForCache);
+                    }
+                }
+                catch (_a) {
+                    console.log('Erro na validação do fonte.');
+                    conteudo = undefined;
                 }
             }
             //Limpa as mensagens do colection

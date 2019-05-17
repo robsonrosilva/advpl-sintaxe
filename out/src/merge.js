@@ -318,11 +318,11 @@ class MergeAdvpl {
     }
     sucesso(value, rotina) {
         vscode_1.window.showInformationMessage(localize('merge.success') + rotina + ' [' + value + ']');
-        this.fnValidacao(undefined, undefined, undefined, undefined, undefined);
+        this.fnValidacao();
     }
     falha(rotina) {
         vscode_1.window.showErrorMessage('ERRO ' + rotina + '!');
-        this.fnValidacao(undefined, undefined, undefined, undefined, undefined);
+        this.fnValidacao();
     }
 }
 exports.MergeAdvpl = MergeAdvpl;
