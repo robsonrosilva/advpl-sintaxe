@@ -108,7 +108,29 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
 - Atualização de análise de Advpl.
 - Criação de Snippets de Linguagem.
 
-# Código
+## Modelo de settings.json
+
+```json
+{
+  "advpl-sintaxe": {
+    "branchHomologacao": "release",
+    "branchProducao": "master",
+    "branchTeste": "validacao",
+    "comentFontPad": [
+      "/*//#########################################################################################",
+      "Projeto\\ \\:",
+      "Modulo\\ \\ \\:",
+      "Fonte\\ \\ \\ \\:",
+      "Objetivo\\:"
+    ],
+    "empresas": ["01", "02"],
+    "ownerDb": ["PROTHEUS", "PROTHEUS12"],
+    "validaProjeto": true
+  }
+}
+```
+
+## Código
 
 [Github](https://github.com/robsonrosilva/advpl-sintaxe)
 
