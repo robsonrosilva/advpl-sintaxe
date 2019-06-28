@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 0.8.0
+
+- Correção de identificação indevida de uso de dicionário.
+
 ### 0.7.9
 
 - Implementação de análise de uso de dicionários.

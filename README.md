@@ -101,9 +101,9 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
 
 ## VERSÃO ATUAL
 
-### 0.8.0
+### 0.8.1
 
-- Correção de identificação indevida de uso de dicionário.
+- Correção de análise de uso indevido de dicionários somente fora de query.
 
 ## Modelo de settings.json
 

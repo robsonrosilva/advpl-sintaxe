@@ -39173,8 +39173,9 @@ class ValidaAdvpl {
                 if (linhaClean.search(/PUTSX1\(/) !== -1) {
                     objeto.aErros.push(new erros_1.Erro(parseInt(key), parseInt(key), traduz('validaAdvpl.PutSX1', objeto.local), erros_1.Severity.Error));
                 }
-                // Uso de Dicionários
-                if (linhaClean.search(/(,| |\t|\>|\()+X+(1|2|3|5|6|7|9|A|B|D|G)+\_/gim) !== -1) {
+                // Uso de Dicionários Fora do BeginSql
+                if (!cBeginSql &&
+                    linhaClean.search(/(,| |\t|\>|\()+X+(1|2|3|5|6|7|9|A|B|D|G)+\_/gim) !== -1) {
                     objeto.aErros.push(new erros_1.Erro(parseInt(key), parseInt(key), traduz('validaAdvpl.Dictionary', objeto.local), erros_1.Severity.Error));
                 }
                 if (linhaClean.search(/(,| |\t||\()+(MSFILE|MSFILE|DBCREATE|DBUSEAREA|CRIATRAB)+( \(|\t\(|\()/gim) !== -1 ||
@@ -39862,7 +39863,7 @@ exports.Erro = Erro;
 /* 260 */
 /***/ (function(module) {
 
-module.exports = {"name":"analise-advpl","version":"4.0.5","description":"Extension of ADVPL code analysis.","types":"lib/index.d.ts","main":"lib/index.js","scripts":{"compile":"tsc -p ./","prepublish":"npm run compile","test":"npm run compile && mocha \"./test/validaadvpl.js\""},"keywords":[],"author":"Robson Rogério Silva","license":"ISC","dependencies":{"@types/node":"^10.14.4","asserts":"^4.0.2","chai":"^4.2.0","file-system":"^2.2.2","i18n":"^0.8.3","mocha":"^5.2.0","vscode":"^1.1.33"},"devDependencies":{"typescript":"^3.4.5"}};
+module.exports = {"name":"analise-advpl","version":"4.0.6","description":"Extension of ADVPL code analysis.","types":"lib/index.d.ts","main":"lib/index.js","scripts":{"compile":"tsc -p ./","prepublish":"npm run compile","test":"npm run compile && mocha \"./test/validaadvpl.js\""},"keywords":[],"author":"Robson Rogério Silva","license":"ISC","dependencies":{"@types/node":"^10.14.4","asserts":"^4.0.2","chai":"^4.2.0","file-system":"^2.2.2","i18n":"^0.8.3","mocha":"^5.2.0","vscode":"^1.1.33"},"devDependencies":{"typescript":"^3.4.5"}};
 
 /***/ })
 /******/ ]);
