@@ -2,6 +2,12 @@
 
 ## Release Notes
 
+### 0.7.9
+
+- Implementação de análise de uso de dicionários.
+- Implementação de análise de uso de ISAM.
+- Implementação de análise de uso de PUTSX1.
+
 ### 0.7.8
 
 - Tratamento de erros de validação.

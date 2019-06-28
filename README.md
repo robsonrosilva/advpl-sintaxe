@@ -101,11 +101,9 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
 
 ## VERSÃO ATUAL
 
-### 0.7.9
+### 0.8.0
 
-- Implementação de análise de uso de dicionários.
-- Implementação de análise de uso de ISAM.
-- Implementação de análise de uso de PUTSX1.
+- Correção de identificação indevida de uso de dicionário.
 
 ## Modelo de settings.json
 
