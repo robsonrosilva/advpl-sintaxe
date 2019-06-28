@@ -2,6 +2,13 @@
 
 ## Release Notes
 
+### 0.7.8
+
+- Tratamento de erros de validação.
+- Remoção de limite de cache.
+- Atualização de análise de Advpl.
+- Criação de Snippets de Linguagem.
+
 ### 0.7.7
 
 - Melhoria de cache, mas ainda limitando a 500 fontes.

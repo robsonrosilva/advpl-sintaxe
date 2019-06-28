@@ -101,12 +101,11 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
 
 ## VERSÃO ATUAL
 
-### 0.7.8
+### 0.7.9
 
-- Tratamento de erros de validação.
-- Remoção de limite de cache.
-- Atualização de análise de Advpl.
-- Criação de Snippets de Linguagem.
+- Implementação de análise de uso de dicionários.
+- Implementação de análise de uso de ISAM.
+- Implementação de análise de uso de PUTSX1.
 
 ## Modelo de settings.json
 

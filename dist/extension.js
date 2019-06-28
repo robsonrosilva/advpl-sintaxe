@@ -346,7 +346,7 @@ function validaProjeto(nGeradas = 0, tags = [], fileContent = '', branchAtual = 
                     }
                 }
                 catch (_a) {
-                    console.log('Erro na validação do fonte.');
+                    console.log('Erro na validação do fonte. ' + vscode_1.workspace.rootPath + '\\' + fileName);
                     conteudo = undefined;
                 }
             }
@@ -38835,6 +38835,9 @@ class Fonte {
     addFunction(tipo, nome, linha) {
         this.funcoes.push(new Funcao(tipo, nome, linha));
     }
+    addVariavel(variavel) {
+        this.funcoes[this.funcoes.length - 1].variaveisLocais.push(variavel);
+    }
 }
 exports.Fonte = Fonte;
 class Funcao {
@@ -38842,6 +38845,7 @@ class Funcao {
         this.tipo = tipo;
         this.nome = nome;
         this.linha = linha;
+        this.variaveisLocais = [];
     }
 }
 exports.Funcao = Funcao;
@@ -38968,7 +38972,8 @@ class ValidaAdvpl {
                     }
                 }
                 //Remove espaços ou tabulações seguidas
-                linhaClean.replace(/\t/g, ' ');
+                linhaClean = linhaClean.replace(/\t/g, ' ');
+                linhaClean = linhaClean.replace(/\:\=/g, ' :=');
                 let conteudos = linhaClean.split(' ');
                 linhaClean = '';
                 for (const key in conteudos) {
@@ -38977,6 +38982,7 @@ class ValidaAdvpl {
                     }
                 }
                 conteudoSComentario = conteudoSComentario + linhaClean + '\n';
+                let firstWord = linhaClean.split(' ')[0].split('\t')[0];
                 //verifica se é função e adiciona no array
                 if (linhaClean.search(/(STATIC|USER|)+(\ |\t)+FUNCTION+(\ |\t)/) !== -1 &&
                     linhaClean
@@ -38999,14 +39005,18 @@ class ValidaAdvpl {
                     if (linhaClean.search(/(USER)+(\ |\t)+FUNCTION+(\ |\t)/) !== -1) {
                         objeto.fonte.addFunction(fonte_1.Tipos['User Function'], nomeFuncao, parseInt(key));
                     }
-                    else if (linhaClean.split(' ')[0].split('\t')[0] === 'FUNCTION') {
+                    else if (linhaClean.search(/(STATIC)+(\ |\t)+FUNCTION+(\ |\t)/) !== -1) {
+                        //verifica se a primeira palavra é FUNCTION
+                        objeto.fonte.addFunction(fonte_1.Tipos['Static Function'], nomeFuncao, parseInt(key));
+                    }
+                    else if (firstWord === 'FUNCTION') {
                         //verifica se a primeira palavra é FUNCTION
                         objeto.fonte.addFunction(fonte_1.Tipos['Function'], nomeFuncao, parseInt(key));
                     }
                 }
                 //Verifica se é CLASSE ou WEBSERVICE
                 if (linhaClean.search('METHOD\\ .*?CLASS') !== -1 ||
-                    linhaClean.split(' ')[0].split('\t')[0] === 'CLASS' ||
+                    firstWord === 'CLASS' ||
                     linhaClean.search('WSMETHOD.*?WSSERVICE') !== -1 ||
                     linhaClean.search('WSSERVICE\\ ') !== -1) {
                     //reseta todas as ariáveis de controle pois está fora de qualquer função
@@ -39022,11 +39032,38 @@ class ValidaAdvpl {
                             .split('(')[0],
                         key
                     ]);
-                    if (linhaClean.split(' ')[0].split('\t')[0] === 'CLASS') {
+                    if (firstWord === 'CLASS') {
                         objeto.fonte.addFunction(fonte_1.Tipos['Class'], linhaClean
                             .trim()
                             .split(' ')[1]
                             .split('(')[0], parseInt(key));
+                    }
+                    if (firstWord.match(/METHOD/)) {
+                        let palavras = linhaClean.split(/,| |\t|\(/);
+                        let metodo = palavras[1];
+                        let classe;
+                        for (var i = 0; i < palavras.length; i++) {
+                            let key2 = palavras[i];
+                            if (key2 === 'WSSERVICE' || key2 === 'CLASS') {
+                                classe = palavras[i + 1];
+                                break;
+                            }
+                        }
+                        objeto.fonte.addFunction(fonte_1.Tipos['METHOD'], classe + '|' + metodo, parseInt(key));
+                    }
+                }
+                //Adiciona no objeto as variáveis locais
+                if (firstWord === 'LOCAL') {
+                    //remove o LOCAL
+                    let variaveis = linhaClean.split(/,| |\t|\r/);
+                    for (var key2 of variaveis) {
+                        if (key2 !== 'LOCAL' && key2 !== '') {
+                            // se terminar as variáveis
+                            if (key2.match(/\:\=/)) {
+                                break;
+                            }
+                            objeto.fonte.addVariavel(key2);
+                        }
                     }
                 }
                 //Verifica se adicionou o include TOTVS.CH
@@ -39131,6 +39168,19 @@ class ValidaAdvpl {
                 }
                 if (linhaClean.search(/CONOUT\(/) !== -1) {
                     objeto.aErros.push(new erros_1.Erro(parseInt(key), parseInt(key), traduz('validaAdvpl.conout', objeto.local), erros_1.Severity.Warning));
+                }
+                //  PUTSX1
+                if (linhaClean.search(/PUTSX1\(/) !== -1) {
+                    objeto.aErros.push(new erros_1.Erro(parseInt(key), parseInt(key), traduz('validaAdvpl.PutSX1', objeto.local), erros_1.Severity.Error));
+                }
+                // Uso de Dicionários
+                if (linhaClean.search(/(,| |\t|\>||\()+X+(1|2|3|5|6|7|9|A|B|D|G)+\_/gim) !== -1) {
+                    objeto.aErros.push(new erros_1.Erro(parseInt(key), parseInt(key), traduz('validaAdvpl.Dictionary', objeto.local), erros_1.Severity.Error));
+                }
+                if (linhaClean.search(/(,| |\t||\()+(MSFILE|MSFILE|DBCREATE|DBUSEAREA|CRIATRAB)+( \(|\t\(|\()/gim) !== -1 ||
+                    linhaClean.search(/( |)+(MSCOPYFILE|MSERASE|COPY TO)+( |\t)/gim) !==
+                        -1) {
+                    objeto.aErros.push(new erros_1.Erro(parseInt(key), parseInt(key), traduz('validaAdvpl.Isam', objeto.local), erros_1.Severity.Error));
                 }
                 //recomendação para melhorar identificação de problemas em queryes
                 if ((linha.match(/(\ |\t|)+SELECT+(\ |\t)/) ||
@@ -39812,7 +39862,7 @@ exports.Erro = Erro;
 /* 260 */
 /***/ (function(module) {
 
-module.exports = {"name":"analise-advpl","version":"4.0.3","description":"Extension of ADVPL code analysis.","types":"lib/index.d.ts","main":"lib/index.js","scripts":{"compile":"tsc -p ./","prepublish":"npm run compile","test":"npm run compile && mocha \"./test/validaadvpl.js\""},"keywords":[],"author":"Robson Rogério Silva","license":"ISC","dependencies":{"@types/node":"^10.14.4","asserts":"^4.0.2","chai":"^4.2.0","file-system":"^2.2.2","i18n":"^0.8.3","mocha":"^5.2.0","vscode":"^1.1.33"}};
+module.exports = {"name":"analise-advpl","version":"4.0.4","description":"Extension of ADVPL code analysis.","types":"lib/index.d.ts","main":"lib/index.js","scripts":{"compile":"tsc -p ./","prepublish":"npm run compile","test":"npm run compile && mocha \"./test/validaadvpl.js\""},"keywords":[],"author":"Robson Rogério Silva","license":"ISC","dependencies":{"@types/node":"^10.14.4","asserts":"^4.0.2","chai":"^4.2.0","file-system":"^2.2.2","i18n":"^0.8.3","mocha":"^5.2.0","vscode":"^1.1.33"},"devDependencies":{"typescript":"^3.4.5"}};
 
 /***/ })
 /******/ ]);

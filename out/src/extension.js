@@ -254,7 +254,7 @@ function validaProjeto(nGeradas = 0, tags = [], fileContent = '', branchAtual = 
                     }
                 }
                 catch (_a) {
-                    console.log('Erro na validação do fonte.');
+                    console.log('Erro na validação do fonte. ' + vscode_1.workspace.rootPath + '\\' + fileName);
                     conteudo = undefined;
                 }
             }

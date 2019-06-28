@@ -11,5 +11,7 @@
     "files.encoding": "utf8",
     "git.ignoreLimitWarning": true,
     "editor.autoIndent":true,
-    "editor.minimap.enabled": false
+    "editor.minimap.enabled": false,
+    "totvsLanguageServer.welcomePage": false,
+    "totvsLanguageServer.askEncodingChange": true
 }

@@ -177,7 +177,7 @@ async function validaFonte(editor: any) {
       if (editor.document.getText()) {
         validaAdvpl.validacao(editor.document.getText(), editor.document.uri);
         //verifica se o fonte já existe no projeto se não adiciona
-        let pos = projeto.map(function(e) {
+        let pos = projeto.map(function (e) {
           return e.fonte.fsPath;
         });
         let posicao = pos.indexOf(editor.document.uri.fsPath);
@@ -227,7 +227,7 @@ function errorVsCode(aErros: any) {
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }
 
 async function vscodeFindFilesSync(advplExtensions): Promise<string[]> {
   let globexp: any[] = [];
@@ -319,7 +319,7 @@ async function validaProjeto(
           cache.addFile(fileForCache);
         }
       } catch {
-        console.log('Erro na validação do fonte.');
+        console.log('Erro na validação do fonte. ' + workspace.rootPath + '\\' + fileName);
         conteudo = undefined;
       }
     }
