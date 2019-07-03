@@ -15,8 +15,9 @@
   "merge.pushError": "Error in Push!",
   "merge.tagError": "Tag creation error!",
   "merge.noRepository": "Repository Git not found!",
-  "extension.functionDuplicate": "This function is duplicated in the project!",
 
+  "validaAdvpl.functionDuplicate": "This function is duplicated in the project!",
+  "validaAdvpl.fileDuplicate": "This file is duplicated in the project!",
   "validaAdvpl.finish": "End of Project Review!",
   "validaAdvpl.queryNoEmbedded": "Use of Query IMPROPER without Embedded SQL.! \n Use: BeginSQL ... EndSQL.",
   "validaAdvpl.deleteFrom": "Use not allowed use of DELETE FROM!",

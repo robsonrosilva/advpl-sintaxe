@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 0.8.1
+
+- Correção de análise de uso indevido de dicionários somente fora de query.
+
 ### 0.8.0
 
 - Correção de identificação indevida de uso de dicionário.
