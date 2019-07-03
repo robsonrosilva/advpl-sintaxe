@@ -103,7 +103,7 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
 
 ### 1.0.0
 
-- Execussão de análise de forma assincrona.
+- Execução de análise de forma assíncrona.
 - Reformulação de aplicação para simplificação e melhoria de performance.
 - Correção do controle de erros.
 - Correção do controle de duplicidades de fontes e funções.
