@@ -8,18 +8,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const Cache_1 = require("./Cache");
 const vscode_1 = require("vscode");
-const fileSystem = require("fs");
-const globby = require("globby");
-const FileCache_1 = require("./model/FileCache");
 const Merge_1 = require("./Merge");
 const analise_advpl_1 = require("analise-advpl");
 const util_1 = require("util");
+const ItemProject_1 = require("analise-advpl/lib/models/ItemProject");
 //Cria um colection para os erros ADVPL
 const collection = vscode_1.languages.createDiagnosticCollection('advpl');
-let listaDuplicados = [];
-let projeto = [];
+let projeto;
+let listaURI = [];
 let comentFontPad = vscode_1.workspace
     .getConfiguration('advpl-sintaxe')
     .get('comentFontPad');
@@ -131,38 +128,35 @@ function activate(context) {
 exports.activate = activate;
 function validaFonte(editor) {
     return __awaiter(this, void 0, void 0, function* () {
-        let cache = new Cache_1.Cache(vscode_1.workspace.rootPath);
-        if (editor) {
-            //verifica se a linguagem é ADVPL
-            if (editor.document.languageId === 'advpl') {
-                if (editor.document.getText()) {
-                    validaAdvpl.validacao(editor.document.getText(), editor.document.uri);
-                    //verifica se o fonte já existe no projeto se não adiciona
-                    let pos = projeto.map(function (e) {
-                        return e.fonte.fsPath;
-                    });
-                    let posicao = pos.indexOf(editor.document.uri.fsPath);
-                    if (posicao === -1) {
-                        projeto.push(validaAdvpl.fonte);
-                    }
-                    else {
-                        projeto[posicao] = validaAdvpl.fonte;
-                    }
-                    let errosOld = Object.assign([], collection.get(validaAdvpl.fonte.fonte));
-                    //recupera os erros de duplicidade eles não são criticados no validaAdvpl
-                    let errosNew = errorVsCode(validaAdvpl.aErros);
-                    errosOld.forEach(erro => {
-                        if (erro.message ===
-                            localize('extension.functionDuplicate', 'This function is duplicated in the project!')) {
-                            errosNew.push(erro);
-                        }
-                    });
-                    //Limpa as mensagens do colection
-                    collection.delete(editor.document.uri);
-                    collection.set(editor.document.uri, errosNew);
-                    verificaDuplicados();
-                }
+        //verifica se a linguagem é ADVPL
+        if (editor && editor.document.languageId === 'advpl' && editor.document.getText()) {
+            validaAdvpl.validacao(editor.document.getText(), editor.document.uri.fsPath);
+            //verifica se o fonte já existe no projeto se não adiciona
+            let pos = projeto.projeto.map(function (e) {
+                return editor.document.urifsPath;
+            });
+            let posicao = pos.indexOf(editor.document.uri.fsPath);
+            let itemProjeto = new ItemProject_1.ItemModel();
+            itemProjeto.content = validaAdvpl.conteudoFonte;
+            itemProjeto.errors = validaAdvpl.aErros;
+            itemProjeto.fonte = validaAdvpl.fonte;
+            let projetoOld;
+            if (posicao === -1) {
+                projeto.projeto.push(itemProjeto);
             }
+            else {
+                projeto.projeto[posicao] = itemProjeto;
+            }
+            projeto.verificaDuplicados().then(() => {
+                // atualiza os erros
+                projeto.projeto.forEach((item) => {
+                    let fonte = item.fonte;
+                    let file = getUri(fonte.fonte);
+                    //Atualiza as mensagens do colection
+                    collection.delete(file);
+                    collection.set(file, errorVsCode(item.errors));
+                });
+            });
         }
     });
 }
@@ -173,210 +167,55 @@ function errorVsCode(aErros) {
     });
     return vsErros;
 }
+function getUri(file) {
+    let uri;
+    let fileName = file
+        .replace(/\\/g, '/')
+        .toUpperCase();
+    let listName;
+    // busca o arquivo
+    uri = vscode_1.Uri.file(file);
+    // busca na lista de uri
+    if (!uri) {
+        listaURI.forEach((item) => {
+            listName = item.path
+                .replace(/\\/g, '/')
+                .toUpperCase();
+            if (listName === fileName) {
+                uri = item;
+            }
+        });
+    }
+    return uri;
+}
 // this method is called when your extension is deactivated
 function deactivate() { }
 exports.deactivate = deactivate;
-function vscodeFindFilesSync(advplExtensions) {
+function validaProjeto() {
     return __awaiter(this, void 0, void 0, function* () {
-        let globexp = [];
-        for (var i = 0; i < advplExtensions.length; i++) {
-            globexp.push(`**/*.${advplExtensions[i]}`);
-        }
-        return yield globby(globexp, {
-            cwd: vscode_1.workspace.rootPath,
-            nocase: true
+        // prepara o objeto de validação
+        let validaPrj = new analise_advpl_1.ValidaProjeto(validaAdvpl.comentFontPad, vscodeOptions);
+        validaPrj.empresas = validaAdvpl.empresas;
+        validaPrj.ownerDb = validaAdvpl.ownerDb;
+        validaPrj.local = vscodeOptions;
+        validaPrj.validaProjeto(vscode_1.workspace.rootPath).then((objProjeto) => {
+            // se for validar o projeto limpa todas as críticas dos arquivos
+            listaURI.forEach((uri) => {
+                collection.delete(uri);
+            });
+            listaURI = [];
+            objProjeto.projeto.forEach((item) => {
+                let fonte = item.fonte;
+                let file = getUri(fonte.fonte);
+                listaURI.push(file);
+                //Atualiza as mensagens do colection
+                collection.set(file, errorVsCode(item.errors));
+            });
+            projeto = validaPrj;
+            //fileSystem.writeFileSync('d:\\extensao.json', JSON.stringify(validaPrj), {
+            //  mode: 0o755
+            //});
         });
-    });
-}
-function validaProjeto(nGeradas = 0, tags = [], fileContent = '', branchAtual = '', objetoMerge = undefined, maxCache = 500) {
-    return __awaiter(this, void 0, void 0, function* () {
-        let cache = new Cache_1.Cache(vscode_1.workspace.rootPath);
-        // se a versão é diferente apaga do cache
-        cache.filesInCache = cache.filesInCache.filter((_file) => _file.validaAdvpl.version === validaAdvpl.version);
-        let totalAddCache = 0;
-        let objeto = this;
-        let tag = tags[nGeradas];
-        //percorre todos os fontes do Workspace e valida se for ADVPL
-        let advplExtensions = ['prw', 'prx', 'prg', 'apw', 'apl', 'tlpp'];
-        let start = new Date();
-        let files = yield vscodeFindFilesSync(advplExtensions);
-        let endTime = new Date();
-        var timeDiff = endTime - start; //in ms
-        // strip the ms
-        timeDiff /= 1000;
-        // get seconds
-        var seconds = Math.round(timeDiff);
-        util_1.debuglog('Tempo gasto buscando arquivos ' + seconds + ' seconds');
-        projeto = [];
-        listaDuplicados = [];
-        files.forEach((fileName) => {
-            let file = vscode_1.Uri.file(vscode_1.workspace.rootPath + '\\' + fileName);
-            util_1.debuglog('Validando  ' + vscode_1.workspace.rootPath + '\\' + file.fsPath);
-            let conteudo = fileSystem.readFileSync(file.fsPath, 'latin1');
-            // pepara objeto para o cache
-            let fileForCache = new FileCache_1.FileCache();
-            fileForCache.file = file;
-            fileForCache.content = conteudo;
-            // verifica se o arquivo está em cache se estiver compara o conteúdo
-            cache.filesInCache.forEach((fileCache) => {
-                // se a versão é diferente apaga o arquivo
-                if (fileCache.validaAdvpl.version !== validaAdvpl.version) {
-                    cache.delFile(fileCache.file.fsPath);
-                }
-                // se há o arquivo no cache compara o conteúdo e versão do cache com o atual
-                if (fileCache.file.fsPath === file.fsPath) {
-                    if (fileCache.content === conteudo) {
-                        util_1.debuglog('usando cache');
-                        // se for igual carrega a validação em cache
-                        fileForCache.validaAdvpl = fileCache.validaAdvpl;
-                    }
-                    else {
-                        // se o conteudo mudou apaga da análise
-                        cache.delFile(fileCache.file.fsPath);
-                    }
-                }
-            });
-            let endTime = new Date();
-            timeDiff = endTime - start; //in ms
-            // strip the ms
-            timeDiff /= 1000;
-            // get seconds
-            seconds = Math.round(timeDiff);
-            // só analisa se há conteúdo e se a validacao estiver vazia(não houver cache ou estiver inválido)
-            if (conteudo && !fileForCache.validaAdvpl) {
-                try {
-                    validaAdvpl.validacao(conteudo, file);
-                    fileForCache.validaAdvpl = validaAdvpl;
-                    // limita a quantidade de arquivos adicionados em cache
-                    if (totalAddCache <= maxCache) {
-                        totalAddCache++;
-                        cache.addFile(fileForCache);
-                    }
-                }
-                catch (_a) {
-                    console.log('Erro na validação do fonte. ' + vscode_1.workspace.rootPath + '\\' + fileName);
-                    conteudo = undefined;
-                }
-            }
-            //Limpa as mensagens do colection
-            collection.delete(file);
-            if (conteudo) {
-                projeto.push(fileForCache.validaAdvpl.fonte);
-                collection.set(file, errorVsCode(fileForCache.validaAdvpl.aErros));
-            }
-            else {
-                projeto.push(new analise_advpl_1.Fonte(file));
-            }
-            if (!fileContent && projeto.length === files.length) {
-                verificaDuplicados();
-                util_1.debuglog(seconds.toString());
-                vscode_1.window.showInformationMessage(localize('extension.finish'));
-            }
-        });
-    });
-}
-function verificaDuplicados() {
-    return __awaiter(this, void 0, void 0, function* () {
-        let listaFuncoes = [];
-        let startTime = new Date();
-        let duplicadosAtual = [];
-        //faz a análise de funções ou classes duplicadas em fontes diferentes
-        let duplicados = [];
-        projeto.forEach((fonte) => {
-            //verifica se o fonte ainda existe
-            try {
-                fileSystem.statSync(fonte.fonte.fsPath);
-            }
-            catch (e) {
-                if (e.code === 'ENOENT') {
-                    collection.delete(fonte.fonte);
-                    fonte = new analise_advpl_1.Fonte();
-                }
-            }
-            fonte.funcoes.forEach((funcao) => {
-                if (listaFuncoes.indexOf((funcao.nome + funcao.tipo).toUpperCase()) === -1) {
-                    listaFuncoes.push((funcao.nome + funcao.tipo).toUpperCase());
-                }
-                else {
-                    duplicados.push((funcao.nome + funcao.tipo).toUpperCase());
-                }
-            });
-        });
-        //guarda lista com os fontes que tem funções duplicadas
-        projeto.forEach((fonte) => {
-            fonte.funcoes.forEach((funcao) => {
-                if (duplicados.indexOf((funcao.nome + funcao.tipo).toUpperCase()) !== -1) {
-                    //procura a funcao nos duplicados
-                    let posicao = duplicadosAtual
-                        .map(x => x.funcao + x.tipo)
-                        .indexOf((funcao.nome + funcao.tipo).toUpperCase());
-                    if (posicao === -1) {
-                        duplicadosAtual.push({
-                            funcao: funcao.nome.toUpperCase(),
-                            tipo: funcao.tipo,
-                            fontes: [fonte]
-                        });
-                    }
-                    else {
-                        duplicadosAtual[posicao].fontes.push(fonte);
-                    }
-                }
-            });
-        });
-        //verifica se mudou a lista de funções duplicadas
-        let listDuplicAtual = duplicadosAtual.map(x => x.funcao + x.tipo);
-        let listDuplicOld = listaDuplicados.map(x => x.funcao + x.tipo);
-        if (listDuplicAtual.toString() !==
-            listDuplicOld.map(x => x.funcao + x.tipo).toString()) {
-            //Procura o que mudou
-            let incluidos = listDuplicAtual.filter(x => listDuplicOld.indexOf(x) === -1);
-            let excluidos = listDuplicOld.filter(x => listDuplicAtual.indexOf(x) === -1);
-            //adicina novos erros
-            incluidos.forEach(funcaoDuplicada => {
-                //debuglog(` funcaoDuplicada  ${funcaoDuplicada}`);
-                //encontra nos fontes a funcao
-                let incluido = duplicadosAtual[listDuplicAtual.indexOf(funcaoDuplicada)];
-                incluido.fontes.forEach(fonte => {
-                    //debuglog(` fonte  ${fonte.fonte}`);
-                    //busca os erros que estão no fonte
-                    let erros = Object.assign([], collection.get(fonte.fonte));
-                    fonte.funcoes.forEach(funcao => {
-                        //debuglog(` funcao  ${funcao.nome}`);
-                        erros.push(new vscode_1.Diagnostic(new vscode_1.Range(funcao.linha, 0, funcao.linha, 0), localize('extension.functionDuplicate', 'This function is duplicated in the project!'), vscode_1.DiagnosticSeverity.Error));
-                    });
-                    //Limpa as mensagens do colection
-                    collection.delete(fonte.fonte);
-                    collection.set(fonte.fonte, erros);
-                });
-            });
-            //remove erros corrigidos
-            excluidos.forEach(funcaoCorrigida => {
-                //debuglog(` funcaoCorrigida  ${funcaoCorrigida}`);
-                //encontra nos fontes a funcao
-                let excuido = listaDuplicados[listDuplicOld.indexOf(funcaoCorrigida)];
-                excuido.fontes.forEach(fonte => {
-                    //debuglog(` fonte  ${fonte.fonte}`);
-                    //busca os erros que estão no fonte
-                    let erros = Object.assign([], collection.get(fonte.fonte));
-                    fonte.funcoes.forEach(funcao => {
-                        ///debuglog(` funcao  ${funcao.nome}`);
-                        erros.splice(erros.map(X => X.range._start._line).indexOf(funcao.linha));
-                    });
-                    //Limpa as mensagens do colection
-                    collection.delete(fonte.fonte);
-                    collection.set(fonte.fonte, erros);
-                });
-            });
-        }
-        //atualiza lista
-        listaDuplicados = duplicadosAtual;
-        let endTime = new Date();
-        var timeDiff = endTime - startTime; //in ms
-        // strip the ms
-        timeDiff /= 1000;
-        // get seconds
-        var seconds = Math.round(timeDiff);
-        util_1.debuglog(seconds + ' seconds');
     });
 }
 function localize(key, text) {

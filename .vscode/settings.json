@@ -13,5 +13,5 @@
     "editor.autoIndent":true,
     "editor.minimap.enabled": false,
     "totvsLanguageServer.welcomePage": false,
-    "totvsLanguageServer.askEncodingChange": true
+    "totvsLanguageServer.askEncodingChange": false
 }
