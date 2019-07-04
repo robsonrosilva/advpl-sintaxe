@@ -101,13 +101,9 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
 
 ## VERSÃO ATUAL
 
-### 1.0.0
+### 1.0.1
 
-- Execução de análise de forma assíncrona.
-- Reformulação de aplicação para simplificação e melhoria de performance.
-- Correção do controle de erros.
-- Correção do controle de duplicidades de fontes e funções.
-- Remoção do cache.
+- Implementação de GitFollowTags conforme atualização do GIT.
 
 ## Modelo de settings.json
 

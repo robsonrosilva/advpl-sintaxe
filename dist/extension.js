@@ -363,8 +363,7 @@ function gitTagSync(repository, tag) {
 }
 function gitPushSync(repository) {
     return __awaiter(this, void 0, void 0, function* () {
-        repository.pushTags();
-        return repository.push();
+        return repository.pushFollowTags();
     });
 }
 function gitPullSync(repository) {

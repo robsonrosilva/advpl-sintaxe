@@ -11,8 +11,7 @@ async function gitTagSync(repository: any, tag: string) {
   return repository.tag(tag, '');
 }
 async function gitPushSync(repository: any) {
-  repository.pushTags();
-  return repository.push();
+    return repository.pushFollowTags();
 }
 async function gitPullSync(repository: any) {
   return repository.pull();

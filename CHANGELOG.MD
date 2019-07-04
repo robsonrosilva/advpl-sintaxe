@@ -2,6 +2,14 @@
 
 ## Release Notes
 
+### 1.0.0
+
+- Execução de análise de forma assíncrona.
+- Reformulação de aplicação para simplificação e melhoria de performance.
+- Correção do controle de erros.
+- Correção do controle de duplicidades de fontes e funções.
+- Remoção do cache.
+
 ### 0.8.1
 
 - Correção de análise de uso indevido de dicionários somente fora de query.
