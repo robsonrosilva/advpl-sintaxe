@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.0.1
+
+- Implementação de GitFollowTags conforme atualização do GIT.
+
 ### 1.0.0
 
 - Execução de análise de forma assíncrona.

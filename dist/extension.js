@@ -353,7 +353,7 @@ function gitCheckoutSync(objeto, destino) {
 }
 function gitMergeSync(repository, branchOrigem) {
     return __awaiter(this, void 0, void 0, function* () {
-        return repository.merge(branchOrigem, '');
+        return gitRunSync(repository.repository, ['merge', '--no-ff', branchOrigem]);
     });
 }
 function gitTagSync(repository, tag) {
@@ -363,12 +363,18 @@ function gitTagSync(repository, tag) {
 }
 function gitPushSync(repository) {
     return __awaiter(this, void 0, void 0, function* () {
-        return repository.pushFollowTags();
+        yield gitRunSync(repository.repository, ['push', '--tags']);
+        return gitRunSync(repository.repository, ['push', '--set-upstream', 'origin', repository.headLabel]);
     });
 }
 function gitPullSync(repository) {
     return __awaiter(this, void 0, void 0, function* () {
         return repository.pull();
+    });
+}
+function gitRunSync(repository, args) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return repository.git.exec(repository.root, args, {});
     });
 }
 class MergeAdvpl {
@@ -415,8 +421,14 @@ class MergeAdvpl {
             else {
                 //Trata quando a branche ainda não subiu para o GIT
                 if (!repository.HEAD.upstream) {
-                    vscode_1.window.showErrorMessage(localize('merge.noPush'));
-                    return;
+                    try {
+                        yield gitPushSync(repository);
+                    }
+                    catch (e) {
+                        console.log(e);
+                        vscode_1.window.showErrorMessage(localize('merge.pushError') + '\n' + e.stdout);
+                        return;
+                    }
                 }
                 // se estiver na branche inicial efetua a atualização antes de iniciar o merge
                 if (objeto.getRepository(true).headLabel === branchAtual) {
@@ -431,6 +443,7 @@ class MergeAdvpl {
                     yield gitPushSync(repository);
                 }
                 catch (e) {
+                    console.log(e);
                     vscode_1.window.showErrorMessage(localize('merge.pushError') + '\n' + e.stdout);
                     return;
                 }
@@ -515,6 +528,7 @@ class MergeAdvpl {
                     yield gitPushSync(repository);
                 }
                 catch (e) {
+                    console.log(e);
                     vscode_1.window.showErrorMessage(localize('merge.pushError') + '\n' + e.stdout);
                     return;
                 }

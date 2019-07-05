@@ -5,16 +5,20 @@ async function gitCheckoutSync(objeto: MergeAdvpl, destino: string) {
   return objeto.repository.checkout(destino);
 }
 async function gitMergeSync(repository: any, branchOrigem: string) {
-  return repository.merge(branchOrigem, '');
+  return gitRunSync(repository.repository, ['merge', '--no-ff', branchOrigem]);
 }
 async function gitTagSync(repository: any, tag: string) {
   return repository.tag(tag, '');
 }
 async function gitPushSync(repository: any) {
-    return repository.pushFollowTags();
+  await gitRunSync(repository.repository, ['push', '--tags'])
+  return gitRunSync(repository.repository, ['push', '--set-upstream', 'origin', repository.headLabel]);
 }
 async function gitPullSync(repository: any) {
   return repository.pull();
+}
+async function gitRunSync(repository: any, args: string[]) {
+  return repository.git.exec(repository.root, args, {})
 }
 
 export class MergeAdvpl {
@@ -78,8 +82,13 @@ export class MergeAdvpl {
     } else {
       //Trata quando a branche ainda não subiu para o GIT
       if (!repository.HEAD.upstream) {
-        window.showErrorMessage(localize('merge.noPush'));
-        return;
+        try {
+          await gitPushSync(repository);
+        } catch (e) {
+          console.log(e);
+          window.showErrorMessage(localize('merge.pushError') + '\n' + e.stdout);
+          return;
+        }
       }
       // se estiver na branche inicial efetua a atualização antes de iniciar o merge
       if (objeto.getRepository(true).headLabel === branchAtual) {
@@ -92,6 +101,7 @@ export class MergeAdvpl {
       try {
         await gitPushSync(repository);
       } catch (e) {
+        console.log(e);
         window.showErrorMessage(localize('merge.pushError') + '\n' + e.stdout);
         return;
       }
@@ -175,6 +185,7 @@ export class MergeAdvpl {
       try {
         await gitPushSync(repository);
       } catch (e) {
+        console.log(e);
         window.showErrorMessage(localize('merge.pushError') + '\n' + e.stdout);
         return;
       }
@@ -204,10 +215,10 @@ export class MergeAdvpl {
         objeto.sucesso(
           tagName,
           localize('merge.mergeFinish') +
-            branchAtual +
-            ' -> ' +
-            branchdestino +
-            '.'
+          branchAtual +
+          ' -> ' +
+          branchdestino +
+          '.'
         );
       }
     }

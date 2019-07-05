@@ -101,9 +101,9 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
 
 ## VERSÃO ATUAL
 
-### 1.0.1
+### 1.0.2
 
-- Implementação de GitFollowTags conforme atualização do GIT.
+- Tratativa alternativa para uso de push tags.
 
 ## Modelo de settings.json
 
