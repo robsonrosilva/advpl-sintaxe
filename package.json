@@ -2,7 +2,7 @@
   "name": "advpl-sintaxe",
   "displayName": "ADVPL Análise, Snippets e GIT",
   "description": "Extensão de análise de qualidade e sintaxe e snippets ADVPL e que facilita a utilização do GIT.",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "publisher": "robsonrosilva",
   "icon": "images/icone.png",
   "engines": {
@@ -49,12 +49,13 @@
     "onCommand:advpl-sintaxe.gitRelease",
     "onCommand:advpl-sintaxe.gitMaster",
     "onCommand:advpl-sintaxe.validaProjeto",
-    "onCommand:advpl-sintaxe.analisaTags",
+    "onCommand:advpl-sintaxe.cleanBranches",
     "onCommand:advpl-sintaxe.atualizaBranch"
   ],
   "main": "./dist/extension",
   "contributes": {
-    "commands": [{
+    "commands": [
+      {
         "command": "advpl-sintaxe.gitValidacao",
         "title": "%advpl-sintaxe.commands.git.teste%"
       },
@@ -73,6 +74,10 @@
       {
         "command": "advpl-sintaxe.atualizaBranch",
         "title": "%advpl-sintaxe.commands.git.atualizaBranch%"
+      },
+      {
+        "command": "advpl-sintaxe.cleanBranches",
+        "title": "%advpl-sintaxe.commands.git.cleanBranches%"
       }
     ],
     "configuration": {
@@ -138,7 +143,8 @@
         }
       }
     },
-    "snippets": [{
+    "snippets": [
+      {
         "language": "advpl",
         "path": "%advpl-sintaxe.configuration.snippets.advpl.mvc%"
       },
@@ -198,7 +204,7 @@
     "webpack-cli": "^3.3.2"
   },
   "dependencies": {
-    "analise-advpl": "^5.0.3",
+    "analise-advpl": "^5.0.4",
     "git": "^0.1.5",
     "vscode-nls": "^4.1.0"
   }

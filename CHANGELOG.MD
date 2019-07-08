@@ -2,6 +2,17 @@
 
 ## Release Notes
 
+### 1.0.3
+
+- Criação de comando para limpar branche apagadas do remote e as branches locais mergeadas com a branche de produção.
+- Atualização de análise de advpl, para melhoria de críticas de uso de dicionários.
+- Criação de método mais genérico de uso do GIT.
+- Tratamento para uso do git de forma assíncrona.
+
+### 1.0.2
+
+- Tratativa alternativa para uso de push tags.
+
 ### 1.0.1
 
 - Implementação de GitFollowTags conforme atualização do GIT.

@@ -9,6 +9,7 @@
   "extension.finish": "End of Project Review!",
   "merge.noBranch": "For merge configure branches in settings!",
   "merge.atualizacaoFinish": "The branch has been updated successfully!",
+  "merge.cleanFinish": "The branches has been clean successfully!",
   "merge.checkoutError": "Error in Checkout!",
   "merge.mergeError": "Error in Merge!",
   "merge.pullError": "Error in Pull!",

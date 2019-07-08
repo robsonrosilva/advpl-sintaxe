@@ -1,10 +1,10 @@
 {
     "compilerOptions": {
         "module": "commonjs",
-        "target": "es6",
+        "target": "es2016",
         "outDir": "out",
         "lib": [
-            "es6"
+            "es7"
         ],
         "sourceMap": true,
         "rootDir": ".",

@@ -57,58 +57,49 @@ export function activate(context: ExtensionContext) {
     //Adiciona comando de envia para Validação
     context.subscriptions.push(
         commands.registerCommand('advpl-sintaxe.gitValidacao', () => {
-            let mergeAdvpl = new MergeAdvpl(false, validaProjeto);
+            let mergeAdvpl = new MergeAdvpl();
             let branchAtual = mergeAdvpl.repository.headLabel;
-            try {
-                mergeAdvpl.merge(
-                    mergeAdvpl.repository,
-                    branchAtual,
-                    mergeAdvpl.branchTeste,
-                    false,
-                    false
-                );
-            } catch (e) {
-                mergeAdvpl.falha(e.stdout);
-            }
-            mergeAdvpl.repository.checkout(branchAtual);
+            
+            mergeAdvpl.merge(mergeAdvpl.branchTeste).then(()=>{
+                mergeAdvpl.repository.checkout(branchAtual);
+                validaProjeto();
+            }).catch((erro:string)=>{
+                window.showErrorMessage(erro);
+                mergeAdvpl.repository.checkout(branchAtual);
+                validaProjeto();
+            });
         })
     );
     //Adiciona comando de envia para Release
     context.subscriptions.push(
         commands.registerCommand('advpl-sintaxe.gitRelease', () => {
-            let mergeAdvpl = new MergeAdvpl(false, validaProjeto);
+            let mergeAdvpl = new MergeAdvpl();
             let branchAtual = mergeAdvpl.repository.headLabel;
-            try {
-                mergeAdvpl.merge(
-                    mergeAdvpl.repository,
-                    branchAtual,
-                    mergeAdvpl.branchTeste,
-                    true,
-                    false
-                );
-            } catch (e) {
-                mergeAdvpl.falha(e.stdout);
-            }
-            mergeAdvpl.repository.checkout(branchAtual);
+
+            mergeAdvpl.merge(mergeAdvpl.branchHomol).then(() => {
+                mergeAdvpl.repository.checkout(branchAtual);
+                validaProjeto();
+            }).catch((erro: string) => {
+                window.showErrorMessage(erro);
+                mergeAdvpl.repository.checkout(branchAtual);
+                validaProjeto();
+            });
         })
     );
     //Adiciona comando de envia para master
     context.subscriptions.push(
         commands.registerCommand('advpl-sintaxe.gitMaster', () => {
-            let mergeAdvpl = new MergeAdvpl(false, validaProjeto);
+            let mergeAdvpl = new MergeAdvpl();
             let branchAtual = mergeAdvpl.repository.headLabel;
-            try {
-                mergeAdvpl.merge(
-                    mergeAdvpl.repository,
-                    branchAtual,
-                    mergeAdvpl.branchTeste,
-                    true,
-                    true
-                );
-            } catch (e) {
-                mergeAdvpl.falha(e.stdout);
-            }
-            mergeAdvpl.repository.checkout(branchAtual);
+
+            mergeAdvpl.merge(mergeAdvpl.branchProdu).then(() => {
+                mergeAdvpl.repository.checkout(branchAtual);
+                validaProjeto();
+            }).catch((erro: string) => {
+                window.showErrorMessage(erro);
+                mergeAdvpl.repository.checkout(branchAtual);
+                validaProjeto();
+            });
         })
     );
     //Adiciona comando de envia para master
@@ -121,32 +112,37 @@ export function activate(context: ExtensionContext) {
             }
         })
     );
-    //Adiciona comando de envia para master
-    context.subscriptions.push(
-        commands.registerCommand('advpl-sintaxe.analisaTags', () => {
-            let mergeAdvpl = new MergeAdvpl(true, validaProjeto);
-            let branchAtual = mergeAdvpl.repository.headLabel;
-            try {
-                mergeAdvpl.analisaTags();
-            } catch (e) {
-                mergeAdvpl.falha(e.stdout);
-            }
-            mergeAdvpl.repository.checkout(branchAtual);
-        })
-    );
+
     //Adiciona comando de Atualiza Branch
     context.subscriptions.push(
         commands.registerCommand('advpl-sintaxe.atualizaBranch', () => {
-            let mergeAdvpl = new MergeAdvpl(true, validaProjeto);
+            let mergeAdvpl = new MergeAdvpl();
             let branchAtual = mergeAdvpl.repository.headLabel;
-            try {
-                mergeAdvpl.atualiza(mergeAdvpl.repository, branchAtual, true);
-            } catch (e) {
-                mergeAdvpl.falha(e.stdout);
-            }
-            mergeAdvpl.repository.checkout(branchAtual);
+            mergeAdvpl.atualiza().then((message:string)=>{
+                window.showInformationMessage(message);
+                mergeAdvpl.repository.checkout(branchAtual);
+                validaProjeto();
+            }).catch((erro: string) => {
+                window.showErrorMessage(erro);
+                mergeAdvpl.repository.checkout(branchAtual);
+                validaProjeto();
+            });
         })
     );
+
+    //Adiciona comando de limeza de branches
+    context.subscriptions.push(
+        commands.registerCommand('advpl-sintaxe.cleanBranches', () => {
+            let mergeAdvpl = new MergeAdvpl();
+            let branchAtual = mergeAdvpl.repository.headLabel;
+            mergeAdvpl.limpaBranches().then((message: string) => {
+                window.showInformationMessage(message);
+            }).catch((erro: string) => {
+                window.showErrorMessage(erro);
+            });
+        })
+    );
+
     if (
         workspace.getConfiguration('advpl-sintaxe').get('validaProjeto') !== false
     ) {

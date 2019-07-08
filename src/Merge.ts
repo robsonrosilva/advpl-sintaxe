@@ -1,374 +1,354 @@
 import { workspace, window, extensions } from 'vscode';
 
-//Criação sincrona de funções do git
-async function gitCheckoutSync(objeto: MergeAdvpl, destino: string) {
-  return objeto.repository.checkout(destino);
-}
-async function gitMergeSync(repository: any, branchOrigem: string) {
-  return gitRunSync(repository.repository, ['merge', '--no-ff', branchOrigem]);
-}
-async function gitTagSync(repository: any, tag: string) {
-  return repository.tag(tag, '');
-}
-async function gitPushSync(repository: any) {
-  await gitRunSync(repository.repository, ['push', '--tags'])
-  return gitRunSync(repository.repository, ['push', '--set-upstream', 'origin', repository.headLabel]);
-}
-async function gitPullSync(repository: any) {
-  return repository.pull();
-}
-async function gitRunSync(repository: any, args: string[]) {
-  return repository.git.exec(repository.root, args, {})
+export interface IExecutionResult<T extends string | Buffer> {
+	exitCode: number;
+	stdout: T;
+	stderr: string;
 }
 
 export class MergeAdvpl {
-  public branchTeste: string;
-  public branchHomol: string;
-  public branchProdu: string;
-  public branchesControladas: string[];
-  public repository: any;
-  private fnValidacao: Function;
-  constructor(forca: boolean, fnValidacao: Function) {
-    this.fnValidacao = fnValidacao;
-    //Busca Configurações do Settings
-    this.branchTeste = workspace
-      .getConfiguration('advpl-sintaxe')
-      .get('branchTeste') as string;
-    if (!this.branchTeste) {
-      this.falha(localize('merge.noBranch'));
-      return;
-    }
-    this.branchHomol = workspace
-      .getConfiguration('advpl-sintaxe')
-      .get('branchHomologacao') as string;
-    if (!this.branchHomol) {
-      this.falha(localize('merge.noBranch'));
-      return;
-    }
-    this.branchProdu = workspace
-      .getConfiguration('advpl-sintaxe')
-      .get('branchProducao') as string;
-    if (!this.branchProdu) {
-      this.falha(localize('merge.noBranch'));
-      return;
-    }
-    this.branchesControladas = Array();
-    this.branchesControladas.push(
-      this.branchHomol.toLocaleUpperCase.toString()
-    );
-    this.branchesControladas.push(
-      this.branchTeste.toLocaleUpperCase.toString()
-    );
-    this.branchesControladas.push(
-      this.branchProdu.toLocaleUpperCase.toString()
-    );
-    this.repository = this.getRepository(forca);
-  }
-
-  public async merge(
-    repository: any,
-    branchAtual: any,
-    branchdestino: any,
-    enviaHomolog: boolean,
-    enviaMaster: boolean
-  ) {
-    //guarda objeto this
-    let objeto = this;
-    let tagName: string = '';
-    //verifica se não está numa branch controlada
-    if (objeto.branchesControladas.indexOf(branchAtual.toUpperCase()) !== -1) {
-      window.showErrorMessage(localize('merge.noBranchMerge'));
-      return;
-    } else {
-      //Trata quando a branche ainda não subiu para o GIT
-      if (!repository.HEAD.upstream) {
-        try {
-          await gitPushSync(repository);
-        } catch (e) {
-          console.log(e);
-          window.showErrorMessage(localize('merge.pushError') + '\n' + e.stdout);
-          return;
+    public branchTeste: string;
+    public branchHomol: string;
+    public branchProdu: string;
+    public branchesControladas: string[];
+    public repository: any;
+    private branchOrigem: string;
+    constructor() {
+        //Busca Configurações do Settings
+        this.branchTeste = workspace
+            .getConfiguration('advpl-sintaxe')
+            .get('branchTeste') as string;
+        if (!this.branchTeste) {
+            window.showErrorMessage(localize('merge.noBranch'));
+            return;
         }
-      }
-      // se estiver na branche inicial efetua a atualização antes de iniciar o merge
-      if (objeto.getRepository(true).headLabel === branchAtual) {
-        try {
-          await objeto.atualiza(objeto.repository, branchAtual);
-        } catch (e) {
-          return;
+        this.branchHomol = workspace
+            .getConfiguration('advpl-sintaxe')
+            .get('branchHomologacao') as string;
+        if (!this.branchHomol) {
+            window.showErrorMessage(localize('merge.noBranch'));
+            return;
         }
-      }
-      try {
-        await gitPushSync(repository);
-      } catch (e) {
-        console.log(e);
-        window.showErrorMessage(localize('merge.pushError') + '\n' + e.stdout);
-        return;
-      }
-      try {
-        await gitCheckoutSync(objeto, branchdestino);
-      } catch (e) {
-        window.showErrorMessage(
-          localize('merge.checkoutError') + '\n' + e.stdout
+        this.branchProdu = workspace
+            .getConfiguration('advpl-sintaxe')
+            .get('branchProducao') as string;
+        if (!this.branchProdu) {
+            window.showErrorMessage(localize('merge.noBranch'));
+            return;
+        }
+        this.branchesControladas = Array();
+        this.branchesControladas.push(
+            this.branchHomol.toUpperCase()
         );
-        return;
-      }
-      try {
-        await gitPullSync(repository);
-      } catch (e) {
-        window.showErrorMessage(localize('merge.pullError') + '\n' + e.stdout);
-        return;
-      }
+        this.branchesControladas.push(
+            this.branchTeste.toUpperCase()
+        );
+        this.branchesControladas.push(
+            this.branchProdu.toUpperCase()
+        );
+        this.repository = this.getRepository();
+    }
 
-      let branchOriginal: any = undefined;
-      //se for merge para produção usa no merge a branch de homologação
-      if (branchdestino === objeto.branchProdu) {
-        branchOriginal = branchAtual;
-        branchAtual = objeto.branchHomol;
-      }
-      try {
-        await gitMergeSync(repository, branchAtual);
-      } catch (e) {
-        window.showErrorMessage(localize('merge.mergeError') + '\n' + e.stdout);
-        return;
-      }
-      //Se a branch destino for a master precisa criar tag
-      if (branchdestino === objeto.branchProdu) {
+    public merge(branchDestino: string) {
+        this.branchOrigem = this.repository.headLabel;
+        // guarda objeto this
+        let objeto: MergeAdvpl = this;
+        return new Promise(
+            (resolve: Function, reject: Function) => {
+                // Verifica se a branch que mandou é uma das controladas
+                if (objeto.branchesControladas.includes(this.branchOrigem.toUpperCase())) {
+                    reject(localize('merge.noBranchMerge'));
+                }
+
+                // Atualiza branch Corrente com a Release
+                objeto.atualiza().catch((erro: string) => {
+                    console.log(erro);
+                    reject(erro);
+                }).then(() => {
+                    // efetua o push da branche
+                    this.run(
+                        ['push', '--set-upstream', 'origin', this.repository.headLabel]
+                    ).catch((erro) => {
+                        console.log(erro);
+                        reject(localize('merge.pushError') + '\n' + erro.stderr);
+                    }
+                    ).then(() => {
+                        // efetua os merges
+                        this.mergeGit(this.branchTeste).then(() => {
+                            if ([this.branchHomol, this.branchProdu].includes(branchDestino)) {
+                                this.mergeGit(this.branchHomol).then(() => {
+                                    if (this.branchProdu === branchDestino) {
+                                        this.mergeGit(this.branchProdu).then((tag: string) => {
+                                            window.showInformationMessage(
+                                                localize('merge.mergeFinish') +
+                                                this.branchOrigem + ' -> ' +
+                                                branchDestino + '(' + tag + ')'
+                                            );
+                                            resolve();
+                                        }).catch((erro) => {
+                                            console.log(erro);
+                                            reject(localize('merge.mergeError') + '\n' + erro.stderr);
+                                        }
+                                        );
+                                    } else {
+                                        window.showInformationMessage(
+                                            localize('merge.mergeFinish') +
+                                            this.branchOrigem +
+                                            ' -> ' +
+                                            branchDestino
+                                        );
+                                        resolve();
+                                    }
+                                }).catch((erro) => {
+                                    console.log(erro);
+                                    reject(localize('merge.mergeError') + '\n' + erro.stderr);
+                                }
+                                );
+                            } else {
+                                window.showInformationMessage(
+                                    localize('merge.mergeFinish') +
+                                    this.branchOrigem +
+                                    ' -> ' +
+                                    branchDestino
+                                );
+                                resolve();
+                            }
+                        }).catch((erro) => {
+                            console.log(erro);
+                            reject(localize('merge.mergeError') + '\n' + erro.stderr);
+                        }
+                        );
+                    });
+                });
+            }
+        );
+    }
+
+    // efetua um check out na branch de homologação, faz o pull dela, 
+    // faz um checkout para a branch corrente e um merge ne com a homologação
+    public atualiza() {
+        return new Promise((resolve: Function, reject: Function) => {
+            // vai para a branche de release
+            this.repository.checkout(this.branchHomol).then(() => {
+                // efetua o pull da branch de release
+                this.repository.pull().then(() => {
+                    // vai para a branche de que estava
+                    this.repository.checkout(this.branchOrigem).then(() => {
+                        // efetua o merge
+                        this.run(['merge', '--no-ff', this.branchHomol]).then(() => {
+                            resolve(localize('merge.atualizacaoFinish'));
+                        }).catch((erro) => {
+                            console.log(erro);
+                            reject(localize('merge.mergeError') + '\n' + erro.stderr);
+                        });
+                    }).catch((erro) => {
+                        console.log(erro);
+                        reject(localize('merge.checkoutError') + '\n' + erro.stderr);
+                    });
+                }).catch((erro) => {
+                    console.log(erro);
+                    reject(localize('merge.pullError') + '\n' + erro.stderr);
+                });
+            }).catch((erro) => {
+                console.log(erro);
+                reject(localize('merge.checkoutError') + '\n' + erro.stderr);
+            });
+        });
+    }
+
+    // limpa as branches mergeadas com a master
+    public limpaBranches() {
+        return new Promise((resolve: Function, reject: Function) => {
+            // Atualiza todas as branches remotas
+            this.run(['fetch', '-v', 'origin']).then(() => {
+                // baixa todas as tags
+                this.run(['pull', '--tags']).then(() => {
+                    // apaga os remotes que foram mergeados com a master
+                    this.run(['remote', 'prune','origin']).then(() => {
+                        // lista os branches mergeados com a master
+                        this.run(['branch', '--merged', 'master']).then((ret: IExecutionResult<string>) => {
+                            let branches = ret.stdout.split("\n");
+
+                            branches.forEach((branche:string) => {
+                                // nem tenta excluir se for a branche selecionada ou se for branche controlada
+                                if (branche.substring(0, 1) !== '*' &&
+                                    !this.branchesControladas.includes(branche.substring(2).toUpperCase())&&
+                                    branche !== ''){
+                                    branche = branche.substring(2);
+                                    this.run(['branch', '-d', branche]);
+                                }
+                            });
+
+                            console.log(ret);
+                            resolve(localize('merge.cleanFinish'));
+                        }).catch((erro) => {
+                            console.log(erro);
+                            reject(localize('merge.mergedError') + '\n' + erro.stderr);
+                        });
+                    }).catch((erro) => {
+                        console.log(erro);
+                        reject(localize('merge.remotePruneError') + '\n' + erro.stderr);
+                    });
+                }).catch((erro) => {
+                    console.log(erro);
+                    reject(localize('merge.pullError') + '\n' + erro.stderr);
+                });
+            }).catch((erro) => {
+                console.log(erro);
+                reject(localize('merge.pullError') + '\n' + erro.stderr);
+            });
+        });
+    }
+
+    // Executa um push com tags
+    private pushAll() {
+        let promises: Promise<any>[] = [];
+        promises.push(this.run(['push', '--tags']));
+        promises.push(this.run(['push', '--set-upstream', 'origin', this.repository.headLabel]));
+        return Promise.all(promises);
+    }
+
+    private getNextTag(): string {
         let aUltimaTag = [0, 0, 0];
         let commit;
         //Verifica ultima tag
-        repository.refs.forEach((item: any) => {
-          //verifica se é TAG
-          if (item.type === 2) {
-            //Verifica se é padrão de numeração
-            let aNiveis = item.name.split('.');
-            if (aNiveis.length === 3) {
-              let aTag = [
-                Number(aNiveis[0]),
-                Number(aNiveis[1]),
-                Number(aNiveis[2])
-              ];
-              if (aTag[0] >= aUltimaTag[0]) {
-                if (aTag[1] >= aUltimaTag[1]) {
-                  if (aTag[2] >= aUltimaTag[2]) {
-                    aUltimaTag = aTag;
-                    commit = item.commit;
-                  }
+        this.repository.refs.forEach((item: any) => {
+            //verifica se Ã© TAG
+            if (item.type === 2) {
+                //Verifica se Ã© padrÃ£o de numeraÃ§Ã£o
+                let aNiveis = item.name.split('.');
+                if (aNiveis.length === 3) {
+                    let aTag = [
+                        Number(aNiveis[0]),
+                        Number(aNiveis[1]),
+                        Number(aNiveis[2])
+                    ];
+                    if (aTag[0] >= aUltimaTag[0]) {
+                        if (aTag[1] >= aUltimaTag[1]) {
+                            if (aTag[2] >= aUltimaTag[2]) {
+                                aUltimaTag = aTag;
+                                commit = item.commit;
+                            }
+                        }
+                    }
                 }
-              }
             }
-          }
         });
         if (aUltimaTag[2] === 9) {
-          aUltimaTag[2] = 0;
-          aUltimaTag[1]++;
+            aUltimaTag[2] = 0;
+            aUltimaTag[1]++;
         } else {
-          aUltimaTag[2]++;
+            aUltimaTag[2]++;
         }
-        if (commit !== repository.HEAD.commit) {
-          try {
-            tagName =
-              String(aUltimaTag[0]) +
-              '.' +
-              String(aUltimaTag[1]) +
-              '.' +
-              String(aUltimaTag[2]);
-            await gitTagSync(repository, tagName);
-          } catch (e) {
-            window.showErrorMessage(
-              localize('merge.tagError') + '\n' + e.stdout
-            );
-            return;
-          }
-        }
-      }
-      try {
-        await gitPushSync(repository);
-      } catch (e) {
-        console.log(e);
-        window.showErrorMessage(localize('merge.pushError') + '\n' + e.stdout);
-        return;
-      }
-      //se for usou a branche de homologação volta o conteúdo original
-      if (branchOriginal) {
-        branchAtual = branchOriginal;
-      }
-      if (enviaHomolog) {
-        objeto.merge(
-          repository,
-          branchAtual,
-          objeto.branchHomol,
-          false,
-          enviaMaster
-        );
-      } else if (enviaMaster) {
-        objeto.merge(repository, branchAtual, objeto.branchProdu, false, false);
-      } else {
-        try {
-          await gitCheckoutSync(repository, branchAtual);
-        } catch (e) {
-          window.showErrorMessage(
-            localize('merge.checkoutError') + '\n' + e.stdout
-          );
-          return;
-        }
-        objeto.sucesso(
-          tagName,
-          localize('merge.mergeFinish') +
-          branchAtual +
-          ' -> ' +
-          branchdestino +
-          '.'
-        );
-      }
+        return String(aUltimaTag[0]) +
+            '.' +
+            String(aUltimaTag[1]) +
+            '.' +
+            String(aUltimaTag[2]);
     }
-  }
 
-  public async atualiza(
-    repository: any,
-    branchAtual: any,
-    showMessage?: boolean
-  ) {
-    //guarda objeto this
-    let objeto = this;
-    //verifica se não está numa branch controlada
-    if (objeto.branchesControladas.indexOf(branchAtual.toUpperCase()) !== -1) {
-      window.showErrorMessage(localize('merge.noBranchMerge'));
-      return;
-    } else {
-      try {
-        await gitCheckoutSync(objeto, objeto.branchHomol);
-      } catch (e) {
-        window.showErrorMessage(
-          localize('merge.checkoutError') + '\n' + e.stdout
-        );
-        return;
-      }
-      try {
-        await gitPullSync(repository);
-      } catch (e) {
-        window.showErrorMessage(localize('merge.pullError') + '\n' + e.stdout);
-        return;
-      }
-      try {
-        await gitCheckoutSync(objeto, branchAtual);
-      } catch (e) {
-        window.showErrorMessage(
-          localize('merge.checkoutError') + '\n' + e.stdout
-        );
-        return;
-      }
-      try {
-        await gitMergeSync(repository, objeto.branchHomol);
-      } catch (e) {
-        window.showErrorMessage(localize('merge.mergeError') + '\n' + e.stdout);
-        return;
-      }
-      if (showMessage) {
-        window.showInformationMessage(localize('merge.atualizacaoFinish'));
-      }
+    private mergeGit(destino: string) {
+        return new Promise((resolve: Function, reject: Function) => {
+            // vai para a branche de release
+            this.repository.checkout(destino).then(() => {
+                // efetua o pull da branch de release
+                this.run(['pull']).then(() => {
+                    // se for um merge para a branch de produção sempre envia a release
+                    let branch: string = destino === this.branchProdu ? this.branchHomol : this.branchOrigem;
+
+                    // efetua o merge
+                    this.run(['merge', '--no-ff', branch]).then(() => {
+                        if (destino === this.branchProdu) {
+                            let tag: string = this.getNextTag();
+                            this.repository.tag(tag, '').then(() => {
+                                this.pushAll().then(() => {
+                                    resolve(tag);
+                                }).catch((erro) => {
+                                    console.log(erro);
+                                    reject(localize('merge.pushError') + '\n' + erro.stderr);
+                                });
+                            }).catch((erro) => {
+                                console.log(erro);
+                                reject(localize('merge.checkoutError') + '\n' + erro.stderr);
+                            });
+                        } else {
+                            this.repository.push().then(() => {
+                                resolve();
+                            }).catch((erro) => {
+                                console.log(erro);
+                                reject(localize('merge.pushError') + '\n' + erro.stderr);
+                            });
+                        }
+                    }).catch((erro) => {
+                        console.log(erro);
+                        reject(localize('merge.mergeError') + '\n' + erro.stderr);
+                    });
+                }).catch((erro) => {
+                    console.log(erro);
+                    reject(localize('merge.pullError') + '\n' + erro.stderr);
+                });
+            }).catch((erro) => {
+                console.log(erro);
+                reject(localize('merge.checkoutError') + '\n' + erro.stderr);
+            });
+        });
     }
-  }
-  public analisaTags() {
-    let fileContent =
-      'TAG\tError\tWarning\tInformation\tHint\tExtension Version\n';
-    let branchAtual = this.repository.headLabel;
-    let objeto = this;
-    let tags: string[] = [];
-    let nGeradas = 0;
 
-    //Verifica ultima tag
-    objeto.repository.refs.forEach((item: any) => {
-      //verifica se é TAG
-      if (item.type === 2) {
-        //Verifica se é padrão de numeração
-        let aNiveis = item.name.split('.');
-        if (aNiveis.length === 3) {
-          fileContent += item.name + '\t\t\t\t\n';
-          tags.push(item.name);
-        }
-      }
-    });
-
-    objeto.geraRelatorio(nGeradas, tags, fileContent, branchAtual);
-  }
-
-  public async geraRelatorio(
-    nGeradas: number,
-    tags: string[],
-    fileContent: string,
-    branchAtual: string
-  ) {
-    let tag = tags[nGeradas];
-    let objeto = this;
-
-    console.log('TROCANDO PARA TAG ' + tag);
-    await gitCheckoutSync(objeto, tag);
-
-    this.fnValidacao(nGeradas, tags, fileContent, branchAtual, objeto);
-    console.log('VALIDANDO TAG ' + tag);
-  }
-
-  protected getRepository(forca: boolean) {
-    let git = extensions.getExtension('vscode.git');
-    if (git) {
-      if (git.isActive) {
-        let repository;
-        // se houver mais de um repositório git aberto e se houver um editor
-        if (
-          git.exports._model.repositories.length > 1 &&
-          window.activeTextEditor
-        ) {
-          repository = git.exports._model.getRepository(
-            window.activeTextEditor.document.uri
-          );
-        } else if (git.exports._model.repositories.length === 1) {
-          repository = git.exports._model.repositories[0];
-        } else {
-          let repository = git.exports._model.getRepository(workspace.rootPath);
-        }
-        // set resource groups
-        if (!repository) {
-          window.showErrorMessage(localize('merge.noRepository'));
-          return;
-        }
-
-        // set resource groups
-        if (
-          repository.mergeGroup.resourceStates.length !== 0 ||
-          repository.indexGroup.resourceStates.length !== 0 ||
-          repository.workingTreeGroup.resourceStates.length !== 0
-        ) {
-          window.showErrorMessage(localize('merge.noCommited'));
-          return;
-        }
-
-        return repository;
-      }
+    // Executa um comando livre no GIT
+    private run(args: string[]) {
+        return this.repository.repository.git.exec(this.repository.root, args, {});
     }
-  }
-  protected sucesso(value: any, rotina: String) {
-    window.showInformationMessage(
-      localize('merge.success') + rotina + ' [' + value + ']'
-    );
-    this.fnValidacao();
-  }
-  public falha(rotina: String) {
-    window.showErrorMessage('ERRO ' + rotina + '!');
-    this.fnValidacao();
-  }
+
+    private getRepository() {
+        let git = extensions.getExtension('vscode.git');
+        if (git) {
+            if (git.isActive) {
+                let repository;
+                // se houver mais de um repositório git aberto e se houver um editor
+                if (
+                    git.exports._model.repositories.length > 1 &&
+                    window.activeTextEditor
+                ) {
+                    repository = git.exports._model.getRepository(
+                        window.activeTextEditor.document.uri
+                    );
+                } else if (git.exports._model.repositories.length === 1) {
+                    repository = git.exports._model.repositories[0];
+                } else {
+                    repository = git.exports._model.getRepository(workspace.rootPath);
+                }
+                // set resource groups
+                if (!repository) {
+                    window.showErrorMessage(localize('merge.noRepository'));
+                    return;
+                }
+
+                // set resource groups
+                if (
+                    repository.mergeGroup.resourceStates.length !== 0 ||
+                    repository.indexGroup.resourceStates.length !== 0 ||
+                    repository.workingTreeGroup.resourceStates.length !== 0
+                ) {
+                    window.showErrorMessage(localize('merge.noCommited'));
+                    return;
+                }
+
+                return repository;
+            }
+        }
+    }
 }
 
-function localize(key: string, text?: string) {
-  const vscodeOptions = JSON.parse(
-    process.env.VSCODE_NLS_CONFIG
-  ).locale.toLowerCase();
-  let i18n = require('i18n');
-  let locales = ['en', 'pt-br'];
-  i18n.configure({
-    locales: locales,
-    directory: __dirname + '\\locales'
-  });
-  i18n.setLocale(locales.indexOf(vscodeOptions) + 1 ? vscodeOptions : 'en');
-  return i18n.__(key);
+function localize(key: string) {
+    const vscodeOptions = JSON.parse(
+        process.env.VSCODE_NLS_CONFIG
+    ).locale.toLowerCase();
+    let i18n = require('i18n');
+    let locales = ['en', 'pt-br'];
+    i18n.configure({
+        locales: locales,
+        directory: __dirname + '\\locales'
+    });
+    i18n.setLocale(locales.indexOf(vscodeOptions) + 1 ? vscodeOptions : 'en');
+    return i18n.__(key);
 }

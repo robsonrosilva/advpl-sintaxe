@@ -46,39 +46,42 @@ function activate(context) {
     vscode_1.workspace.onDidChangeTextDocument(validaFonte);
     //Adiciona comando de envia para Validação
     context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.gitValidacao', () => {
-        let mergeAdvpl = new Merge_1.MergeAdvpl(false, validaProjeto);
+        let mergeAdvpl = new Merge_1.MergeAdvpl();
         let branchAtual = mergeAdvpl.repository.headLabel;
-        try {
-            mergeAdvpl.merge(mergeAdvpl.repository, branchAtual, mergeAdvpl.branchTeste, false, false);
-        }
-        catch (e) {
-            mergeAdvpl.falha(e.stdout);
-        }
-        mergeAdvpl.repository.checkout(branchAtual);
+        mergeAdvpl.merge(mergeAdvpl.branchTeste).then(() => {
+            mergeAdvpl.repository.checkout(branchAtual);
+            validaProjeto();
+        }).catch((erro) => {
+            vscode_1.window.showErrorMessage(erro);
+            mergeAdvpl.repository.checkout(branchAtual);
+            validaProjeto();
+        });
     }));
     //Adiciona comando de envia para Release
     context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.gitRelease', () => {
-        let mergeAdvpl = new Merge_1.MergeAdvpl(false, validaProjeto);
+        let mergeAdvpl = new Merge_1.MergeAdvpl();
         let branchAtual = mergeAdvpl.repository.headLabel;
-        try {
-            mergeAdvpl.merge(mergeAdvpl.repository, branchAtual, mergeAdvpl.branchTeste, true, false);
-        }
-        catch (e) {
-            mergeAdvpl.falha(e.stdout);
-        }
-        mergeAdvpl.repository.checkout(branchAtual);
+        mergeAdvpl.merge(mergeAdvpl.branchHomol).then(() => {
+            mergeAdvpl.repository.checkout(branchAtual);
+            validaProjeto();
+        }).catch((erro) => {
+            vscode_1.window.showErrorMessage(erro);
+            mergeAdvpl.repository.checkout(branchAtual);
+            validaProjeto();
+        });
     }));
     //Adiciona comando de envia para master
     context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.gitMaster', () => {
-        let mergeAdvpl = new Merge_1.MergeAdvpl(false, validaProjeto);
+        let mergeAdvpl = new Merge_1.MergeAdvpl();
         let branchAtual = mergeAdvpl.repository.headLabel;
-        try {
-            mergeAdvpl.merge(mergeAdvpl.repository, branchAtual, mergeAdvpl.branchTeste, true, true);
-        }
-        catch (e) {
-            mergeAdvpl.falha(e.stdout);
-        }
-        mergeAdvpl.repository.checkout(branchAtual);
+        mergeAdvpl.merge(mergeAdvpl.branchProdu).then(() => {
+            mergeAdvpl.repository.checkout(branchAtual);
+            validaProjeto();
+        }).catch((erro) => {
+            vscode_1.window.showErrorMessage(erro);
+            mergeAdvpl.repository.checkout(branchAtual);
+            validaProjeto();
+        });
     }));
     //Adiciona comando de envia para master
     context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.validaProjeto', () => {
@@ -89,29 +92,29 @@ function activate(context) {
             vscode_1.window.showInformationMessage(e.stdout);
         }
     }));
-    //Adiciona comando de envia para master
-    context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.analisaTags', () => {
-        let mergeAdvpl = new Merge_1.MergeAdvpl(true, validaProjeto);
-        let branchAtual = mergeAdvpl.repository.headLabel;
-        try {
-            mergeAdvpl.analisaTags();
-        }
-        catch (e) {
-            mergeAdvpl.falha(e.stdout);
-        }
-        mergeAdvpl.repository.checkout(branchAtual);
-    }));
     //Adiciona comando de Atualiza Branch
     context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.atualizaBranch', () => {
-        let mergeAdvpl = new Merge_1.MergeAdvpl(true, validaProjeto);
+        let mergeAdvpl = new Merge_1.MergeAdvpl();
         let branchAtual = mergeAdvpl.repository.headLabel;
-        try {
-            mergeAdvpl.atualiza(mergeAdvpl.repository, branchAtual, true);
-        }
-        catch (e) {
-            mergeAdvpl.falha(e.stdout);
-        }
-        mergeAdvpl.repository.checkout(branchAtual);
+        mergeAdvpl.atualiza().then((message) => {
+            vscode_1.window.showInformationMessage(message);
+            mergeAdvpl.repository.checkout(branchAtual);
+            validaProjeto();
+        }).catch((erro) => {
+            vscode_1.window.showErrorMessage(erro);
+            mergeAdvpl.repository.checkout(branchAtual);
+            validaProjeto();
+        });
+    }));
+    //Adiciona comando de limeza de branches
+    context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.cleanBranches', () => {
+        let mergeAdvpl = new Merge_1.MergeAdvpl();
+        let branchAtual = mergeAdvpl.repository.headLabel;
+        mergeAdvpl.limpaBranches().then((message) => {
+            vscode_1.window.showInformationMessage(message);
+        }).catch((erro) => {
+            vscode_1.window.showErrorMessage(erro);
+        });
     }));
     if (vscode_1.workspace.getConfiguration('advpl-sintaxe').get('validaProjeto') !== false) {
         let startTime = new Date();

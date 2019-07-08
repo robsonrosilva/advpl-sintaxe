@@ -99,12 +99,6 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
 - **IF** - If convencional.
 - **BEGINSQL** - Modelo de EmbededSql.
 
-## VERSÃO ATUAL
-
-### 1.0.2
-
-- Tratativa alternativa para uso de push tags.
-
 ## Modelo de settings.json
 
 ```json

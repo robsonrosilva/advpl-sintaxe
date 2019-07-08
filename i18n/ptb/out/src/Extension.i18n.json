@@ -9,6 +9,7 @@
   "extension.finish": "Análise de projeto finalizada!",
   "merge.noBranch": "Para efetuar merge configure suas branches no settings!",
   "merge.atualizacaoFinish": "A branch foi atualizada com sucesso!",
+  "merge.cleanFinish": "As branches foram limpas com sucesso!",
   "merge.checkoutError": "Erro na execução do Checkout!",
   "merge.mergeError": "Erro na execução do Merge!",
   "merge.pullError": "Erro na execução do Pull!",
