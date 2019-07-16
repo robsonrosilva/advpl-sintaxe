@@ -107,6 +107,7 @@ const util_1 = __webpack_require__(15);
 const ItemProject_1 = __webpack_require__(34);
 //Cria um colection para os erros ADVPL
 const collection = vscode_1.languages.createDiagnosticCollection('advpl');
+let pendingValidation = false;
 let projeto;
 let listaURI = [];
 let comentFontPad = vscode_1.workspace
@@ -223,35 +224,53 @@ function activate(context) {
 exports.activate = activate;
 function validaFonte(editor) {
     return __awaiter(this, void 0, void 0, function* () {
+        let time = vscode_1.workspace.getConfiguration('advpl-sintaxe').get('tempoValidacao');
+        if (!time || time == 0) {
+            time = 5000;
+        }
         //verifica se a linguagem é ADVPL
         if (editor && editor.document.languageId === 'advpl' && editor.document.getText()) {
-            validaAdvpl.validacao(editor.document.getText(), editor.document.uri.fsPath);
-            //verifica se o fonte já existe no projeto se não adiciona
-            let pos = projeto.projeto.map(function (e) {
-                return editor.document.urifsPath;
-            });
-            let posicao = pos.indexOf(editor.document.uri.fsPath);
-            let itemProjeto = new ItemProject_1.ItemModel();
-            itemProjeto.content = validaAdvpl.conteudoFonte;
-            itemProjeto.errors = validaAdvpl.aErros;
-            itemProjeto.fonte = validaAdvpl.fonte;
-            let projetoOld;
-            if (posicao === -1) {
-                projeto.projeto.push(itemProjeto);
+            // Se estiver pendente de processamento não faz a validação
+            if (pendingValidation) {
+                //console.log('pulou')
+                return;
             }
             else {
-                projeto.projeto[posicao] = itemProjeto;
+                //console.log('agendou')
+                pendingValidation = true;
+                setTimeout(() => {
+                    //console.log('comecou')
+                    pendingValidation = false;
+                    validaAdvpl.validacao(editor.document.getText(), editor.document.uri.fsPath);
+                    //verifica se o fonte já existe no projeto se não adiciona
+                    let pos = projeto.projeto.map(function (e) {
+                        return editor.document.urifsPath;
+                    });
+                    let posicao = pos.indexOf(editor.document.uri.fsPath);
+                    let itemProjeto = new ItemProject_1.ItemModel();
+                    itemProjeto.content = validaAdvpl.conteudoFonte;
+                    itemProjeto.errors = validaAdvpl.aErros;
+                    itemProjeto.fonte = validaAdvpl.fonte;
+                    let projetoOld;
+                    if (posicao === -1) {
+                        projeto.projeto.push(itemProjeto);
+                    }
+                    else {
+                        projeto.projeto[posicao] = itemProjeto;
+                    }
+                    projeto.verificaDuplicados().then(() => {
+                        // atualiza os erros
+                        projeto.projeto.forEach((item) => {
+                            let fonte = item.fonte;
+                            let file = getUri(fonte.fonte);
+                            //Atualiza as mensagens do colection
+                            collection.delete(file);
+                            collection.set(file, errorVsCode(item.errors));
+                        });
+                        //console.log('terminou')
+                    });
+                }, time);
             }
-            projeto.verificaDuplicados().then(() => {
-                // atualiza os erros
-                projeto.projeto.forEach((item) => {
-                    let fonte = item.fonte;
-                    let file = getUri(fonte.fonte);
-                    //Atualiza as mensagens do colection
-                    collection.delete(file);
-                    collection.set(file, errorVsCode(item.errors));
-                });
-            });
         }
     });
 }

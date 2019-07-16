@@ -2,6 +2,11 @@
 
 ## Release Notes
 
+### 1.0.4
+
+- Define um tempo de 5 segundos entre a digitação do editor e o início da validação, para melhoria de performance.
+- Foi criada uma configuração para modificar o tempo de intervalo caso deseje.
+
 ### 1.0.3
 
 - Criação de comando para limpar branche apagadas do remote e as branches locais mergeadas com a branche de produção.

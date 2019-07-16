@@ -19,6 +19,8 @@
 	"advpl-sintaxe.configuration.properties.empresas.items": "Protheus business codes for query validation.",
 	"advpl-sintaxe.configuration.properties.comentFontPad": "List with source comment lines.",
 	"advpl-sintaxe.configuration.properties.comentFontPad.items": "Source comment line. (Use search TypeScript default)",
+	"advpl-sintaxe.configuration.properties.validaProjeto": "Enables project validation.",
+	"advpl-sintaxe.configuration.properties.tempoValidacao": "Sets the time in milliseconds of the typing validation interval.",
 	"advpl-sintaxe.configuration.snippets.advpl.mvc": "./i18n/enu/snippets/advpl.mvc.json",
 	"advpl-sintaxe.configuration.snippets.advpl.treport": "./i18n/enu/snippets/advpl.treport.json",
 	"advpl-sintaxe.configuration.snippets.advpl.webservices": "./i18n/enu/snippets/advpl.webservices.json",

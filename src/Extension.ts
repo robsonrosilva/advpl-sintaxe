@@ -15,6 +15,8 @@ import { ItemModel } from 'analise-advpl/lib/models/ItemProject';
 //Cria um colection para os erros ADVPL
 const collection = languages.createDiagnosticCollection('advpl');
 
+let pendingValidation: boolean = false;
+
 let projeto: ValidaProjeto;
 let listaURI: Uri[] = [];
 let comentFontPad: string[] = workspace
@@ -59,11 +61,11 @@ export function activate(context: ExtensionContext) {
         commands.registerCommand('advpl-sintaxe.gitValidacao', () => {
             let mergeAdvpl = new MergeAdvpl();
             let branchAtual = mergeAdvpl.repository.headLabel;
-            
-            mergeAdvpl.merge(mergeAdvpl.branchTeste).then(()=>{
+
+            mergeAdvpl.merge(mergeAdvpl.branchTeste).then(() => {
                 mergeAdvpl.repository.checkout(branchAtual);
                 validaProjeto();
-            }).catch((erro:string)=>{
+            }).catch((erro: string) => {
                 window.showErrorMessage(erro);
                 mergeAdvpl.repository.checkout(branchAtual);
                 validaProjeto();
@@ -118,7 +120,7 @@ export function activate(context: ExtensionContext) {
         commands.registerCommand('advpl-sintaxe.atualizaBranch', () => {
             let mergeAdvpl = new MergeAdvpl();
             let branchAtual = mergeAdvpl.repository.headLabel;
-            mergeAdvpl.atualiza().then((message:string)=>{
+            mergeAdvpl.atualiza().then((message: string) => {
                 window.showInformationMessage(message);
                 mergeAdvpl.repository.checkout(branchAtual);
                 validaProjeto();
@@ -161,38 +163,57 @@ export function activate(context: ExtensionContext) {
     }
 }
 async function validaFonte(editor: any) {
+    let time: number = workspace.getConfiguration('advpl-sintaxe').get('tempoValidacao') as number;
+
+    if (!time || time == 0) {
+        time = 5000;
+    }
+
     //verifica se a linguagem é ADVPL
     if (editor && editor.document.languageId === 'advpl' && editor.document.getText()) {
-        validaAdvpl.validacao(editor.document.getText(), editor.document.uri.fsPath);
-        //verifica se o fonte já existe no projeto se não adiciona
-        let pos = projeto.projeto.map(function (e) {
-            return editor.document.urifsPath;
-        });
-        let posicao = pos.indexOf(editor.document.uri.fsPath);
-        let itemProjeto = new ItemModel();
-        itemProjeto.content = validaAdvpl.conteudoFonte;
-        itemProjeto.errors = validaAdvpl.aErros;
-        itemProjeto.fonte = validaAdvpl.fonte;
-
-        let projetoOld: ValidaProjeto;
-
-        if (posicao === -1) {
-            projeto.projeto.push(itemProjeto);
+        // Se estiver pendente de processamento não faz a validação
+        if (pendingValidation) {
+            //console.log('pulou')
+            return
         } else {
-            projeto.projeto[posicao] = itemProjeto;
+            //console.log('agendou')
+            pendingValidation = true;
+            setTimeout(() => {
+                //console.log('comecou')
+                pendingValidation = false;
+                validaAdvpl.validacao(editor.document.getText(), editor.document.uri.fsPath);
+                //verifica se o fonte já existe no projeto se não adiciona
+                let pos = projeto.projeto.map(function (e) {
+                    return editor.document.urifsPath;
+                });
+                let posicao = pos.indexOf(editor.document.uri.fsPath);
+                let itemProjeto = new ItemModel();
+                itemProjeto.content = validaAdvpl.conteudoFonte;
+                itemProjeto.errors = validaAdvpl.aErros;
+                itemProjeto.fonte = validaAdvpl.fonte;
+
+                let projetoOld: ValidaProjeto;
+
+                if (posicao === -1) {
+                    projeto.projeto.push(itemProjeto);
+                } else {
+                    projeto.projeto[posicao] = itemProjeto;
+                }
+
+                projeto.verificaDuplicados().then(() => {
+                    // atualiza os erros
+                    projeto.projeto.forEach((item: ItemModel) => {
+                        let fonte: Fonte = item.fonte;
+                        let file = getUri(fonte.fonte);
+
+                        //Atualiza as mensagens do colection
+                        collection.delete(file);
+                        collection.set(file, errorVsCode(item.errors));
+                    });
+                    //console.log('terminou')
+                });
+            }, time)
         }
-
-        projeto.verificaDuplicados().then(() => {
-            // atualiza os erros
-            projeto.projeto.forEach((item: ItemModel) => {
-                let fonte: Fonte = item.fonte;
-                let file = getUri(fonte.fonte);
-
-                //Atualiza as mensagens do colection
-                collection.delete(file);
-                collection.set(file, errorVsCode(item.errors));
-            });
-        });
     }
 }
 
