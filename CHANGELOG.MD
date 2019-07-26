@@ -2,6 +2,13 @@
 
 ## Release Notes
 
+### 1.0.5
+
+- Correção de validação quando desativa a validação do projeto.
+- Adição de ativações da extensão do TDS.
+- Validação de fonte na abertura, alteração, seleção e salvamento.
+- 
+
 ### 1.0.4
 
 - Define um tempo de 5 segundos entre a digitação do editor e o início da validação, para melhoria de performance.

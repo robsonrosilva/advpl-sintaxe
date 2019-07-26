@@ -45,6 +45,9 @@ function activate(context) {
     //debuglog(localize('extension.activeMessage', 'não funcionou'));
     vscode_1.window.showInformationMessage(localize('extension.activeMessage', 'Active ADVPL Validation!'));
     vscode_1.workspace.onDidChangeTextDocument(validaFonte);
+    vscode_1.workspace.onDidOpenTextDocument(validaFonte);
+    vscode_1.workspace.onDidSaveTextDocument(validaFonte);
+    vscode_1.window.onDidChangeTextEditorSelection(validaAdvpl);
     //Adiciona comando de envia para Validação
     context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.gitValidacao', () => {
         let mergeAdvpl = new Merge_1.MergeAdvpl();
@@ -128,16 +131,27 @@ function activate(context) {
         var seconds = Math.round(timeDiff);
         util_1.debuglog('Tempo gasto validacao ' + seconds + ' seconds');
     }
+    else {
+        validaFonte(vscode_1.window.activeTextEditor);
+    }
 }
 exports.activate = activate;
 function validaFonte(editor) {
     return __awaiter(this, void 0, void 0, function* () {
         let time = vscode_1.workspace.getConfiguration('advpl-sintaxe').get('tempoValidacao');
+        let document;
         if (!time || time == 0) {
             time = 5000;
         }
+        //trata quando recebe o documento
+        if (editor.languageId) {
+            document = editor;
+        }
+        else if (editor && editor.document) {
+            document = editor.document;
+        }
         //verifica se a linguagem é ADVPL
-        if (editor && editor.document.languageId === 'advpl' && editor.document.getText()) {
+        if (document && document.languageId === 'advpl' && document.getText()) {
             // Se estiver pendente de processamento não faz a validação
             if (pendingValidation) {
                 //console.log('pulou')
@@ -149,34 +163,43 @@ function validaFonte(editor) {
                 setTimeout(() => {
                     //console.log('comecou')
                     pendingValidation = false;
-                    validaAdvpl.validacao(editor.document.getText(), editor.document.uri.fsPath);
-                    //verifica se o fonte já existe no projeto se não adiciona
-                    let pos = projeto.projeto.map(function (e) {
-                        return editor.document.urifsPath;
-                    });
-                    let posicao = pos.indexOf(editor.document.uri.fsPath);
-                    let itemProjeto = new ItemProject_1.ItemModel();
-                    itemProjeto.content = validaAdvpl.conteudoFonte;
-                    itemProjeto.errors = validaAdvpl.aErros;
-                    itemProjeto.fonte = validaAdvpl.fonte;
-                    let projetoOld;
-                    if (posicao === -1) {
-                        projeto.projeto.push(itemProjeto);
+                    validaAdvpl.validacao(document.getText(), document.uri.fsPath);
+                    // se valida projeto faz a validação se não somente atualiza o fonte atual
+                    if (vscode_1.workspace.getConfiguration('advpl-sintaxe').get('validaProjeto') !== false) {
+                        //verifica se o fonte já existe no projeto se não adiciona
+                        let pos = projeto.projeto.map(function (e) {
+                            return document.uri.fsPath;
+                        });
+                        let posicao = pos.indexOf(document.uri.fsPath);
+                        let itemProjeto = new ItemProject_1.ItemModel();
+                        itemProjeto.content = validaAdvpl.conteudoFonte;
+                        itemProjeto.errors = validaAdvpl.aErros;
+                        itemProjeto.fonte = validaAdvpl.fonte;
+                        let projetoOld;
+                        if (posicao === -1) {
+                            projeto.projeto.push(itemProjeto);
+                        }
+                        else {
+                            projeto.projeto[posicao] = itemProjeto;
+                        }
+                        projeto.verificaDuplicados().then(() => {
+                            // atualiza os erros
+                            projeto.projeto.forEach((item) => {
+                                let fonte = item.fonte;
+                                let file = getUri(fonte.fonte);
+                                //Atualiza as mensagens do colection
+                                collection.delete(file);
+                                collection.set(file, errorVsCode(item.errors));
+                            });
+                            //console.log('terminou')
+                        });
                     }
                     else {
-                        projeto.projeto[posicao] = itemProjeto;
+                        let file = getUri(validaAdvpl.fonte.fonte);
+                        //Atualiza as mensagens do colection
+                        collection.delete(file);
+                        collection.set(file, errorVsCode(validaAdvpl.aErros));
                     }
-                    projeto.verificaDuplicados().then(() => {
-                        // atualiza os erros
-                        projeto.projeto.forEach((item) => {
-                            let fonte = item.fonte;
-                            let file = getUri(fonte.fonte);
-                            //Atualiza as mensagens do colection
-                            collection.delete(file);
-                            collection.set(file, errorVsCode(item.errors));
-                        });
-                        //console.log('terminou')
-                    });
                 }, time);
             }
         }
