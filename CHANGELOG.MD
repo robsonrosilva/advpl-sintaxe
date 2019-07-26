@@ -7,7 +7,7 @@
 - Correção de validação quando desativa a validação do projeto.
 - Adição de ativações da extensão do TDS.
 - Validação de fonte na abertura, alteração, seleção e salvamento.
-- 
+- Correção de validação de funções com X?_.
 
 ### 1.0.4
 
