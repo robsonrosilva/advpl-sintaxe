@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.0.6
+
+- Correção de atualização de Branch, não estava dando o checkout antes do merge.
+
 ### 1.0.5
 
 - Correção de validação quando desativa a validação do projeto.

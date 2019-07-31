@@ -95,6 +95,8 @@ class MergeAdvpl {
     // efetua um check out na branch de homologação, faz o pull dela, 
     // faz um checkout para a branch corrente e um merge ne com a homologação
     atualiza() {
+        // se não estiver com a branch origem definida define ela
+        this.branchOrigem = this.branchOrigem ? this.branchOrigem : this.repository.headLabel;
         return new Promise((resolve, reject) => {
             // vai para a branche de release
             this.repository.checkout(this.branchHomol).then(() => {

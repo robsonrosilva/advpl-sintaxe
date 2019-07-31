@@ -1,9 +1,9 @@
 import { workspace, window, extensions } from 'vscode';
 
 export interface IExecutionResult<T extends string | Buffer> {
-	exitCode: number;
-	stdout: T;
-	stderr: string;
+    exitCode: number;
+    stdout: T;
+    stderr: string;
 }
 
 export class MergeAdvpl {
@@ -127,6 +127,8 @@ export class MergeAdvpl {
     // efetua um check out na branch de homologação, faz o pull dela, 
     // faz um checkout para a branch corrente e um merge ne com a homologação
     public atualiza() {
+        // se não estiver com a branch origem definida define ela
+        this.branchOrigem = this.branchOrigem ? this.branchOrigem : this.repository.headLabel;
         return new Promise((resolve: Function, reject: Function) => {
             // vai para a branche de release
             this.repository.checkout(this.branchHomol).then(() => {
@@ -164,16 +166,16 @@ export class MergeAdvpl {
                 // baixa todas as tags
                 this.run(['pull', '--tags']).then(() => {
                     // apaga os remotes que foram mergeados com a master
-                    this.run(['remote', 'prune','origin']).then(() => {
+                    this.run(['remote', 'prune', 'origin']).then(() => {
                         // lista os branches mergeados com a master
                         this.run(['branch', '--merged', 'master']).then((ret: IExecutionResult<string>) => {
                             let branches = ret.stdout.split("\n");
 
-                            branches.forEach((branche:string) => {
+                            branches.forEach((branche: string) => {
                                 // nem tenta excluir se for a branche selecionada ou se for branche controlada
                                 if (branche.substring(0, 1) !== '*' &&
-                                    !this.branchesControladas.includes(branche.substring(2).toUpperCase())&&
-                                    branche !== ''){
+                                    !this.branchesControladas.includes(branche.substring(2).toUpperCase()) &&
+                                    branche !== '') {
                                     branche = branche.substring(2);
                                     this.run(['branch', '-d', branche]);
                                 }
