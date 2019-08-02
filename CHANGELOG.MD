@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.0.7
+
+- Correção de identificação de arquivos e funções duplicadas.
+
 ### 1.0.6
 
 - Correção de atualização de Branch, não estava dando o checkout antes do merge.
@@ -133,48 +137,48 @@
 - Foram removidos desse projeto os fontes de análise de advpl, pois segmentei em um projeto NPM. O projeto NPM visa possibilitar a análise de ADVPL via CI do GITLAB.
 - Mudança de forma de tradução.
 
-### 0.5.5 - 2018-11-19
+### 0.5.5
 
 - Ajuste de espaço na identificação de ProtheusDoc.
 
-### 0.5.4 - 2018-10-31
+### 0.5.4
 
 - Finalização de internacionalização para inglês, troca de mensagens padrão para inglês.
 
-### 0.5.3 - 2018-10-31
+### 0.5.3
 
 - Inicio de internacionalização para inglês.
 - Ajustes de identificação de função.
 
-### 0.5.2 - 2018-10-27
+### 0.5.2
 
 - Correção de Internacionalização na descrição, de forma paleativa.
 
-### 0.5.0 - 2018-10-27
+### 0.5.0
 
 - Implementação de Internacionalização.
 
-### 0.4.9 - 2018-10-24
+### 0.4.9
 
 - Melhoria na identificação de Includes.
 - Adição de análise de APWEB.CH.
 
-### 0.4.8 - 2018-10-24
+### 0.4.8
 
 - Melhoria na identificação de falta de BeginSql.
 - Melhoria na identificação de ConOut().
 - Ajuste de Expressões para utilizar de forma mais otimizada.
 - Padronização de comentários em snippets.
 
-### 0.4.7 - 2018-10-23
+### 0.4.7
 
 - Correção de tratamento de comentários.
 
-### 0.4.6 - 2018-10-23
+### 0.4.6
 
 - Identificação de Array.ch.
 
-### 0.4.5 - 2018-10-23
+### 0.4.5
 
 - Análise de expressões de includes somente com o texto sem comentários e strings.
 - Análise de Includes contidos em outros.
@@ -182,98 +186,98 @@
 - Análise de Parâmetro MV_FOLMES e MSGBOX que foram descontinuados para o Protheus 12.
 - Correção de bug de identificação de classe fix #1.
 
-### 0.4.4 - 2018-10-22
+### 0.4.4
 
 - Correção de identificação de funções.
 
-### 0.4.3 - 2018-10-22
+### 0.4.3
 
 - Inclusão de includes obsoletos - STDWIN, SET.
 
-### 0.4.2 - 2018-10-21
+### 0.4.2
 
 - Inclusão de icone de extensão e melhoria de padrões de README.
 
-### 0.4.1 - 2018-10-21
+### 0.4.1
 
 - Ajuste de identificação de includes FWMVCDEF.CH e REPORT.CH.
 - Ajuste de exibição de erros em todas as linhas quando faltar o include.
 - Melhoria de identificação de comentários em linhas.
 
-### 0.4.0 - 2018-10-21
+### 0.4.0
 
 - Montagem de objeto de análise de includes.
   - Analisados - TOPCONN, TBICONN, REPORT, AP5MAIL, APWIZARD, FILEIO, TBICODE, PARMTYPE, FWMVCDEF, AARRAY, RPTDEF,
     FWPRINTSETUP, APWEBSRV, APWEBEX e MSOLE.
   - Obsoletos - PROTHEUS, DIALOG, FONT, PTMENU, PRINT, COLORS, FOLDER, MSOBJECT, VKEY, WINAPI, FWCOMMAND e FWCSS.
 
-### 0.3.7 - 2018-10-19
+### 0.3.7
 
 - Crítica de RWMAKE.CH, REPORT.CH obsoleto.
 
-### 0.3.6 - 2018-10-19
+### 0.3.6
 
 - Correção de erro de identificação de PROTHEUS.CH.
 
-### 0.3.5 - 2018-10-19
+### 0.3.5
 
 - Crítica de PROTHEUS.CH obsoleto.
 
-### 0.3.4 - 2018-10-19
+### 0.3.4
 
 - Análise de TBICONN.CH sem PREPARE ENVIRONMENT.
 - Análise de PREPARE ENVIRONMENT sem TBICONN.CH.
 - Análise de includes duplicados.
 
-### 0.3.3 - 2018-10-18
+### 0.3.3
 
 - Correção de mensagens dadas quando for executar TcSqlExec.
 
-### 0.3.2 - 2018-10-18
+### 0.3.2
 
 - Correção de mensagem na análise de projeto.
 
-### 0.3.1 - 2018-10-17
+### 0.3.1
 
 - Tratamentos de erros na extensão.
 - Ajuste de mensagem de MERGE.
 
-### 0.3.0 - 2018-10-17
+### 0.3.0
 
 - Mudança de execução de rotinas de forma síncrona.
 
-### 0.2.1 - 2018-10-16
+### 0.2.1
 
 - Ajuste de identificação de tabela fixas.
 
-### 0.2.0 - 2018-10-16
+### 0.2.0
 
 - Criação de análise de tags, onde serão varridas as tags do padrão N.N.N e gerado um arquivo na raiz com as pendências de cada TAG.
 - Melhorada a identificação de tabelas fixas em queries.
 
-### 0.1.1 - 2018-10-10
+### 0.1.1
 
 - Melhoria na identificação UPDATE, SELECT, JOIN e DELETE na mesma linha.
 
-### 0.1.0 - 2018-10-10
+### 0.1.0
 
 - Melhoria na identificação de comentários.
 
-### 0.0.9 - 2018-10-08
+### 0.0.9
 
 - Executa as validações de projeto quando chama as rotinas do GIT.
 
-### 0.0.8 - 2018-10-08
+### 0.0.8
 
 - Correção do Fluxo de merge para a Master.
 - Criticas de DELETE FROM.
 - Criticas de Erro de Commit.
 
-### 0.0.7 - 2018-10-06
+### 0.0.7
 
 - Montagem de settings para padrão de comentário de fonte.
 
-### 0.0.6 - 2018-10-05
+### 0.0.6
 
 - Implementação para aceitar vários bancos de dados.
 - Ajuste para identificação no Settings de configurações de extensão.
@@ -281,12 +285,12 @@
 - Melhoria de identificação de banco de dados fixo no fonte.
 - Recomendação de identação de queryes para melhor análise.
 
-### 0.0.5 - 2018-10-05
+### 0.0.5
 
 - Alteração de classificações de mensagens de Error para Warning.
 - Criação de regra para verificar tabelas fixas em query.
 
-### 0.0.4 - 2018-10-05
+### 0.0.4
 
 - Criação de informação para comentário de fonte fora do padrão.
 - Identificação de fontes com extensão em caixa alta.
@@ -294,18 +298,18 @@
 - Criação de comando para validação de projeto.
 - Criticas de comentários de fontes e funções.
 
-### 0.0.3 - 2018-10-04
+### 0.0.3
 
 - Criado variável cSelect para identificar Query e validar o owner.
 - Criação de variáveis de Workspace para extensão.
 - Melhoria na identificação de owner.
 
-### 0.0.2 - 2018-10-04
+### 0.0.2
 
 - Validação de todo o projeto na abertura.
 - Ajuste de validação que Select com \*.
 - Alert para utilização de CRLF em vez de funções.
 
-### 0.0.1 - 2018-10-04
+### 0.0.1
 
 - Foi implementada a Validação de fontes básica e os merges.

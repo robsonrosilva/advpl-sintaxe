@@ -2,7 +2,7 @@
   "name": "advpl-sintaxe",
   "displayName": "ADVPL Análise, Snippets e GIT",
   "description": "Extensão de análise de qualidade e sintaxe e snippets ADVPL e que facilita a utilização do GIT.",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "publisher": "robsonrosilva",
   "icon": "images/icone.png",
   "engines": {
@@ -102,7 +102,8 @@
   ],
   "main": "./dist/extension",
   "contributes": {
-    "commands": [{
+    "commands": [
+      {
         "command": "advpl-sintaxe.gitValidacao",
         "title": "%advpl-sintaxe.commands.git.teste%"
       },
@@ -195,7 +196,8 @@
         }
       }
     },
-    "snippets": [{
+    "snippets": [
+      {
         "language": "advpl",
         "path": "%advpl-sintaxe.configuration.snippets.advpl.mvc%"
       },
@@ -232,9 +234,9 @@
   },
   "devDependencies": {
     "@types/mocha": "^2.2.48",
-    "@types/node": "^8.10.48",
-    "@types/webpack": "^4.4.31",
-    "@types/webpack-dev-server": "^3.1.5",
+    "@types/node": "^8.10.51",
+    "@types/webpack": "^4.32.1",
+    "@types/webpack-dev-server": "^3.1.7",
     "del": "^3.0.0",
     "event-stream": "^3.3.5",
     "globby": "^9.2.0",
@@ -243,20 +245,20 @@
     "gulp-sourcemaps": "^2.6.5",
     "gulp-typescript": "^5.0.1",
     "run-sequence": "^2.2.1",
-    "ts-loader": "^6.0.0",
-    "ts-node": "^8.1.0",
-    "tslint": "^5.16.0",
+    "ts-loader": "^6.0.4",
+    "ts-node": "^8.3.0",
+    "tslint": "^5.18.0",
     "typescript": "^2.9.2",
     "vsce": "^1.66.0",
-    "vscode": "^1.1.34",
-    "vscode-debugadapter-testsupport": "^1.34.0",
-    "vscode-nls-dev": "^3.2.6",
-    "webpack": "^4.31.0",
-    "webpack-cli": "^3.3.2"
+    "vscode": "^1.1.36",
+    "vscode-debugadapter-testsupport": "^1.35.0",
+    "vscode-nls-dev": "^3.3.1",
+    "webpack": "^4.39.1",
+    "webpack-cli": "^3.3.6"
   },
   "dependencies": {
     "analise-advpl": "^5.0.5",
     "git": "^0.1.5",
-    "vscode-nls": "^4.1.0"
+    "vscode-nls": "^4.1.1"
   }
 }

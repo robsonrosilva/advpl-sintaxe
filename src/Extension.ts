@@ -172,7 +172,7 @@ export function activate(context: ExtensionContext) {
 async function validaFonte(editor: any) {
     let time: number = workspace.getConfiguration('advpl-sintaxe').get('tempoValidacao') as number;
     let document: TextDocument;
-    if (!time || time == 0) {
+    if (!time || time === 0) {
         time = 5000;
     }
 
@@ -188,7 +188,7 @@ async function validaFonte(editor: any) {
         // Se estiver pendente de processamento não faz a validação
         if (pendingValidation) {
             //console.log('pulou')
-            return
+            return;
         } else {
             //console.log('agendou')
             pendingValidation = true;
@@ -203,7 +203,7 @@ async function validaFonte(editor: any) {
                 ) {
                     //verifica se o fonte já existe no projeto se não adiciona
                     let pos = projeto.projeto.map(function (e) {
-                        return document.uri.fsPath;
+                        return getUri(e.fonte.fonte).fsPath;
                     });
                     let posicao = pos.indexOf(document.uri.fsPath);
                     let itemProjeto = new ItemModel();
@@ -238,7 +238,7 @@ async function validaFonte(editor: any) {
                     collection.delete(file);
                     collection.set(file, errorVsCode(validaAdvpl.aErros));
                 }
-            }, time)
+            }, time);
         }
     }
 }

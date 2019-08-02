@@ -140,7 +140,7 @@ function validaFonte(editor) {
     return __awaiter(this, void 0, void 0, function* () {
         let time = vscode_1.workspace.getConfiguration('advpl-sintaxe').get('tempoValidacao');
         let document;
-        if (!time || time == 0) {
+        if (!time || time === 0) {
             time = 5000;
         }
         //trata quando recebe o documento
@@ -168,7 +168,7 @@ function validaFonte(editor) {
                     if (vscode_1.workspace.getConfiguration('advpl-sintaxe').get('validaProjeto') !== false) {
                         //verifica se o fonte já existe no projeto se não adiciona
                         let pos = projeto.projeto.map(function (e) {
-                            return document.uri.fsPath;
+                            return getUri(e.fonte.fonte).fsPath;
                         });
                         let posicao = pos.indexOf(document.uri.fsPath);
                         let itemProjeto = new ItemProject_1.ItemModel();
