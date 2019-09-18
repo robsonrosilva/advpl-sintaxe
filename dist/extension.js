@@ -103,7 +103,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const vscode_1 = __webpack_require__(1);
 const Merge_1 = __webpack_require__(2);
 const analise_advpl_1 = __webpack_require__(27);
-const util_1 = __webpack_require__(15);
 const ItemProject_1 = __webpack_require__(34);
 //Cria um colection para os erros ADVPL
 const collection = vscode_1.languages.createDiagnosticCollection('advpl');
@@ -134,102 +133,97 @@ if (!validaAdvpl.empresas) {
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 function activate(context) {
-    //debuglog(localize('extension.activeMessage', 'não funcionou'));
-    vscode_1.window.showInformationMessage(localize('extension.activeMessage', 'Active ADVPL Validation!'));
-    vscode_1.workspace.onDidChangeTextDocument(validaFonte);
-    vscode_1.workspace.onDidOpenTextDocument(validaFonte);
-    vscode_1.workspace.onDidSaveTextDocument(validaFonte);
-    vscode_1.window.onDidChangeTextEditorSelection(validaAdvpl);
-    //Adiciona comando de envia para Validação
-    context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.gitValidacao', () => {
-        let mergeAdvpl = new Merge_1.MergeAdvpl();
-        let branchAtual = mergeAdvpl.repository.headLabel;
-        mergeAdvpl.merge(mergeAdvpl.branchTeste).then(() => {
-            mergeAdvpl.repository.checkout(branchAtual);
-            validaProjeto();
-        }).catch((erro) => {
-            vscode_1.window.showErrorMessage(erro);
-            mergeAdvpl.repository.checkout(branchAtual);
-            validaProjeto();
-        });
-    }));
-    //Adiciona comando de envia para Release
-    context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.gitRelease', () => {
-        let mergeAdvpl = new Merge_1.MergeAdvpl();
-        let branchAtual = mergeAdvpl.repository.headLabel;
-        mergeAdvpl.merge(mergeAdvpl.branchHomol).then(() => {
-            mergeAdvpl.repository.checkout(branchAtual);
-            validaProjeto();
-        }).catch((erro) => {
-            vscode_1.window.showErrorMessage(erro);
-            mergeAdvpl.repository.checkout(branchAtual);
-            validaProjeto();
-        });
-    }));
-    //Adiciona comando de envia para master
-    context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.gitMaster', () => {
-        let mergeAdvpl = new Merge_1.MergeAdvpl();
-        let branchAtual = mergeAdvpl.repository.headLabel;
-        mergeAdvpl.merge(mergeAdvpl.branchProdu).then(() => {
-            mergeAdvpl.repository.checkout(branchAtual);
-            validaProjeto();
-        }).catch((erro) => {
-            vscode_1.window.showErrorMessage(erro);
-            mergeAdvpl.repository.checkout(branchAtual);
-            validaProjeto();
-        });
-    }));
-    //Adiciona comando de envia para master
-    context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.validaProjeto', () => {
-        try {
+    return __awaiter(this, void 0, void 0, function* () {
+        console.log('Ativando ' + new Date());
+        vscode_1.window.showInformationMessage(localize('extension.activeMessage', 'Active ADVPL Validation!'));
+        vscode_1.workspace.onDidChangeTextDocument(validaFonte);
+        vscode_1.workspace.onDidOpenTextDocument(validaFonte);
+        vscode_1.workspace.onDidSaveTextDocument(validaFonte);
+        vscode_1.window.onDidChangeTextEditorSelection(validaAdvpl);
+        //Adiciona comando de envia para Validação
+        context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.gitValidacao', () => {
+            let mergeAdvpl = new Merge_1.MergeAdvpl();
+            let branchAtual = mergeAdvpl.repository.headLabel;
+            mergeAdvpl.merge(mergeAdvpl.branchTeste).then(() => {
+                mergeAdvpl.repository.checkout(branchAtual);
+                validaProjeto();
+            }).catch((erro) => {
+                vscode_1.window.showErrorMessage(erro);
+                mergeAdvpl.repository.checkout(branchAtual);
+                validaProjeto();
+            });
+        }));
+        //Adiciona comando de envia para Release
+        context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.gitRelease', () => {
+            let mergeAdvpl = new Merge_1.MergeAdvpl();
+            let branchAtual = mergeAdvpl.repository.headLabel;
+            mergeAdvpl.merge(mergeAdvpl.branchHomol).then(() => {
+                mergeAdvpl.repository.checkout(branchAtual);
+                validaProjeto();
+            }).catch((erro) => {
+                vscode_1.window.showErrorMessage(erro);
+                mergeAdvpl.repository.checkout(branchAtual);
+                validaProjeto();
+            });
+        }));
+        //Adiciona comando de envia para master
+        context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.gitMaster', () => {
+            let mergeAdvpl = new Merge_1.MergeAdvpl();
+            let branchAtual = mergeAdvpl.repository.headLabel;
+            mergeAdvpl.merge(mergeAdvpl.branchProdu).then(() => {
+                mergeAdvpl.repository.checkout(branchAtual);
+                validaProjeto();
+            }).catch((erro) => {
+                vscode_1.window.showErrorMessage(erro);
+                mergeAdvpl.repository.checkout(branchAtual);
+                validaProjeto();
+            });
+        }));
+        //Adiciona comando de envia para master
+        context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.validaProjeto', () => {
+            try {
+                validaProjeto();
+            }
+            catch (e) {
+                vscode_1.window.showInformationMessage(e.stdout);
+            }
+        }));
+        //Adiciona comando de Atualiza Branch
+        context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.atualizaBranch', () => {
+            let mergeAdvpl = new Merge_1.MergeAdvpl();
+            let branchAtual = mergeAdvpl.repository.headLabel;
+            mergeAdvpl.atualiza().then((message) => {
+                vscode_1.window.showInformationMessage(message);
+                mergeAdvpl.repository.checkout(branchAtual);
+                validaProjeto();
+            }).catch((erro) => {
+                vscode_1.window.showErrorMessage(erro);
+                mergeAdvpl.repository.checkout(branchAtual);
+                validaProjeto();
+            });
+        }));
+        //Adiciona comando de limeza de branches
+        context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.cleanBranches', () => {
+            let mergeAdvpl = new Merge_1.MergeAdvpl();
+            let branchAtual = mergeAdvpl.repository.headLabel;
+            mergeAdvpl.limpaBranches().then((message) => {
+                vscode_1.window.showInformationMessage(message);
+            }).catch((erro) => {
+                vscode_1.window.showErrorMessage(erro);
+            });
+        }));
+        if (vscode_1.workspace.getConfiguration('advpl-sintaxe').get('validaProjeto') !== false) {
             validaProjeto();
         }
-        catch (e) {
-            vscode_1.window.showInformationMessage(e.stdout);
+        else {
+            validaFonte(vscode_1.window.activeTextEditor);
         }
-    }));
-    //Adiciona comando de Atualiza Branch
-    context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.atualizaBranch', () => {
-        let mergeAdvpl = new Merge_1.MergeAdvpl();
-        let branchAtual = mergeAdvpl.repository.headLabel;
-        mergeAdvpl.atualiza().then((message) => {
-            vscode_1.window.showInformationMessage(message);
-            mergeAdvpl.repository.checkout(branchAtual);
-            validaProjeto();
-        }).catch((erro) => {
-            vscode_1.window.showErrorMessage(erro);
-            mergeAdvpl.repository.checkout(branchAtual);
-            validaProjeto();
-        });
-    }));
-    //Adiciona comando de limeza de branches
-    context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.cleanBranches', () => {
-        let mergeAdvpl = new Merge_1.MergeAdvpl();
-        let branchAtual = mergeAdvpl.repository.headLabel;
-        mergeAdvpl.limpaBranches().then((message) => {
-            vscode_1.window.showInformationMessage(message);
-        }).catch((erro) => {
-            vscode_1.window.showErrorMessage(erro);
-        });
-    }));
-    if (vscode_1.workspace.getConfiguration('advpl-sintaxe').get('validaProjeto') !== false) {
-        let startTime = new Date();
-        validaProjeto();
-        let endTime = new Date();
-        var timeDiff = endTime - startTime; //in ms
-        // strip the ms
-        timeDiff /= 1000;
-        // get seconds
-        var seconds = Math.round(timeDiff);
-        util_1.debuglog('Tempo gasto validacao ' + seconds + ' seconds');
-    }
-    else {
-        validaFonte(vscode_1.window.activeTextEditor);
-    }
+        console.log('Fim ' + new Date());
+    });
 }
 exports.activate = activate;
 function validaFonte(editor) {
-    return __awaiter(this, void 0, void 0, function* () {
+    return new Promise(() => {
         let time = vscode_1.workspace.getConfiguration('advpl-sintaxe').get('tempoValidacao');
         let document;
         if (!time || time === 0) {
@@ -329,13 +323,17 @@ function getUri(file) {
 function deactivate() { }
 exports.deactivate = deactivate;
 function validaProjeto() {
-    return __awaiter(this, void 0, void 0, function* () {
+    return new Promise(() => {
         // prepara o objeto de validação
         let validaPrj = new analise_advpl_1.ValidaProjeto(validaAdvpl.comentFontPad, vscodeOptions);
         validaPrj.empresas = validaAdvpl.empresas;
         validaPrj.ownerDb = validaAdvpl.ownerDb;
         validaPrj.local = vscodeOptions;
-        validaPrj.validaProjeto(vscode_1.workspace.rootPath).then((objProjeto) => {
+        let pastas = [];
+        vscode_1.workspace.workspaceFolders.forEach((path) => {
+            pastas.push(path.uri.fsPath);
+        });
+        validaPrj.validaProjeto(pastas).then((objProjeto) => {
             // se for validar o projeto limpa todas as críticas dos arquivos
             listaURI.forEach((uri) => {
                 collection.delete(uri);
@@ -349,9 +347,6 @@ function validaProjeto() {
                 collection.set(file, errorVsCode(item.errors));
             });
             projeto = validaPrj;
-            //fileSystem.writeFileSync('d:\\extensao.json', JSON.stringify(validaPrj), {
-            //  mode: 0o755
-            //});
         });
     });
 }
@@ -3352,7 +3347,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
    * Safe way of detecting whether or not the given thing is a primitive and
    * whether it has the given property
    */
-  function primitiveHasOwnProperty (primitive, propName) {  
+  function primitiveHasOwnProperty (primitive, propName) {
     return (
       primitive != null
       && typeof primitive !== 'object'
@@ -3417,16 +3412,22 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
    * Tokens that are the root node of a subtree contain two more elements: 1) an
    * array of tokens in the subtree and 2) the index in the original template at
    * which the closing tag for that section begins.
+   *
+   * Tokens for partials also contain two more elements: 1) a string value of
+   * indendation prior to that tag and 2) the index of that tag on that line -
+   * eg a value of 2 indicates the partial is the third tag on this line.
    */
   function parseTemplate (template, tags) {
     if (!template)
       return [];
-
+    var lineHasNonSpace = false;
     var sections = [];     // Stack to hold section tokens
     var tokens = [];       // Buffer to hold the tokens
     var spaces = [];       // Indices of whitespace tokens on the current line
     var hasTag = false;    // Is there a {{tag}} on the current line?
     var nonSpace = false;  // Is there a non-space char on the current line?
+    var indentation = '';  // Tracks indentation for tags that use it
+    var tagIndex = 0;      // Stores a count of number of tags encountered on a line
 
     // Strips all whitespace tokens array for the current line
     // if there was a {{#tag}} on it and otherwise only space.
@@ -3472,16 +3473,23 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
           if (isWhitespace(chr)) {
             spaces.push(tokens.length);
+            indentation += chr;
           } else {
             nonSpace = true;
+            lineHasNonSpace = true;
+            indentation += ' ';
           }
 
           tokens.push([ 'text', chr, start, start + 1 ]);
           start += 1;
 
           // Check for whitespace on the current line.
-          if (chr === '\n')
+          if (chr === '\n') {
             stripSpace();
+            indentation = '';
+            tagIndex = 0;
+            lineHasNonSpace = false;
+          }
         }
       }
 
@@ -3513,7 +3521,12 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
       if (!scanner.scan(closingTagRe))
         throw new Error('Unclosed tag at ' + scanner.pos);
 
-      token = [ type, value, start, scanner.pos ];
+      if (type == '>') {
+        token = [ type, value, start, scanner.pos, indentation, tagIndex, lineHasNonSpace ];
+      } else {
+        token = [ type, value, start, scanner.pos ];
+      }
+      tagIndex++;
       tokens.push(token);
 
       if (type === '#' || type === '^') {
@@ -3534,6 +3547,8 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
         compileTags(value);
       }
     }
+
+    stripSpace();
 
     // Make sure there are no open sections when we're done.
     openSection = sections.pop();
@@ -3721,7 +3736,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
           while (intermediateValue != null && index < names.length) {
             if (index === names.length - 1)
               lookupHit = (
-                hasProperty(intermediateValue, names[index]) 
+                hasProperty(intermediateValue, names[index])
                 || primitiveHasOwnProperty(intermediateValue, names[index])
               );
 
@@ -3895,12 +3910,31 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
       return this.renderTokens(token[4], context, partials, originalTemplate);
   };
 
+  Writer.prototype.indentPartial = function indentPartial (partial, indentation, lineHasNonSpace) {
+    var filteredIndentation = indentation.replace(/[^ \t]/g, '');
+    var partialByNl = partial.split('\n');
+    for (var i = 0; i < partialByNl.length; i++) {
+      if (partialByNl[i].length && (i > 0 || !lineHasNonSpace)) {
+        partialByNl[i] = filteredIndentation + partialByNl[i];
+      }
+    }
+    return partialByNl.join('\n');
+  };
+
   Writer.prototype.renderPartial = function renderPartial (token, context, partials, tags) {
     if (!partials) return;
 
     var value = isFunction(partials) ? partials(token[1]) : partials[token[1]];
-    if (value != null)
-      return this.renderTokens(this.parse(value, tags), context, partials, value);
+    if (value != null) {
+      var lineHasNonSpace = token[6];
+      var tagIndex = token[5];
+      var indentation = token[4];
+      var indentedValue = value;
+      if (tagIndex == 0 && indentation) {
+        indentedValue = this.indentPartial(value, indentation, lineHasNonSpace);
+      }
+      return this.renderTokens(this.parse(indentedValue, tags), context, partials, indentedValue);
+    }
   };
 
   Writer.prototype.unescapedValue = function unescapedValue (token, context) {
@@ -3920,7 +3954,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
   };
 
   mustache.name = 'mustache.js';
-  mustache.version = '3.0.1';
+  mustache.version = '3.1.0';
   mustache.tags = [ '{{', '}}' ];
 
   // All high-level mustache.* functions use this writer.
@@ -9769,20 +9803,26 @@ class ValidaAdvpl {
                         if (linhaClean.search('METHOD\\ .*?CLASS') !== -1 ||
                             firstWord === 'CLASS' ||
                             linhaClean.search('WSMETHOD.*?WSSERVICE') !== -1 ||
-                            linhaClean.search('WSSERVICE\\ ') !== -1) {
+                            firstWord === 'WSSERVICE\\ ') {
                             //reseta todas as ariáveis de controle pois está fora de qualquer função
                             cBeginSql = false;
                             FromQuery = false;
                             JoinQuery = false;
                             cSelect = false;
                             //verifica se é um função e adiciona no array
-                            funcoes.push([
-                                linhaClean
-                                    .trim()
-                                    .split(' ')[1]
-                                    .split('(')[0],
-                                key
-                            ]);
+                            try {
+                                funcoes.push([
+                                    linhaClean
+                                        .trim()
+                                        .split(' ')[1]
+                                        .split('(')[0],
+                                    key
+                                ]);
+                            }
+                            catch (_a) {
+                                console.log('Erro na captura de função da linha ');
+                                console.log(linhaClean);
+                            }
                             if (firstWord === 'CLASS') {
                                 objeto.fonte.addFunction(fonte_1.Tipos.Class, linhaClean
                                     .trim()
@@ -9887,18 +9927,20 @@ class ValidaAdvpl {
                             cSelect = false;
                         }
                         //Implementação para aceitar vários bancos de dados
-                        objeto.ownerDb.forEach(banco => {
+                        for (var idb = 0; idb < objeto.ownerDb.length; idb++) {
+                            let banco = objeto.ownerDb[idb];
                             if (cSelect && FromQuery && linha.search(banco) !== -1) {
                                 objeto.aErros.push(new Erro_1.Erro(parseInt(key), parseInt(key), traduz('validaAdvpl.noSchema', objeto.local) +
                                     banco +
                                     traduz('validaAdvpl.inQuery', objeto.local), Erro_1.Severity.Error));
                             }
-                        });
+                        }
                         if (cSelect &&
                             (FromQuery || JoinQuery || linha.search('SET') !== -1) &&
                             linha.search('exp:cTable') === -1) {
                             //procura códigos de empresas nas queryes
-                            objeto.empresas.forEach(empresa => {
+                            for (var idb = 0; idb < objeto.empresas.length; idb++) {
+                                let empresa = objeto.empresas[idb];
                                 //para melhorar a análise vou quebrar a string por espaços
                                 //e removendo as quebras de linhas, vou varrer os itens do array e verificar o tamanho
                                 //e o código da empresa chumbado
@@ -9906,13 +9948,14 @@ class ValidaAdvpl {
                                     .replace(/\r/g, '')
                                     .replace(/\t/g, '')
                                     .split(' ');
-                                palavras.forEach(palavra => {
+                                for (var idb2 = 0; idb2 < palavras.length; idb2++) {
+                                    let palavra = palavras[idb2];
                                     if (palavra.search(empresa + '0') !== -1 &&
                                         palavra.length === 6) {
                                         objeto.aErros.push(new Erro_1.Erro(parseInt(key), parseInt(key), traduz('validaAdvpl.tableFixed', objeto.local), Erro_1.Severity.Error));
                                     }
-                                });
-                            });
+                                }
+                            }
                         }
                         if (cSelect && JoinQuery && linha.search('ON') !== -1) {
                             JoinQuery = false;
@@ -9928,7 +9971,11 @@ class ValidaAdvpl {
                         let posicaoDic = (' ' + linhaClean).search(/(,| |\t|\>|\()+X+(1|2|3|5|6|7|9|A|B|D|G)+\_/gim);
                         if (!cBeginSql &&
                             posicaoDic !== -1 &&
-                            (' ' + linhaClean).substring(posicaoDic + 1).split(" ")[0].split("\t")[0].search(/\(/) === -1) {
+                            (' ' + linhaClean)
+                                .substring(posicaoDic + 1)
+                                .split(' ')[0]
+                                .split('\t')[0]
+                                .search(/\(/) === -1) {
                             objeto.aErros.push(new Erro_1.Erro(parseInt(key), parseInt(key), traduz('validaAdvpl.Dictionary', objeto.local), Erro_1.Severity.Error));
                         }
                         if (linhaClean.search(/(,| |\t||\()+(MSFILE|MSFILE|DBCREATE|DBUSEAREA|CRIATRAB)+( \(|\t\(|\()/gim) !== -1 ||
@@ -9947,11 +9994,12 @@ class ValidaAdvpl {
                             //verifica o caracter anterior tem que ser ou ESPACO ou ' ou " ou nada
                             let itens1 = ['FROM', 'ON', 'WHERE'];
                             let addErro = false;
-                            itens1.forEach(item => {
+                            for (var idx3 = 0; idx3 < itens1.length; idx3++) {
+                                let item = itens1[idx3];
                                 addErro = addErro || linha.search("\\'" + item) !== -1;
                                 addErro = addErro || linha.search('\\"' + item) !== -1;
                                 addErro = addErro || linha.search('\\ ' + item) !== -1;
-                            });
+                            }
                             if (addErro) {
                                 objeto.aErros.push(new Erro_1.Erro(parseInt(key), parseInt(key), traduz('validaAdvpl.bestAnalitc', objeto.local) +
                                     ' SELECT, DELETE, UPDATE, JOIN, FROM, ON, WHERE.', Erro_1.Severity.Information));
@@ -9974,25 +10022,29 @@ class ValidaAdvpl {
                     objeto.aErros.push(new Erro_1.Erro(0, 0, traduz('validaAdvpl.padComment', objeto.local), Erro_1.Severity.Information));
                 }
                 //Validação funções sem comentários
-                funcoes.forEach(funcao => {
+                for (var idx = 0; idx < funcoes.length; idx++) {
+                    let funcao = funcoes[idx];
                     let achou = false;
-                    comentFuncoes.forEach(comentario => {
+                    for (var idx4 = 0; idx4 < comentFuncoes.length; idx4++) {
+                        let comentario = comentFuncoes[idx4];
                         achou = achou || comentario[0] === funcao[0];
-                    });
+                    }
                     if (!achou) {
                         objeto.aErros.push(new Erro_1.Erro(parseInt(funcao[1]), parseInt(funcao[1]), traduz('validaAdvpl.functionNoCommented', objeto.local), Erro_1.Severity.Warning));
                     }
-                });
+                }
                 //Validação comentários sem funções
-                comentFuncoes.forEach(comentario => {
+                for (var idx = 0; idx < comentFuncoes.length; idx++) {
+                    let comentario = comentFuncoes[idx];
                     let achou = false;
-                    funcoes.forEach(funcao => {
+                    for (var idx4 = 0; idx4 < funcoes.length; idx4++) {
+                        let funcao = funcoes[idx4];
                         achou = achou || comentario[0] === funcao[0];
-                    });
+                    }
                     if (!achou) {
                         objeto.aErros.push(new Erro_1.Erro(parseInt(comentario[1]), parseInt(comentario[1]), traduz('validaAdvpl.CommentNoFunction', objeto.local), Erro_1.Severity.Warning));
                     }
-                });
+                }
                 //Validador de includes
                 let oInclude = new include_1.Include(objeto.local);
                 oInclude.valida(objeto, conteudoSComentario);
@@ -10001,7 +10053,8 @@ class ValidaAdvpl {
                 objeto.information = 0;
                 objeto.warning = 0;
                 objeto.error = 0;
-                objeto.aErros.forEach((erro) => {
+                for (var idx = 0; idx < objeto.aErros.length; idx++) {
+                    let erro = objeto.aErros[idx];
                     if (erro.severity === Erro_1.Severity.Hint) {
                         objeto.hint++;
                     }
@@ -10014,7 +10067,7 @@ class ValidaAdvpl {
                     if (erro.severity === Erro_1.Severity.Error) {
                         objeto.error++;
                     }
-                });
+                }
                 if (objeto.error + objeto.hint + objeto.warning + objeto.information >
                     0 &&
                     this.log) {
@@ -10622,7 +10675,7 @@ exports.Erro = Erro;
 /* 32 */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"name\":\"analise-advpl\",\"version\":\"5.0.5\",\"description\":\"Extension of ADVPL code analysis.\",\"types\":\"lib/index.d.ts\",\"main\":\"lib/index.js\",\"scripts\":{\"compile\":\"tsc -p ./\",\"prepublish\":\"npm run compile\",\"test\":\"npm run compile && mocha \\\"./test/validaadvpl.js\\\"\"},\"keywords\":[],\"author\":\"Robson Rogério Silva\",\"license\":\"ISC\",\"dependencies\":{\"@types/node\":\"^10.14.10\",\"asserts\":\"^4.0.2\",\"chai\":\"^4.2.0\",\"file-system\":\"^2.2.2\",\"globby\":\"^10.0.0\",\"i18n\":\"^0.8.3\",\"mocha\":\"^5.2.0\"},\"devDependencies\":{\"typescript\":\"^3.5.2\",\"vscode\":\"^1.1.35\"}}");
+module.exports = JSON.parse("{\"name\":\"analise-advpl\",\"version\":\"5.0.6\",\"description\":\"Extension of ADVPL code analysis.\",\"types\":\"lib/index.d.ts\",\"main\":\"lib/index.js\",\"scripts\":{\"compile\":\"tsc -p ./\",\"prepare\":\"npm run compile\",\"test\":\"npm run compile && mocha \\\"./test/validaadvpl.js\\\"\"},\"keywords\":[],\"author\":\"Robson Rogério Silva\",\"license\":\"ISC\",\"dependencies\":{\"@types/node\":\"^10.14.14\",\"asserts\":\"^4.0.2\",\"chai\":\"^4.2.0\",\"file-system\":\"^2.2.2\",\"globby\":\"^10.0.1\",\"i18n\":\"^0.8.3\",\"mocha\":\"^5.2.0\"},\"devDependencies\":{\"typescript\":\"^3.5.3\",\"vscode\":\"^1.1.36\"}}");
 
 /***/ }),
 /* 33 */
@@ -10664,45 +10717,27 @@ class ValidaProjeto {
         this.ownerDb = [];
         this.empresas = [];
     }
-    validaProjeto(pathProject) {
+    validaProjeto(pathsProject) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
                 this.projeto = [];
-                // monta expressão para buscar arquivos
-                let globexp = [];
-                for (var i = 0; i < this.advplExtensions.length; i++) {
-                    globexp.push(`**/*.${this.advplExtensions[i]}`);
-                }
-                // busca arquivos na pasta
-                let files = yield globby.sync(globexp, {
-                    cwd: pathProject,
-                    caseSensitiveMatch: false
-                });
-                // valida arquivos
-                let promisses = [];
                 let startTime = new Date();
                 if (this.log) {
                     console.log(startTime);
-                    console.log('Analise de Projeto: ' + pathProject);
+                    console.log('Analise de Projeto');
                 }
-                files.forEach((fileName) => {
-                    let valida = new validaAdvpl_1.ValidaAdvpl(this.comentFontPad, this.local, this.log);
-                    valida.ownerDb = this.ownerDb;
-                    valida.empresas = this.empresas;
-                    if (this.log) {
-                        console.log('Arquivo: ' + fileName);
-                    }
-                    let conteudo = fileSystem.readFileSync(pathProject + '\\' + fileName, 'latin1');
-                    promisses.push(valida.validacao(conteudo, pathProject + '\\' + fileName));
-                });
+                // valida arquivos
+                let promisses;
+                promisses = yield this.criaPromises(pathsProject);
                 Promise.all(promisses).then((validacoes) => {
-                    validacoes.forEach((validacao) => {
+                    for (var idx = 0; idx < validacoes.length; idx++) {
+                        let validacao = validacoes[idx];
                         let itemProjeto = new ItemProject_1.ItemModel();
                         itemProjeto.content = validacao.conteudoFonte;
                         itemProjeto.errors = validacao.aErros;
                         itemProjeto.fonte = validacao.fonte;
                         this.projeto.push(itemProjeto);
-                    });
+                    }
                     // verifica duplicados
                     this.verificaDuplicados().then(() => {
                         if (this.log) {
@@ -10721,18 +10756,52 @@ class ValidaProjeto {
             }));
         });
     }
+    criaPromises(pathsProject) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let promisses = [];
+            // monta expressão para buscar arquivos
+            let globexp = [];
+            for (var i = 0; i < this.advplExtensions.length; i++) {
+                globexp.push(`**/*.${this.advplExtensions[i]}`);
+            }
+            for (var i = 0; i < pathsProject.length; i++) {
+                let pathProject = pathsProject[i];
+                // busca arquivos na pasta
+                let files = yield globby.sync(globexp, {
+                    cwd: pathProject,
+                    caseSensitiveMatch: false
+                });
+                for (var j = 0; j < files.length; j++) {
+                    let fileName = files[j];
+                    let valida = new validaAdvpl_1.ValidaAdvpl(this.comentFontPad, this.local, this.log);
+                    valida.ownerDb = this.ownerDb;
+                    valida.empresas = this.empresas;
+                    if (this.log) {
+                        console.log('Arquivo: ' + fileName);
+                    }
+                    let conteudo = fileSystem.readFileSync(pathsProject + '\\' + fileName, 'latin1');
+                    promisses.push(valida.validacao(conteudo, pathsProject + '\\' + fileName));
+                }
+            }
+            return promisses;
+        });
+    }
     verificaDuplicados() {
         return new Promise((resolve) => {
+            let startTime = new Date();
+            console.log('Start Duplicados');
             let listaFuncoes = [];
             let funcoesDuplicadas = [];
             let listaArquivos = [];
             let arquivosDuplicados = [];
-            this.projeto.forEach((item) => {
+            for (var idx = 0; idx < this.projeto.length; idx++) {
+                let item = this.projeto[idx];
                 let fonte = item.fonte;
                 //verifica se o fonte ainda existe
                 try {
                     fileSystem.statSync(fonte.fonte);
-                    fonte.funcoes.forEach((funcao) => {
+                    for (var idx2 = 0; idx2 < fonte.funcoes.length; idx2++) {
+                        let funcao = fonte.funcoes[idx2];
                         // não aponta como duplicadas as static Functions ou metodos
                         if (funcao.tipo !== fonte_1.Tipos['Static Function'] &&
                             funcao.tipo !== fonte_1.Tipos.Method) {
@@ -10745,7 +10814,7 @@ class ValidaProjeto {
                                 funcoesDuplicadas.push(functionName);
                             }
                         }
-                    });
+                    }
                     let fileName = fonte.fonte
                         .replace(/\\/g, '/')
                         .substring(fonte.fonte.replace(/\\/g, '/').lastIndexOf('/') + 1)
@@ -10769,7 +10838,7 @@ class ValidaProjeto {
                         console.log(e);
                     }
                 }
-            });
+            }
             // guarda lista de duplicados
             let duplicadosOld = JSON.parse(JSON.stringify(this.listaDuplicados));
             this.listaDuplicados.files = JSON.parse(JSON.stringify(arquivosDuplicados));
@@ -10780,9 +10849,11 @@ class ValidaProjeto {
             let functionsIncluidos = this.listaDuplicados.functions.filter(x => duplicadosOld.functions.indexOf(x) === -1);
             let functionsExcluidos = duplicadosOld.functions.filter(x => this.listaDuplicados.functions.indexOf(x) === -1);
             // marca duplicados
-            this.projeto.forEach((item) => {
+            for (var idx = 0; idx < this.projeto.length; idx++) {
+                let item = this.projeto[idx];
                 let fonte = item.fonte;
-                fonte.funcoes.forEach((funcao) => {
+                for (var idx2 = 0; idx2 < fonte.funcoes.length; idx2++) {
+                    let funcao = fonte.funcoes[idx2];
                     let functionName = (funcao.nome + funcao.tipo).toUpperCase();
                     //adiciona o erro
                     if (functionsIncluidos.indexOf(functionName) > -1) {
@@ -10795,7 +10866,7 @@ class ValidaProjeto {
                                 funcao.linha !== erro.startLine);
                         });
                     }
-                });
+                }
                 let fileName = fonte.fonte
                     .replace(/\\/g, '/')
                     .substring(fonte.fonte.replace(/\\/g, '/').lastIndexOf('/') + 1)
@@ -10809,7 +10880,7 @@ class ValidaProjeto {
                         return (erro.message !== traduz('validaAdvpl.fileDuplicate', this.local));
                     });
                 }
-            });
+            }
             if (this.log) {
                 let errosContagem = this.contaErros();
                 console.log(`\t${errosContagem.errors} Errors`);
@@ -10817,13 +10888,25 @@ class ValidaProjeto {
                 console.log(`\t${errosContagem.information} Informations`);
                 console.log(`\t${errosContagem.hint} Hints`);
             }
+            if (this.log) {
+                // calcula tempo gasto
+                let endTime = new Date();
+                let timeDiff = endTime - startTime; //in ms
+                // strip the ms
+                timeDiff /= 1000;
+                // get seconds
+                let seconds = Math.round(timeDiff);
+                console.log('Terminou! (' + seconds + ' segundos) Duplicados');
+            }
             resolve();
         });
     }
     contaErros() {
         let erros = { errors: 0, warnings: 0, information: 0, hint: 0 };
-        this.projeto.forEach((item) => {
-            item.errors.forEach((erro) => {
+        for (var idx = 0; idx < this.projeto.length; idx++) {
+            let item = this.projeto[idx];
+            for (var idx2 = 0; idx2 < item.errors.length; idx2++) {
+                let erro = item.errors[idx2];
                 if (erro.severity === Erro_1.Severity.Error) {
                     erros.errors++;
                 }
@@ -10836,8 +10919,8 @@ class ValidaProjeto {
                 else if (erro.severity === Erro_1.Severity.Hint) {
                     erros.hint++;
                 }
-            });
-        });
+            }
+        }
         return erros;
     }
 }
@@ -20905,7 +20988,7 @@ const sanitizeRange = range => range.replace(
 //      you could use option `mark: true` with `glob`
 
 // '`foo/`' should not continue with the '`..`'
-const DEFAULT_REPLACER_PREFIX = [
+const REPLACERS = [
 
   // > Trailing spaces are ignored unless they are quoted with backslash ("\")
   [
@@ -20988,10 +21071,33 @@ const DEFAULT_REPLACER_PREFIX = [
 
     // '**/foo' <-> 'foo'
     () => '^(?:.*\\/)?'
-  ]
-]
+  ],
 
-const DEFAULT_REPLACER_SUFFIX = [
+  // ending
+  [
+    // 'js' will not match 'js.'
+    // 'ab' will not match 'abc'
+    /(?:[^*])$/,
+
+    // WTF!
+    // https://git-scm.com/docs/gitignore
+    // changes in [2.22.1](https://git-scm.com/docs/gitignore/2.22.1)
+    // which re-fixes #24, #38
+
+    // > If there is a separator at the end of the pattern then the pattern
+    // > will only match directories, otherwise the pattern can match both
+    // > files and directories.
+
+    // 'js*' will not match 'a.js'
+    // 'js/' will not match 'a.js'
+    // 'js' will match 'a.js' and 'a.js/'
+    match => /\/$/.test(match)
+      // foo/ will not match 'foo'
+      ? `${match}$`
+      // foo matches 'foo' and 'foo/'
+      : `${match}(?=$|\\/$)`
+  ],
+
   // starting
   [
     // there will be no leading '/'
@@ -20999,11 +21105,20 @@ const DEFAULT_REPLACER_SUFFIX = [
     // If starts with '**', adding a '^' to the regular expression also works
     /^(?=[^^])/,
     function startingReplacer () {
+      // If has a slash `/` at the beginning or middle
       return !/\/(?!$)/.test(this)
+        // > Prior to 2.22.1
         // > If the pattern does not contain a slash /,
         // >   Git treats it as a shell glob pattern
         // Actually, if there is only a trailing slash,
         //   git also treats it as a shell glob pattern
+
+        // After 2.22.1 (compatible but clearer)
+        // > If there is a separator at the beginning or middle (or both)
+        // > of the pattern, then the pattern is relative to the directory
+        // > level of the particular .gitignore file itself.
+        // > Otherwise the pattern may also match at any level below
+        // > the .gitignore level.
         ? '(?:^|\\/)'
 
         // > Otherwise, Git treats the pattern as a shell glob suitable for
@@ -21079,55 +21194,6 @@ const DEFAULT_REPLACER_SUFFIX = [
   ]
 ]
 
-const POSITIVE_REPLACERS = [
-  ...DEFAULT_REPLACER_PREFIX,
-
-  // 'f'
-  // matches
-  // - /f(end)
-  // - /f/
-  // - (start)f(end)
-  // - (start)f/
-  // doesn't match
-  // - oof
-  // - foo
-  // pseudo:
-  // -> (^|/)f(/|$)
-
-  // ending
-  [
-    // 'js' will not match 'js.'
-    // 'ab' will not match 'abc'
-    /(?:[^*/])$/,
-
-    // 'js*' will not match 'a.js'
-    // 'js/' will not match 'a.js'
-    // 'js' will match 'a.js' and 'a.js/'
-    match => `${match}(?=$|\\/)`
-  ],
-
-  ...DEFAULT_REPLACER_SUFFIX
-]
-
-const NEGATIVE_REPLACERS = [
-  ...DEFAULT_REPLACER_PREFIX,
-
-  // #24, #38
-  // The MISSING rule of [gitignore docs](https://git-scm.com/docs/gitignore)
-  // A negative pattern without a trailing wildcard should not
-  // re-include the things inside that directory.
-
-  // eg:
-  // ['node_modules/*', '!node_modules']
-  // should ignore `node_modules/a.js`
-  [
-    /(?:[^*])$/,
-    match => `${match}(?=$|\\/$)`
-  ],
-
-  ...DEFAULT_REPLACER_SUFFIX
-]
-
 // A simple cache, because an ignore rule only has only one certain meaning
 const regexCache = Object.create(null)
 
@@ -21138,11 +21204,11 @@ const makeRegex = (pattern, negative, ignorecase) => {
     return r
   }
 
-  const replacers = negative
-    ? NEGATIVE_REPLACERS
-    : POSITIVE_REPLACERS
+  // const replacers = negative
+  //   ? NEGATIVE_REPLACERS
+  //   : POSITIVE_REPLACERS
 
-  const source = replacers.reduce(
+  const source = REPLACERS.reduce(
     (prev, current) => prev.replace(current[0], current[1].bind(pattern)),
     pattern
   )

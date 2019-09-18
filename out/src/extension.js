@@ -11,7 +11,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const vscode_1 = require("vscode");
 const Merge_1 = require("./Merge");
 const analise_advpl_1 = require("analise-advpl");
-const util_1 = require("util");
 const ItemProject_1 = require("analise-advpl/lib/models/ItemProject");
 //Cria um colection para os erros ADVPL
 const collection = vscode_1.languages.createDiagnosticCollection('advpl');
@@ -42,102 +41,97 @@ if (!validaAdvpl.empresas) {
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 function activate(context) {
-    //debuglog(localize('extension.activeMessage', 'não funcionou'));
-    vscode_1.window.showInformationMessage(localize('extension.activeMessage', 'Active ADVPL Validation!'));
-    vscode_1.workspace.onDidChangeTextDocument(validaFonte);
-    vscode_1.workspace.onDidOpenTextDocument(validaFonte);
-    vscode_1.workspace.onDidSaveTextDocument(validaFonte);
-    vscode_1.window.onDidChangeTextEditorSelection(validaAdvpl);
-    //Adiciona comando de envia para Validação
-    context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.gitValidacao', () => {
-        let mergeAdvpl = new Merge_1.MergeAdvpl();
-        let branchAtual = mergeAdvpl.repository.headLabel;
-        mergeAdvpl.merge(mergeAdvpl.branchTeste).then(() => {
-            mergeAdvpl.repository.checkout(branchAtual);
-            validaProjeto();
-        }).catch((erro) => {
-            vscode_1.window.showErrorMessage(erro);
-            mergeAdvpl.repository.checkout(branchAtual);
-            validaProjeto();
-        });
-    }));
-    //Adiciona comando de envia para Release
-    context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.gitRelease', () => {
-        let mergeAdvpl = new Merge_1.MergeAdvpl();
-        let branchAtual = mergeAdvpl.repository.headLabel;
-        mergeAdvpl.merge(mergeAdvpl.branchHomol).then(() => {
-            mergeAdvpl.repository.checkout(branchAtual);
-            validaProjeto();
-        }).catch((erro) => {
-            vscode_1.window.showErrorMessage(erro);
-            mergeAdvpl.repository.checkout(branchAtual);
-            validaProjeto();
-        });
-    }));
-    //Adiciona comando de envia para master
-    context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.gitMaster', () => {
-        let mergeAdvpl = new Merge_1.MergeAdvpl();
-        let branchAtual = mergeAdvpl.repository.headLabel;
-        mergeAdvpl.merge(mergeAdvpl.branchProdu).then(() => {
-            mergeAdvpl.repository.checkout(branchAtual);
-            validaProjeto();
-        }).catch((erro) => {
-            vscode_1.window.showErrorMessage(erro);
-            mergeAdvpl.repository.checkout(branchAtual);
-            validaProjeto();
-        });
-    }));
-    //Adiciona comando de envia para master
-    context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.validaProjeto', () => {
-        try {
+    return __awaiter(this, void 0, void 0, function* () {
+        console.log('Ativando ' + new Date());
+        vscode_1.window.showInformationMessage(localize('extension.activeMessage', 'Active ADVPL Validation!'));
+        vscode_1.workspace.onDidChangeTextDocument(validaFonte);
+        vscode_1.workspace.onDidOpenTextDocument(validaFonte);
+        vscode_1.workspace.onDidSaveTextDocument(validaFonte);
+        vscode_1.window.onDidChangeTextEditorSelection(validaAdvpl);
+        //Adiciona comando de envia para Validação
+        context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.gitValidacao', () => {
+            let mergeAdvpl = new Merge_1.MergeAdvpl();
+            let branchAtual = mergeAdvpl.repository.headLabel;
+            mergeAdvpl.merge(mergeAdvpl.branchTeste).then(() => {
+                mergeAdvpl.repository.checkout(branchAtual);
+                validaProjeto();
+            }).catch((erro) => {
+                vscode_1.window.showErrorMessage(erro);
+                mergeAdvpl.repository.checkout(branchAtual);
+                validaProjeto();
+            });
+        }));
+        //Adiciona comando de envia para Release
+        context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.gitRelease', () => {
+            let mergeAdvpl = new Merge_1.MergeAdvpl();
+            let branchAtual = mergeAdvpl.repository.headLabel;
+            mergeAdvpl.merge(mergeAdvpl.branchHomol).then(() => {
+                mergeAdvpl.repository.checkout(branchAtual);
+                validaProjeto();
+            }).catch((erro) => {
+                vscode_1.window.showErrorMessage(erro);
+                mergeAdvpl.repository.checkout(branchAtual);
+                validaProjeto();
+            });
+        }));
+        //Adiciona comando de envia para master
+        context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.gitMaster', () => {
+            let mergeAdvpl = new Merge_1.MergeAdvpl();
+            let branchAtual = mergeAdvpl.repository.headLabel;
+            mergeAdvpl.merge(mergeAdvpl.branchProdu).then(() => {
+                mergeAdvpl.repository.checkout(branchAtual);
+                validaProjeto();
+            }).catch((erro) => {
+                vscode_1.window.showErrorMessage(erro);
+                mergeAdvpl.repository.checkout(branchAtual);
+                validaProjeto();
+            });
+        }));
+        //Adiciona comando de envia para master
+        context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.validaProjeto', () => {
+            try {
+                validaProjeto();
+            }
+            catch (e) {
+                vscode_1.window.showInformationMessage(e.stdout);
+            }
+        }));
+        //Adiciona comando de Atualiza Branch
+        context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.atualizaBranch', () => {
+            let mergeAdvpl = new Merge_1.MergeAdvpl();
+            let branchAtual = mergeAdvpl.repository.headLabel;
+            mergeAdvpl.atualiza().then((message) => {
+                vscode_1.window.showInformationMessage(message);
+                mergeAdvpl.repository.checkout(branchAtual);
+                validaProjeto();
+            }).catch((erro) => {
+                vscode_1.window.showErrorMessage(erro);
+                mergeAdvpl.repository.checkout(branchAtual);
+                validaProjeto();
+            });
+        }));
+        //Adiciona comando de limeza de branches
+        context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.cleanBranches', () => {
+            let mergeAdvpl = new Merge_1.MergeAdvpl();
+            let branchAtual = mergeAdvpl.repository.headLabel;
+            mergeAdvpl.limpaBranches().then((message) => {
+                vscode_1.window.showInformationMessage(message);
+            }).catch((erro) => {
+                vscode_1.window.showErrorMessage(erro);
+            });
+        }));
+        if (vscode_1.workspace.getConfiguration('advpl-sintaxe').get('validaProjeto') !== false) {
             validaProjeto();
         }
-        catch (e) {
-            vscode_1.window.showInformationMessage(e.stdout);
+        else {
+            validaFonte(vscode_1.window.activeTextEditor);
         }
-    }));
-    //Adiciona comando de Atualiza Branch
-    context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.atualizaBranch', () => {
-        let mergeAdvpl = new Merge_1.MergeAdvpl();
-        let branchAtual = mergeAdvpl.repository.headLabel;
-        mergeAdvpl.atualiza().then((message) => {
-            vscode_1.window.showInformationMessage(message);
-            mergeAdvpl.repository.checkout(branchAtual);
-            validaProjeto();
-        }).catch((erro) => {
-            vscode_1.window.showErrorMessage(erro);
-            mergeAdvpl.repository.checkout(branchAtual);
-            validaProjeto();
-        });
-    }));
-    //Adiciona comando de limeza de branches
-    context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.cleanBranches', () => {
-        let mergeAdvpl = new Merge_1.MergeAdvpl();
-        let branchAtual = mergeAdvpl.repository.headLabel;
-        mergeAdvpl.limpaBranches().then((message) => {
-            vscode_1.window.showInformationMessage(message);
-        }).catch((erro) => {
-            vscode_1.window.showErrorMessage(erro);
-        });
-    }));
-    if (vscode_1.workspace.getConfiguration('advpl-sintaxe').get('validaProjeto') !== false) {
-        let startTime = new Date();
-        validaProjeto();
-        let endTime = new Date();
-        var timeDiff = endTime - startTime; //in ms
-        // strip the ms
-        timeDiff /= 1000;
-        // get seconds
-        var seconds = Math.round(timeDiff);
-        util_1.debuglog('Tempo gasto validacao ' + seconds + ' seconds');
-    }
-    else {
-        validaFonte(vscode_1.window.activeTextEditor);
-    }
+        console.log('Fim ' + new Date());
+    });
 }
 exports.activate = activate;
 function validaFonte(editor) {
-    return __awaiter(this, void 0, void 0, function* () {
+    return new Promise(() => {
         let time = vscode_1.workspace.getConfiguration('advpl-sintaxe').get('tempoValidacao');
         let document;
         if (!time || time === 0) {
@@ -237,13 +231,17 @@ function getUri(file) {
 function deactivate() { }
 exports.deactivate = deactivate;
 function validaProjeto() {
-    return __awaiter(this, void 0, void 0, function* () {
+    return new Promise(() => {
         // prepara o objeto de validação
         let validaPrj = new analise_advpl_1.ValidaProjeto(validaAdvpl.comentFontPad, vscodeOptions);
         validaPrj.empresas = validaAdvpl.empresas;
         validaPrj.ownerDb = validaAdvpl.ownerDb;
         validaPrj.local = vscodeOptions;
-        validaPrj.validaProjeto(vscode_1.workspace.rootPath).then((objProjeto) => {
+        let pastas = [];
+        vscode_1.workspace.workspaceFolders.forEach((path) => {
+            pastas.push(path.uri.fsPath);
+        });
+        validaPrj.validaProjeto(pastas).then((objProjeto) => {
             // se for validar o projeto limpa todas as críticas dos arquivos
             listaURI.forEach((uri) => {
                 collection.delete(uri);
@@ -257,9 +255,6 @@ function validaProjeto() {
                 collection.set(file, errorVsCode(item.errors));
             });
             projeto = validaPrj;
-            //fileSystem.writeFileSync('d:\\extensao.json', JSON.stringify(validaPrj), {
-            //  mode: 0o755
-            //});
         });
     });
 }

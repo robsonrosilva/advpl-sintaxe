@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.0.8
+
+- Ajuste de execução assincrona.
+
 ### 1.0.7
 
 - Correção de identificação de arquivos e funções duplicadas.

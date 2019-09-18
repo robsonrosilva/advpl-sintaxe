@@ -7,12 +7,10 @@ import {
     commands,
     Diagnostic,
     Range,
-    TextEditor,
     TextDocument
 } from 'vscode';
 import { MergeAdvpl } from './Merge';
 import { ValidaAdvpl, Fonte, ValidaProjeto } from 'analise-advpl';
-import { debuglog } from 'util';
 import { ItemModel } from 'analise-advpl/lib/models/ItemProject';
 //Cria um colection para os erros ADVPL
 const collection = languages.createDiagnosticCollection('advpl');
@@ -51,8 +49,8 @@ if (!validaAdvpl.empresas) {
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
-export function activate(context: ExtensionContext) {
-    //debuglog(localize('extension.activeMessage', 'não funcionou'));
+export async function activate(context: ExtensionContext) {
+    console.log('Ativando ' + new Date());
     window.showInformationMessage(
         localize('extension.activeMessage', 'Active ADVPL Validation!')
     );
@@ -153,94 +151,86 @@ export function activate(context: ExtensionContext) {
     if (
         workspace.getConfiguration('advpl-sintaxe').get('validaProjeto') !== false
     ) {
-        let startTime: any = new Date();
-
         validaProjeto();
-
-        let endTime: any = new Date();
-        var timeDiff = endTime - startTime; //in ms
-        // strip the ms
-        timeDiff /= 1000;
-
-        // get seconds
-        var seconds = Math.round(timeDiff);
-        debuglog('Tempo gasto validacao ' + seconds + ' seconds');
     } else {
         validaFonte(window.activeTextEditor);
     }
+    console.log('Fim ' + new Date());
 }
-async function validaFonte(editor: any) {
-    let time: number = workspace.getConfiguration('advpl-sintaxe').get('tempoValidacao') as number;
-    let document: TextDocument;
-    if (!time || time === 0) {
-        time = 5000;
-    }
-
-    //trata quando recebe o documento
-    if (editor.languageId) {
-        document = editor;
-    } else if (editor && editor.document) {
-        document = editor.document;
-    }
-
-    //verifica se a linguagem é ADVPL
-    if (document && document.languageId === 'advpl' && document.getText()) {
-        // Se estiver pendente de processamento não faz a validação
-        if (pendingValidation) {
-            //console.log('pulou')
-            return;
-        } else {
-            //console.log('agendou')
-            pendingValidation = true;
-            setTimeout(() => {
-                //console.log('comecou')
-                pendingValidation = false;
-                validaAdvpl.validacao(document.getText(), document.uri.fsPath);
-
-                // se valida projeto faz a validação se não somente atualiza o fonte atual
-                if (
-                    workspace.getConfiguration('advpl-sintaxe').get('validaProjeto') !== false
-                ) {
-                    //verifica se o fonte já existe no projeto se não adiciona
-                    let pos = projeto.projeto.map(function (e) {
-                        return getUri(e.fonte.fonte).fsPath;
-                    });
-                    let posicao = pos.indexOf(document.uri.fsPath);
-                    let itemProjeto = new ItemModel();
-                    itemProjeto.content = validaAdvpl.conteudoFonte;
-                    itemProjeto.errors = validaAdvpl.aErros;
-                    itemProjeto.fonte = validaAdvpl.fonte;
-
-                    let projetoOld: ValidaProjeto;
-
-                    if (posicao === -1) {
-                        projeto.projeto.push(itemProjeto);
-                    } else {
-                        projeto.projeto[posicao] = itemProjeto;
-                    }
-
-                    projeto.verificaDuplicados().then(() => {
-                        // atualiza os erros
-                        projeto.projeto.forEach((item: ItemModel) => {
-                            let fonte: Fonte = item.fonte;
-                            let file = getUri(fonte.fonte);
-
-                            //Atualiza as mensagens do colection
-                            collection.delete(file);
-                            collection.set(file, errorVsCode(item.errors));
-                        });
-                        //console.log('terminou')
-                    });
-                } else {
-                    let file = getUri(validaAdvpl.fonte.fonte);
-
-                    //Atualiza as mensagens do colection
-                    collection.delete(file);
-                    collection.set(file, errorVsCode(validaAdvpl.aErros));
-                }
-            }, time);
+function validaFonte(editor: any) {
+    return new Promise(() => {
+        let time: number = workspace.getConfiguration('advpl-sintaxe').get('tempoValidacao') as number;
+        let document: TextDocument;
+        if (!time || time === 0) {
+            time = 5000;
         }
-    }
+
+        //trata quando recebe o documento
+        if (editor.languageId) {
+            document = editor;
+        } else if (editor && editor.document) {
+            document = editor.document;
+        }
+
+        //verifica se a linguagem é ADVPL
+        if (document && document.languageId === 'advpl' && document.getText()) {
+            // Se estiver pendente de processamento não faz a validação
+            if (pendingValidation) {
+                //console.log('pulou')
+                return;
+            } else {
+                //console.log('agendou')
+                pendingValidation = true;
+                setTimeout(() => {
+                    //console.log('comecou')
+                    pendingValidation = false;
+                    validaAdvpl.validacao(document.getText(), document.uri.fsPath);
+
+                    // se valida projeto faz a validação se não somente atualiza o fonte atual
+                    if (
+                        workspace.getConfiguration('advpl-sintaxe').get('validaProjeto') !== false
+                    ) {
+                        //verifica se o fonte já existe no projeto se não adiciona
+                        let pos = projeto.projeto.map(function (e) {
+                            return getUri(e.fonte.fonte).fsPath;
+                        });
+                        let posicao = pos.indexOf(document.uri.fsPath);
+                        let itemProjeto = new ItemModel();
+                        itemProjeto.content = validaAdvpl.conteudoFonte;
+                        itemProjeto.errors = validaAdvpl.aErros;
+                        itemProjeto.fonte = validaAdvpl.fonte;
+
+                        let projetoOld: ValidaProjeto;
+
+                        if (posicao === -1) {
+                            projeto.projeto.push(itemProjeto);
+                        } else {
+                            projeto.projeto[posicao] = itemProjeto;
+                        }
+
+                        projeto.verificaDuplicados().then(() => {
+                            // atualiza os erros
+                            projeto.projeto.forEach((item: ItemModel) => {
+                                let fonte: Fonte = item.fonte;
+                                let file = getUri(fonte.fonte);
+
+                                //Atualiza as mensagens do colection
+                                collection.delete(file);
+                                collection.set(file, errorVsCode(item.errors));
+                            });
+                            //console.log('terminou')
+                        });
+                    } else {
+                        let file = getUri(validaAdvpl.fonte.fonte);
+
+                        //Atualiza as mensagens do colection
+                        collection.delete(file);
+                        collection.set(file, errorVsCode(validaAdvpl.aErros));
+                    }
+                }, time);
+            }
+        }
+    });
 }
 
 function errorVsCode(aErros: any) {
@@ -286,37 +276,41 @@ function getUri(file: string): Uri {
 export function deactivate() { }
 
 
-async function validaProjeto(
+function validaProjeto(
 ) {
-    // prepara o objeto de validação
-    let validaPrj: ValidaProjeto = new ValidaProjeto(validaAdvpl.comentFontPad, vscodeOptions);
+    return new Promise(()=>{
+        // prepara o objeto de validação
+        let validaPrj: ValidaProjeto = new ValidaProjeto(validaAdvpl.comentFontPad, vscodeOptions);
 
-    validaPrj.empresas = validaAdvpl.empresas;
-    validaPrj.ownerDb = validaAdvpl.ownerDb;
-    validaPrj.local = vscodeOptions;
+        validaPrj.empresas = validaAdvpl.empresas;
+        validaPrj.ownerDb = validaAdvpl.ownerDb;
+        validaPrj.local = vscodeOptions;
 
-    validaPrj.validaProjeto(workspace.rootPath).then((objProjeto: ValidaProjeto) => {
-        // se for validar o projeto limpa todas as críticas dos arquivos
-        listaURI.forEach((uri: Uri) => {
-            collection.delete(uri);
+        let pastas: string[] = [];
+
+        workspace.workspaceFolders.forEach((path) => {
+            pastas.push(path.uri.fsPath)
         });
 
-        listaURI = [];
-        objProjeto.projeto.forEach((item: ItemModel) => {
-            let fonte: Fonte = item.fonte;
-            let file = getUri(fonte.fonte);
+        validaPrj.validaProjeto(pastas).then((objProjeto: ValidaProjeto) => {
+            // se for validar o projeto limpa todas as críticas dos arquivos
+            listaURI.forEach((uri: Uri) => {
+                collection.delete(uri);
+            });
 
-            listaURI.push(file);
+            listaURI = [];
+            objProjeto.projeto.forEach((item: ItemModel) => {
+                let fonte: Fonte = item.fonte;
+                let file = getUri(fonte.fonte);
 
-            //Atualiza as mensagens do colection
-            collection.set(file, errorVsCode(item.errors));
+                listaURI.push(file);
+
+                //Atualiza as mensagens do colection
+                collection.set(file, errorVsCode(item.errors));
+            });
+
+            projeto = validaPrj;
         });
-
-        projeto = validaPrj;
-
-        //fileSystem.writeFileSync('d:\\extensao.json', JSON.stringify(validaPrj), {
-        //  mode: 0o755
-        //});
     });
 }
 
