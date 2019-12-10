@@ -9,9 +9,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const vscode_1 = require("vscode");
-const Merge_1 = require("./Merge");
+const merge_1 = require("./merge");
 const analise_advpl_1 = require("analise-advpl");
 const ItemProject_1 = require("analise-advpl/lib/models/ItemProject");
+const formatting_1 = require("./formatting");
 //Cria um colection para os erros ADVPL
 const collection = vscode_1.languages.createDiagnosticCollection('advpl');
 let pendingValidation = false;
@@ -50,7 +51,7 @@ function activate(context) {
         vscode_1.window.onDidChangeTextEditorSelection(validaAdvpl);
         //Adiciona comando de envia para Validação
         context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.gitValidacao', () => {
-            let mergeAdvpl = new Merge_1.MergeAdvpl();
+            let mergeAdvpl = new merge_1.MergeAdvpl();
             let branchAtual = mergeAdvpl.repository.headLabel;
             mergeAdvpl.merge(mergeAdvpl.branchTeste).then(() => {
                 mergeAdvpl.repository.checkout(branchAtual);
@@ -63,7 +64,7 @@ function activate(context) {
         }));
         //Adiciona comando de envia para Release
         context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.gitRelease', () => {
-            let mergeAdvpl = new Merge_1.MergeAdvpl();
+            let mergeAdvpl = new merge_1.MergeAdvpl();
             let branchAtual = mergeAdvpl.repository.headLabel;
             mergeAdvpl.merge(mergeAdvpl.branchHomol).then(() => {
                 mergeAdvpl.repository.checkout(branchAtual);
@@ -76,7 +77,7 @@ function activate(context) {
         }));
         //Adiciona comando de envia para master
         context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.gitMaster', () => {
-            let mergeAdvpl = new Merge_1.MergeAdvpl();
+            let mergeAdvpl = new merge_1.MergeAdvpl();
             let branchAtual = mergeAdvpl.repository.headLabel;
             mergeAdvpl.merge(mergeAdvpl.branchProdu).then(() => {
                 mergeAdvpl.repository.checkout(branchAtual);
@@ -98,7 +99,7 @@ function activate(context) {
         }));
         //Adiciona comando de Atualiza Branch
         context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.atualizaBranch', () => {
-            let mergeAdvpl = new Merge_1.MergeAdvpl();
+            let mergeAdvpl = new merge_1.MergeAdvpl();
             let branchAtual = mergeAdvpl.repository.headLabel;
             mergeAdvpl.atualiza().then((message) => {
                 vscode_1.window.showInformationMessage(message);
@@ -110,9 +111,11 @@ function activate(context) {
                 validaProjeto();
             });
         }));
+        vscode_1.languages.registerDocumentFormattingEditProvider('advpl', formatting_1.formattingEditProvider());
+        vscode_1.languages.registerDocumentRangeFormattingEditProvider('advpl', formatting_1.rangeFormattingEditProvider());
         //Adiciona comando de limeza de branches
         context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.cleanBranches', () => {
-            let mergeAdvpl = new Merge_1.MergeAdvpl();
+            let mergeAdvpl = new merge_1.MergeAdvpl();
             let branchAtual = mergeAdvpl.repository.headLabel;
             mergeAdvpl.limpaBranches().then((message) => {
                 vscode_1.window.showInformationMessage(message);
@@ -238,7 +241,8 @@ function validaProjeto() {
         validaPrj.ownerDb = validaAdvpl.ownerDb;
         validaPrj.local = vscodeOptions;
         let pastas = [];
-        vscode_1.workspace.workspaceFolders.forEach((path) => {
+        let workspaceFolders = vscode_1.workspace['workspaceFolders'];
+        workspaceFolders.forEach((path) => {
             pastas.push(path.uri.fsPath);
         });
         validaPrj.validaProjeto(pastas).then((objProjeto) => {
@@ -270,4 +274,4 @@ function localize(key, text) {
     return i18n.__(key);
 }
 
-//# sourceMappingURL=Extension.js.map
+//# sourceMappingURL=extension.js.map

@@ -101,9 +101,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const vscode_1 = __webpack_require__(1);
-const Merge_1 = __webpack_require__(2);
-const analise_advpl_1 = __webpack_require__(27);
-const ItemProject_1 = __webpack_require__(34);
+const merge_1 = __webpack_require__(2);
+const analise_advpl_1 = __webpack_require__(34);
+const ItemProject_1 = __webpack_require__(41);
+const formatting_1 = __webpack_require__(136);
 //Cria um colection para os erros ADVPL
 const collection = vscode_1.languages.createDiagnosticCollection('advpl');
 let pendingValidation = false;
@@ -142,7 +143,7 @@ function activate(context) {
         vscode_1.window.onDidChangeTextEditorSelection(validaAdvpl);
         //Adiciona comando de envia para Validação
         context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.gitValidacao', () => {
-            let mergeAdvpl = new Merge_1.MergeAdvpl();
+            let mergeAdvpl = new merge_1.MergeAdvpl();
             let branchAtual = mergeAdvpl.repository.headLabel;
             mergeAdvpl.merge(mergeAdvpl.branchTeste).then(() => {
                 mergeAdvpl.repository.checkout(branchAtual);
@@ -155,7 +156,7 @@ function activate(context) {
         }));
         //Adiciona comando de envia para Release
         context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.gitRelease', () => {
-            let mergeAdvpl = new Merge_1.MergeAdvpl();
+            let mergeAdvpl = new merge_1.MergeAdvpl();
             let branchAtual = mergeAdvpl.repository.headLabel;
             mergeAdvpl.merge(mergeAdvpl.branchHomol).then(() => {
                 mergeAdvpl.repository.checkout(branchAtual);
@@ -168,7 +169,7 @@ function activate(context) {
         }));
         //Adiciona comando de envia para master
         context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.gitMaster', () => {
-            let mergeAdvpl = new Merge_1.MergeAdvpl();
+            let mergeAdvpl = new merge_1.MergeAdvpl();
             let branchAtual = mergeAdvpl.repository.headLabel;
             mergeAdvpl.merge(mergeAdvpl.branchProdu).then(() => {
                 mergeAdvpl.repository.checkout(branchAtual);
@@ -190,7 +191,7 @@ function activate(context) {
         }));
         //Adiciona comando de Atualiza Branch
         context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.atualizaBranch', () => {
-            let mergeAdvpl = new Merge_1.MergeAdvpl();
+            let mergeAdvpl = new merge_1.MergeAdvpl();
             let branchAtual = mergeAdvpl.repository.headLabel;
             mergeAdvpl.atualiza().then((message) => {
                 vscode_1.window.showInformationMessage(message);
@@ -202,9 +203,11 @@ function activate(context) {
                 validaProjeto();
             });
         }));
+        vscode_1.languages.registerDocumentFormattingEditProvider('advpl', formatting_1.formattingEditProvider());
+        vscode_1.languages.registerDocumentRangeFormattingEditProvider('advpl', formatting_1.rangeFormattingEditProvider());
         //Adiciona comando de limeza de branches
         context.subscriptions.push(vscode_1.commands.registerCommand('advpl-sintaxe.cleanBranches', () => {
-            let mergeAdvpl = new Merge_1.MergeAdvpl();
+            let mergeAdvpl = new merge_1.MergeAdvpl();
             let branchAtual = mergeAdvpl.repository.headLabel;
             mergeAdvpl.limpaBranches().then((message) => {
                 vscode_1.window.showInformationMessage(message);
@@ -330,7 +333,8 @@ function validaProjeto() {
         validaPrj.ownerDb = validaAdvpl.ownerDb;
         validaPrj.local = vscodeOptions;
         let pastas = [];
-        vscode_1.workspace.workspaceFolders.forEach((path) => {
+        let workspaceFolders = vscode_1.workspace['workspaceFolders'];
+        workspaceFolders.forEach((path) => {
             pastas.push(path.uri.fsPath);
         });
         validaPrj.validaProjeto(pastas).then((objProjeto) => {
@@ -715,12 +719,11 @@ var vsprintf = __webpack_require__(5).vsprintf,
   debug = __webpack_require__(9)('i18n:debug'),
   warn = __webpack_require__(9)('i18n:warn'),
   error = __webpack_require__(9)('i18n:error'),
-  Mustache = __webpack_require__(19),
-  Messageformat = __webpack_require__(20),
-  MakePlural = __webpack_require__(23).load(
-    __webpack_require__(24)
-  ),
-  parseInterval = __webpack_require__(25).default;
+  Mustache = __webpack_require__(17),
+  Messageformat = __webpack_require__(18),
+  MakePlural = __webpack_require__(32),
+  parseInterval = __webpack_require__(33).default;
+
 
 // exports an instance
 module.exports = (function() {
@@ -753,6 +756,7 @@ module.exports = (function() {
     logDebugFn,
     logErrorFn,
     logWarnFn,
+    preserveLegacyCase,
     objectNotation,
     prefix,
     queryParameter,
@@ -762,8 +766,6 @@ module.exports = (function() {
 
   // public exports
   var i18n = {};
-
-  i18n.locales = locales;
 
   i18n.version = '0.8.3';
 
@@ -845,6 +847,9 @@ module.exports = (function() {
     logDebugFn = (typeof opt.logDebugFn === 'function') ? opt.logDebugFn : debug;
     logWarnFn = (typeof opt.logWarnFn === 'function') ? opt.logWarnFn : warn;
     logErrorFn = (typeof opt.logErrorFn === 'function') ? opt.logErrorFn : error;
+
+    preserveLegacyCase = (typeof opt.preserveLegacyCase === 'undefined') ?
+      true : opt.preserveLegacyCase;
 
     // when missing locales we try to guess that from directory
     opt.locales = opt.locales || guessLocales(directory);
@@ -963,6 +968,9 @@ module.exports = (function() {
       mf = MessageformatInstanceForLocale[targetLocale];
     } else {
       mf = new Messageformat(targetLocale);
+
+      // @see https://messageformat.github.io/messageformat/MessageFormat#disablePluralKeyChecks__anchor
+      mf.disablePluralKeyChecks();
       mf.compiledFunctions = {};
       MessageformatInstanceForLocale[targetLocale] = mf;
     }
@@ -1066,7 +1074,7 @@ module.exports = (function() {
         var lc = targetLocale.toLowerCase().split(/[_-\s]+/)
           .filter(function(el){ return  true && el; });
         // take the first part of locale, fallback to full locale
-        p = new MakePlural(lc[0] || targetLocale);
+        p = MakePlural[lc[0] || targetLocale];
         PluralsForLocale[targetLocale] = p;
       }
 
@@ -1183,7 +1191,7 @@ module.exports = (function() {
       locale === undefined &&
       typeof this.locale === 'string'
     ) {
-      if (register && register.GLOBAL) {
+      if (register && register.global) {
         targetLocale = '';
       } else {
         targetLocale = this.locale;
@@ -1358,7 +1366,12 @@ module.exports = (function() {
         var urlObj = url.parse(request.url, true);
         if (urlObj.query[queryParameter]) {
           logDebug('Overriding locale from query: ' + urlObj.query[queryParameter]);
-          request.language = urlObj.query[queryParameter].toLowerCase();
+          request.language = urlObj.query[queryParameter];
+
+          if (preserveLegacyCase) {
+            request.language = request.language.toLowerCase();
+          }
+
           return i18n.setLocale(request, request.language);
         }
       }
@@ -1578,7 +1591,7 @@ module.exports = (function() {
     var mutator = localeMutator(locale, singular);
 
     if (plural) {
-      if (!accessor()) {
+      if (accessor() == null) {
         mutator({
           'one': defaultSingular || singular,
           'other': defaultPlural || plural
@@ -1587,7 +1600,7 @@ module.exports = (function() {
       }
     }
 
-    if (!accessor()) {
+    if (accessor() == null) {
       mutator(defaultSingular || singular);
       write(locale);
     }
@@ -1876,6 +1889,7 @@ module.exports = (function() {
 
 }());
 
+
 /***/ }),
 /* 5 */
 /***/ (function(module, exports, __webpack_require__) {
@@ -2137,14 +2151,14 @@ module.exports = require("path");
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
- * Detect Electron renderer / nwjs process, which is node, but we should
+ * Detect Electron renderer process, which is node, but we should
  * treat as a browser.
  */
 
-if (typeof process === 'undefined' || process.type === 'renderer' || process.browser === true || process.__nwjs) {
-	module.exports = __webpack_require__(10);
+if (typeof process !== 'undefined' && process.type === 'renderer') {
+  module.exports = __webpack_require__(10);
 } else {
-	module.exports = __webpack_require__(13);
+  module.exports = __webpack_require__(13);
 }
 
 
@@ -2152,100 +2166,34 @@ if (typeof process === 'undefined' || process.type === 'renderer' || process.bro
 /* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* eslint-env browser */
-
 /**
  * This is the web browser implementation of `debug()`.
+ *
+ * Expose `debug()` as the module.
  */
 
+exports = module.exports = __webpack_require__(11);
 exports.log = log;
 exports.formatArgs = formatArgs;
 exports.save = save;
 exports.load = load;
 exports.useColors = useColors;
-exports.storage = localstorage();
+exports.storage = 'undefined' != typeof chrome
+               && 'undefined' != typeof chrome.storage
+                  ? chrome.storage.local
+                  : localstorage();
 
 /**
  * Colors.
  */
 
 exports.colors = [
-	'#0000CC',
-	'#0000FF',
-	'#0033CC',
-	'#0033FF',
-	'#0066CC',
-	'#0066FF',
-	'#0099CC',
-	'#0099FF',
-	'#00CC00',
-	'#00CC33',
-	'#00CC66',
-	'#00CC99',
-	'#00CCCC',
-	'#00CCFF',
-	'#3300CC',
-	'#3300FF',
-	'#3333CC',
-	'#3333FF',
-	'#3366CC',
-	'#3366FF',
-	'#3399CC',
-	'#3399FF',
-	'#33CC00',
-	'#33CC33',
-	'#33CC66',
-	'#33CC99',
-	'#33CCCC',
-	'#33CCFF',
-	'#6600CC',
-	'#6600FF',
-	'#6633CC',
-	'#6633FF',
-	'#66CC00',
-	'#66CC33',
-	'#9900CC',
-	'#9900FF',
-	'#9933CC',
-	'#9933FF',
-	'#99CC00',
-	'#99CC33',
-	'#CC0000',
-	'#CC0033',
-	'#CC0066',
-	'#CC0099',
-	'#CC00CC',
-	'#CC00FF',
-	'#CC3300',
-	'#CC3333',
-	'#CC3366',
-	'#CC3399',
-	'#CC33CC',
-	'#CC33FF',
-	'#CC6600',
-	'#CC6633',
-	'#CC9900',
-	'#CC9933',
-	'#CCCC00',
-	'#CCCC33',
-	'#FF0000',
-	'#FF0033',
-	'#FF0066',
-	'#FF0099',
-	'#FF00CC',
-	'#FF00FF',
-	'#FF3300',
-	'#FF3333',
-	'#FF3366',
-	'#FF3399',
-	'#FF33CC',
-	'#FF33FF',
-	'#FF6600',
-	'#FF6633',
-	'#FF9900',
-	'#FF9933',
-	'#FFCC00',
-	'#FFCC33'
+  'lightseagreen',
+  'forestgreen',
+  'goldenrod',
+  'dodgerblue',
+  'darkorchid',
+  'crimson'
 ];
 
 /**
@@ -2256,31 +2204,38 @@ exports.colors = [
  * TODO: add a `localStorage` variable to explicitly enable/disable colors
  */
 
-// eslint-disable-next-line complexity
 function useColors() {
-	// NB: In an Electron preload script, document will be defined but not fully
-	// initialized. Since we know we're in Chrome, we'll just detect this case
-	// explicitly
-	if (typeof window !== 'undefined' && window.process && (window.process.type === 'renderer' || window.process.__nwjs)) {
-		return true;
-	}
+  // NB: In an Electron preload script, document will be defined but not fully
+  // initialized. Since we know we're in Chrome, we'll just detect this case
+  // explicitly
+  if (typeof window !== 'undefined' && window.process && window.process.type === 'renderer') {
+    return true;
+  }
 
-	// Internet Explorer and Edge do not support colors.
-	if (typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.toLowerCase().match(/(edge|trident)\/(\d+)/)) {
-		return false;
-	}
-
-	// Is webkit? http://stackoverflow.com/a/16459606/376773
-	// document is undefined in react-native: https://github.com/facebook/react-native/pull/1632
-	return (typeof document !== 'undefined' && document.documentElement && document.documentElement.style && document.documentElement.style.WebkitAppearance) ||
-		// Is firebug? http://stackoverflow.com/a/398120/376773
-		(typeof window !== 'undefined' && window.console && (window.console.firebug || (window.console.exception && window.console.table))) ||
-		// Is firefox >= v31?
-		// https://developer.mozilla.org/en-US/docs/Tools/Web_Console#Styling_messages
-		(typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.toLowerCase().match(/firefox\/(\d+)/) && parseInt(RegExp.$1, 10) >= 31) ||
-		// Double check webkit in userAgent just in case we are in a worker
-		(typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.toLowerCase().match(/applewebkit\/(\d+)/));
+  // is webkit? http://stackoverflow.com/a/16459606/376773
+  // document is undefined in react-native: https://github.com/facebook/react-native/pull/1632
+  return (typeof document !== 'undefined' && document.documentElement && document.documentElement.style && document.documentElement.style.WebkitAppearance) ||
+    // is firebug? http://stackoverflow.com/a/398120/376773
+    (typeof window !== 'undefined' && window.console && (window.console.firebug || (window.console.exception && window.console.table))) ||
+    // is firefox >= v31?
+    // https://developer.mozilla.org/en-US/docs/Tools/Web_Console#Styling_messages
+    (typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.toLowerCase().match(/firefox\/(\d+)/) && parseInt(RegExp.$1, 10) >= 31) ||
+    // double check webkit in userAgent just in case we are in a worker
+    (typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.toLowerCase().match(/applewebkit\/(\d+)/));
 }
+
+/**
+ * Map %j to `JSON.stringify()`, since no Web Inspectors do that by default.
+ */
+
+exports.formatters.j = function(v) {
+  try {
+    return JSON.stringify(v);
+  } catch (err) {
+    return '[UnexpectedJSONParseError]: ' + err.message;
+  }
+};
+
 
 /**
  * Colorize log arguments if enabled.
@@ -2289,38 +2244,36 @@ function useColors() {
  */
 
 function formatArgs(args) {
-	args[0] = (this.useColors ? '%c' : '') +
-		this.namespace +
-		(this.useColors ? ' %c' : ' ') +
-		args[0] +
-		(this.useColors ? '%c ' : ' ') +
-		'+' + module.exports.humanize(this.diff);
+  var useColors = this.useColors;
 
-	if (!this.useColors) {
-		return;
-	}
+  args[0] = (useColors ? '%c' : '')
+    + this.namespace
+    + (useColors ? ' %c' : ' ')
+    + args[0]
+    + (useColors ? '%c ' : ' ')
+    + '+' + exports.humanize(this.diff);
 
-	const c = 'color: ' + this.color;
-	args.splice(1, 0, c, 'color: inherit');
+  if (!useColors) return;
 
-	// The final "%c" is somewhat tricky, because there could be other
-	// arguments passed either before or after the %c, so we need to
-	// figure out the correct index to insert the CSS into
-	let index = 0;
-	let lastC = 0;
-	args[0].replace(/%[a-zA-Z%]/g, match => {
-		if (match === '%%') {
-			return;
-		}
-		index++;
-		if (match === '%c') {
-			// We only are interested in the *last* %c
-			// (the user may have provided their own)
-			lastC = index;
-		}
-	});
+  var c = 'color: ' + this.color;
+  args.splice(1, 0, c, 'color: inherit')
 
-	args.splice(lastC, 0, c);
+  // the final "%c" is somewhat tricky, because there could be other
+  // arguments passed either before or after the %c, so we need to
+  // figure out the correct index to insert the CSS into
+  var index = 0;
+  var lastC = 0;
+  args[0].replace(/%[a-zA-Z%]/g, function(match) {
+    if ('%%' === match) return;
+    index++;
+    if ('%c' === match) {
+      // we only are interested in the *last* %c
+      // (the user may have provided their own)
+      lastC = index;
+    }
+  });
+
+  args.splice(lastC, 0, c);
 }
 
 /**
@@ -2329,12 +2282,13 @@ function formatArgs(args) {
  *
  * @api public
  */
-function log(...args) {
-	// This hackery is required for IE8/9, where
-	// the `console.log` function doesn't have 'apply'
-	return typeof console === 'object' &&
-		console.log &&
-		console.log(...args);
+
+function log() {
+  // this hackery is required for IE8/9, where
+  // the `console.log` function doesn't have 'apply'
+  return 'object' === typeof console
+    && console.log
+    && Function.prototype.apply.call(console.log, console, arguments);
 }
 
 /**
@@ -2343,17 +2297,15 @@ function log(...args) {
  * @param {String} namespaces
  * @api private
  */
+
 function save(namespaces) {
-	try {
-		if (namespaces) {
-			exports.storage.setItem('debug', namespaces);
-		} else {
-			exports.storage.removeItem('debug');
-		}
-	} catch (error) {
-		// Swallow
-		// XXX (@Qix-) should we be logging these?
-	}
+  try {
+    if (null == namespaces) {
+      exports.storage.removeItem('debug');
+    } else {
+      exports.storage.debug = namespaces;
+    }
+  } catch(e) {}
 }
 
 /**
@@ -2362,22 +2314,26 @@ function save(namespaces) {
  * @return {String} returns the previously persisted debug modes
  * @api private
  */
+
 function load() {
-	let r;
-	try {
-		r = exports.storage.getItem('debug');
-	} catch (error) {
-		// Swallow
-		// XXX (@Qix-) should we be logging these?
-	}
+  var r;
+  try {
+    r = exports.storage.debug;
+  } catch(e) {}
 
-	// If debug isn't set in LS, and we're in Electron, try to load $DEBUG
-	if (!r && typeof process !== 'undefined' && 'env' in process) {
-		r = process.env.DEBUG;
-	}
+  // If debug isn't set in LS, and we're in Electron, try to load $DEBUG
+  if (!r && typeof process !== 'undefined' && 'env' in process) {
+    r = process.env.DEBUG;
+  }
 
-	return r;
+  return r;
 }
+
+/**
+ * Enable namespaces listed in `localStorage.debug` initially.
+ */
+
+exports.enable(load());
 
 /**
  * Localstorage attempts to return the localstorage.
@@ -2391,31 +2347,10 @@ function load() {
  */
 
 function localstorage() {
-	try {
-		// TVMLKit (Apple TV JS Runtime) does not have a window object, just localStorage in the global context
-		// The Browser also has localStorage in the global context.
-		return localStorage;
-	} catch (error) {
-		// Swallow
-		// XXX (@Qix-) should we be logging these?
-	}
+  try {
+    return window.localStorage;
+  } catch (e) {}
 }
-
-module.exports = __webpack_require__(11)(exports);
-
-const {formatters} = module.exports;
-
-/**
- * Map %j to `JSON.stringify()`, since no Web Inspectors do that by default.
- */
-
-formatters.j = function (v) {
-	try {
-		return JSON.stringify(v);
-	} catch (error) {
-		return '[UnexpectedJSONParseError]: ' + error.message;
-	}
-};
 
 
 /***/ }),
@@ -2426,268 +2361,204 @@ formatters.j = function (v) {
 /**
  * This is the common logic for both the Node.js and web browser
  * implementations of `debug()`.
+ *
+ * Expose `debug()` as the module.
  */
 
-function setup(env) {
-	createDebug.debug = createDebug;
-	createDebug.default = createDebug;
-	createDebug.coerce = coerce;
-	createDebug.disable = disable;
-	createDebug.enable = enable;
-	createDebug.enabled = enabled;
-	createDebug.humanize = __webpack_require__(12);
+exports = module.exports = createDebug.debug = createDebug['default'] = createDebug;
+exports.coerce = coerce;
+exports.disable = disable;
+exports.enable = enable;
+exports.enabled = enabled;
+exports.humanize = __webpack_require__(12);
 
-	Object.keys(env).forEach(key => {
-		createDebug[key] = env[key];
-	});
+/**
+ * The currently active debug mode names, and names to skip.
+ */
 
-	/**
-	* Active `debug` instances.
-	*/
-	createDebug.instances = [];
+exports.names = [];
+exports.skips = [];
 
-	/**
-	* The currently active debug mode names, and names to skip.
-	*/
+/**
+ * Map of special "%n" handling functions, for the debug "format" argument.
+ *
+ * Valid key names are a single, lower or upper-case letter, i.e. "n" and "N".
+ */
 
-	createDebug.names = [];
-	createDebug.skips = [];
+exports.formatters = {};
 
-	/**
-	* Map of special "%n" handling functions, for the debug "format" argument.
-	*
-	* Valid key names are a single, lower or upper-case letter, i.e. "n" and "N".
-	*/
-	createDebug.formatters = {};
+/**
+ * Previous log timestamp.
+ */
 
-	/**
-	* Selects a color for a debug namespace
-	* @param {String} namespace The namespace string for the for the debug instance to be colored
-	* @return {Number|String} An ANSI color code for the given namespace
-	* @api private
-	*/
-	function selectColor(namespace) {
-		let hash = 0;
+var prevTime;
 
-		for (let i = 0; i < namespace.length; i++) {
-			hash = ((hash << 5) - hash) + namespace.charCodeAt(i);
-			hash |= 0; // Convert to 32bit integer
-		}
+/**
+ * Select a color.
+ * @param {String} namespace
+ * @return {Number}
+ * @api private
+ */
 
-		return createDebug.colors[Math.abs(hash) % createDebug.colors.length];
-	}
-	createDebug.selectColor = selectColor;
+function selectColor(namespace) {
+  var hash = 0, i;
 
-	/**
-	* Create a debugger with the given `namespace`.
-	*
-	* @param {String} namespace
-	* @return {Function}
-	* @api public
-	*/
-	function createDebug(namespace) {
-		let prevTime;
+  for (i in namespace) {
+    hash  = ((hash << 5) - hash) + namespace.charCodeAt(i);
+    hash |= 0; // Convert to 32bit integer
+  }
 
-		function debug(...args) {
-			// Disabled?
-			if (!debug.enabled) {
-				return;
-			}
-
-			const self = debug;
-
-			// Set `diff` timestamp
-			const curr = Number(new Date());
-			const ms = curr - (prevTime || curr);
-			self.diff = ms;
-			self.prev = prevTime;
-			self.curr = curr;
-			prevTime = curr;
-
-			args[0] = createDebug.coerce(args[0]);
-
-			if (typeof args[0] !== 'string') {
-				// Anything else let's inspect with %O
-				args.unshift('%O');
-			}
-
-			// Apply any `formatters` transformations
-			let index = 0;
-			args[0] = args[0].replace(/%([a-zA-Z%])/g, (match, format) => {
-				// If we encounter an escaped % then don't increase the array index
-				if (match === '%%') {
-					return match;
-				}
-				index++;
-				const formatter = createDebug.formatters[format];
-				if (typeof formatter === 'function') {
-					const val = args[index];
-					match = formatter.call(self, val);
-
-					// Now we need to remove `args[index]` since it's inlined in the `format`
-					args.splice(index, 1);
-					index--;
-				}
-				return match;
-			});
-
-			// Apply env-specific formatting (colors, etc.)
-			createDebug.formatArgs.call(self, args);
-
-			const logFn = self.log || createDebug.log;
-			logFn.apply(self, args);
-		}
-
-		debug.namespace = namespace;
-		debug.enabled = createDebug.enabled(namespace);
-		debug.useColors = createDebug.useColors();
-		debug.color = selectColor(namespace);
-		debug.destroy = destroy;
-		debug.extend = extend;
-		// Debug.formatArgs = formatArgs;
-		// debug.rawLog = rawLog;
-
-		// env-specific initialization logic for debug instances
-		if (typeof createDebug.init === 'function') {
-			createDebug.init(debug);
-		}
-
-		createDebug.instances.push(debug);
-
-		return debug;
-	}
-
-	function destroy() {
-		const index = createDebug.instances.indexOf(this);
-		if (index !== -1) {
-			createDebug.instances.splice(index, 1);
-			return true;
-		}
-		return false;
-	}
-
-	function extend(namespace, delimiter) {
-		const newDebug = createDebug(this.namespace + (typeof delimiter === 'undefined' ? ':' : delimiter) + namespace);
-		newDebug.log = this.log;
-		return newDebug;
-	}
-
-	/**
-	* Enables a debug mode by namespaces. This can include modes
-	* separated by a colon and wildcards.
-	*
-	* @param {String} namespaces
-	* @api public
-	*/
-	function enable(namespaces) {
-		createDebug.save(namespaces);
-
-		createDebug.names = [];
-		createDebug.skips = [];
-
-		let i;
-		const split = (typeof namespaces === 'string' ? namespaces : '').split(/[\s,]+/);
-		const len = split.length;
-
-		for (i = 0; i < len; i++) {
-			if (!split[i]) {
-				// ignore empty strings
-				continue;
-			}
-
-			namespaces = split[i].replace(/\*/g, '.*?');
-
-			if (namespaces[0] === '-') {
-				createDebug.skips.push(new RegExp('^' + namespaces.substr(1) + '$'));
-			} else {
-				createDebug.names.push(new RegExp('^' + namespaces + '$'));
-			}
-		}
-
-		for (i = 0; i < createDebug.instances.length; i++) {
-			const instance = createDebug.instances[i];
-			instance.enabled = createDebug.enabled(instance.namespace);
-		}
-	}
-
-	/**
-	* Disable debug output.
-	*
-	* @return {String} namespaces
-	* @api public
-	*/
-	function disable() {
-		const namespaces = [
-			...createDebug.names.map(toNamespace),
-			...createDebug.skips.map(toNamespace).map(namespace => '-' + namespace)
-		].join(',');
-		createDebug.enable('');
-		return namespaces;
-	}
-
-	/**
-	* Returns true if the given mode name is enabled, false otherwise.
-	*
-	* @param {String} name
-	* @return {Boolean}
-	* @api public
-	*/
-	function enabled(name) {
-		if (name[name.length - 1] === '*') {
-			return true;
-		}
-
-		let i;
-		let len;
-
-		for (i = 0, len = createDebug.skips.length; i < len; i++) {
-			if (createDebug.skips[i].test(name)) {
-				return false;
-			}
-		}
-
-		for (i = 0, len = createDebug.names.length; i < len; i++) {
-			if (createDebug.names[i].test(name)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	/**
-	* Convert regexp to namespace
-	*
-	* @param {RegExp} regxep
-	* @return {String} namespace
-	* @api private
-	*/
-	function toNamespace(regexp) {
-		return regexp.toString()
-			.substring(2, regexp.toString().length - 2)
-			.replace(/\.\*\?$/, '*');
-	}
-
-	/**
-	* Coerce `val`.
-	*
-	* @param {Mixed} val
-	* @return {Mixed}
-	* @api private
-	*/
-	function coerce(val) {
-		if (val instanceof Error) {
-			return val.stack || val.message;
-		}
-		return val;
-	}
-
-	createDebug.enable(createDebug.load());
-
-	return createDebug;
+  return exports.colors[Math.abs(hash) % exports.colors.length];
 }
 
-module.exports = setup;
+/**
+ * Create a debugger with the given `namespace`.
+ *
+ * @param {String} namespace
+ * @return {Function}
+ * @api public
+ */
+
+function createDebug(namespace) {
+
+  function debug() {
+    // disabled?
+    if (!debug.enabled) return;
+
+    var self = debug;
+
+    // set `diff` timestamp
+    var curr = +new Date();
+    var ms = curr - (prevTime || curr);
+    self.diff = ms;
+    self.prev = prevTime;
+    self.curr = curr;
+    prevTime = curr;
+
+    // turn the `arguments` into a proper Array
+    var args = new Array(arguments.length);
+    for (var i = 0; i < args.length; i++) {
+      args[i] = arguments[i];
+    }
+
+    args[0] = exports.coerce(args[0]);
+
+    if ('string' !== typeof args[0]) {
+      // anything else let's inspect with %O
+      args.unshift('%O');
+    }
+
+    // apply any `formatters` transformations
+    var index = 0;
+    args[0] = args[0].replace(/%([a-zA-Z%])/g, function(match, format) {
+      // if we encounter an escaped % then don't increase the array index
+      if (match === '%%') return match;
+      index++;
+      var formatter = exports.formatters[format];
+      if ('function' === typeof formatter) {
+        var val = args[index];
+        match = formatter.call(self, val);
+
+        // now we need to remove `args[index]` since it's inlined in the `format`
+        args.splice(index, 1);
+        index--;
+      }
+      return match;
+    });
+
+    // apply env-specific formatting (colors, etc.)
+    exports.formatArgs.call(self, args);
+
+    var logFn = debug.log || exports.log || console.log.bind(console);
+    logFn.apply(self, args);
+  }
+
+  debug.namespace = namespace;
+  debug.enabled = exports.enabled(namespace);
+  debug.useColors = exports.useColors();
+  debug.color = selectColor(namespace);
+
+  // env-specific initialization logic for debug instances
+  if ('function' === typeof exports.init) {
+    exports.init(debug);
+  }
+
+  return debug;
+}
+
+/**
+ * Enables a debug mode by namespaces. This can include modes
+ * separated by a colon and wildcards.
+ *
+ * @param {String} namespaces
+ * @api public
+ */
+
+function enable(namespaces) {
+  exports.save(namespaces);
+
+  exports.names = [];
+  exports.skips = [];
+
+  var split = (typeof namespaces === 'string' ? namespaces : '').split(/[\s,]+/);
+  var len = split.length;
+
+  for (var i = 0; i < len; i++) {
+    if (!split[i]) continue; // ignore empty strings
+    namespaces = split[i].replace(/\*/g, '.*?');
+    if (namespaces[0] === '-') {
+      exports.skips.push(new RegExp('^' + namespaces.substr(1) + '$'));
+    } else {
+      exports.names.push(new RegExp('^' + namespaces + '$'));
+    }
+  }
+}
+
+/**
+ * Disable debug output.
+ *
+ * @api public
+ */
+
+function disable() {
+  exports.enable('');
+}
+
+/**
+ * Returns true if the given mode name is enabled, false otherwise.
+ *
+ * @param {String} name
+ * @return {Boolean}
+ * @api public
+ */
+
+function enabled(name) {
+  var i, len;
+  for (i = 0, len = exports.skips.length; i < len; i++) {
+    if (exports.skips[i].test(name)) {
+      return false;
+    }
+  }
+  for (i = 0, len = exports.names.length; i < len; i++) {
+    if (exports.names[i].test(name)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Coerce `val`.
+ *
+ * @param {Mixed} val
+ * @return {Mixed}
+ * @api private
+ */
+
+function coerce(val) {
+  if (val instanceof Error) return val.stack || val.message;
+  return val;
+}
 
 
 /***/ }),
@@ -2702,7 +2573,6 @@ var s = 1000;
 var m = s * 60;
 var h = m * 60;
 var d = h * 24;
-var w = d * 7;
 var y = d * 365.25;
 
 /**
@@ -2746,7 +2616,7 @@ function parse(str) {
   if (str.length > 100) {
     return;
   }
-  var match = /^((?:\d+)?\-?\d?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|years?|yrs?|y)?$/i.exec(
+  var match = /^((?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|years?|yrs?|y)?$/i.exec(
     str
   );
   if (!match) {
@@ -2761,10 +2631,6 @@ function parse(str) {
     case 'yr':
     case 'y':
       return n * y;
-    case 'weeks':
-    case 'week':
-    case 'w':
-      return n * w;
     case 'days':
     case 'day':
     case 'd':
@@ -2807,17 +2673,16 @@ function parse(str) {
  */
 
 function fmtShort(ms) {
-  var msAbs = Math.abs(ms);
-  if (msAbs >= d) {
+  if (ms >= d) {
     return Math.round(ms / d) + 'd';
   }
-  if (msAbs >= h) {
+  if (ms >= h) {
     return Math.round(ms / h) + 'h';
   }
-  if (msAbs >= m) {
+  if (ms >= m) {
     return Math.round(ms / m) + 'm';
   }
-  if (msAbs >= s) {
+  if (ms >= s) {
     return Math.round(ms / s) + 's';
   }
   return ms + 'ms';
@@ -2832,29 +2697,25 @@ function fmtShort(ms) {
  */
 
 function fmtLong(ms) {
-  var msAbs = Math.abs(ms);
-  if (msAbs >= d) {
-    return plural(ms, msAbs, d, 'day');
-  }
-  if (msAbs >= h) {
-    return plural(ms, msAbs, h, 'hour');
-  }
-  if (msAbs >= m) {
-    return plural(ms, msAbs, m, 'minute');
-  }
-  if (msAbs >= s) {
-    return plural(ms, msAbs, s, 'second');
-  }
-  return ms + ' ms';
+  return plural(ms, d, 'day') ||
+    plural(ms, h, 'hour') ||
+    plural(ms, m, 'minute') ||
+    plural(ms, s, 'second') ||
+    ms + ' ms';
 }
 
 /**
  * Pluralization helper.
  */
 
-function plural(ms, msAbs, n, name) {
-  var isPlural = msAbs >= n * 1.5;
-  return Math.round(ms / n) + ' ' + name + (isPlural ? 's' : '');
+function plural(ms, n, name) {
+  if (ms < n) {
+    return;
+  }
+  if (ms < n * 1.5) {
+    return Math.floor(ms / n) + ' ' + name;
+  }
+  return Math.ceil(ms / n) + ' ' + name + 's';
 }
 
 
@@ -2866,13 +2727,16 @@ function plural(ms, msAbs, n, name) {
  * Module dependencies.
  */
 
-const tty = __webpack_require__(14);
-const util = __webpack_require__(15);
+var tty = __webpack_require__(14);
+var util = __webpack_require__(15);
 
 /**
  * This is the Node.js implementation of `debug()`.
+ *
+ * Expose `debug()` as the module.
  */
 
+exports = module.exports = __webpack_require__(11);
 exports.init = init;
 exports.log = log;
 exports.formatArgs = formatArgs;
@@ -2886,137 +2750,79 @@ exports.useColors = useColors;
 
 exports.colors = [6, 2, 3, 4, 5, 1];
 
-try {
-	// Optional dependency (as in, doesn't need to be installed, NOT like optionalDependencies in package.json)
-	// eslint-disable-next-line import/no-extraneous-dependencies
-	const supportsColor = __webpack_require__(16);
-
-	if (supportsColor && (supportsColor.stderr || supportsColor).level >= 2) {
-		exports.colors = [
-			20,
-			21,
-			26,
-			27,
-			32,
-			33,
-			38,
-			39,
-			40,
-			41,
-			42,
-			43,
-			44,
-			45,
-			56,
-			57,
-			62,
-			63,
-			68,
-			69,
-			74,
-			75,
-			76,
-			77,
-			78,
-			79,
-			80,
-			81,
-			92,
-			93,
-			98,
-			99,
-			112,
-			113,
-			128,
-			129,
-			134,
-			135,
-			148,
-			149,
-			160,
-			161,
-			162,
-			163,
-			164,
-			165,
-			166,
-			167,
-			168,
-			169,
-			170,
-			171,
-			172,
-			173,
-			178,
-			179,
-			184,
-			185,
-			196,
-			197,
-			198,
-			199,
-			200,
-			201,
-			202,
-			203,
-			204,
-			205,
-			206,
-			207,
-			208,
-			209,
-			214,
-			215,
-			220,
-			221
-		];
-	}
-} catch (error) {
-	// Swallow - we only care if `supports-color` is available; it doesn't have to be.
-}
-
 /**
  * Build up the default `inspectOpts` object from the environment variables.
  *
  *   $ DEBUG_COLORS=no DEBUG_DEPTH=10 DEBUG_SHOW_HIDDEN=enabled node script.js
  */
 
-exports.inspectOpts = Object.keys(process.env).filter(key => {
-	return /^debug_/i.test(key);
-}).reduce((obj, key) => {
-	// Camel-case
-	const prop = key
-		.substring(6)
-		.toLowerCase()
-		.replace(/_([a-z])/g, (_, k) => {
-			return k.toUpperCase();
-		});
+exports.inspectOpts = Object.keys(process.env).filter(function (key) {
+  return /^debug_/i.test(key);
+}).reduce(function (obj, key) {
+  // camel-case
+  var prop = key
+    .substring(6)
+    .toLowerCase()
+    .replace(/_([a-z])/g, function (_, k) { return k.toUpperCase() });
 
-	// Coerce string value into JS value
-	let val = process.env[key];
-	if (/^(yes|on|true|enabled)$/i.test(val)) {
-		val = true;
-	} else if (/^(no|off|false|disabled)$/i.test(val)) {
-		val = false;
-	} else if (val === 'null') {
-		val = null;
-	} else {
-		val = Number(val);
-	}
+  // coerce string value into JS value
+  var val = process.env[key];
+  if (/^(yes|on|true|enabled)$/i.test(val)) val = true;
+  else if (/^(no|off|false|disabled)$/i.test(val)) val = false;
+  else if (val === 'null') val = null;
+  else val = Number(val);
 
-	obj[prop] = val;
-	return obj;
+  obj[prop] = val;
+  return obj;
 }, {});
+
+/**
+ * The file descriptor to write the `debug()` calls to.
+ * Set the `DEBUG_FD` env variable to override with another value. i.e.:
+ *
+ *   $ DEBUG_FD=3 node script.js 3>debug.log
+ */
+
+var fd = parseInt(process.env.DEBUG_FD, 10) || 2;
+
+if (1 !== fd && 2 !== fd) {
+  util.deprecate(function(){}, 'except for stderr(2) and stdout(1), any other usage of DEBUG_FD is deprecated. Override debug.log if you want to use a different log function (https://git.io/debug_fd)')()
+}
+
+var stream = 1 === fd ? process.stdout :
+             2 === fd ? process.stderr :
+             createWritableStdioStream(fd);
 
 /**
  * Is stdout a TTY? Colored output is enabled when `true`.
  */
 
 function useColors() {
-	return 'colors' in exports.inspectOpts ?
-		Boolean(exports.inspectOpts.colors) :
-		tty.isatty(process.stderr.fd);
+  return 'colors' in exports.inspectOpts
+    ? Boolean(exports.inspectOpts.colors)
+    : tty.isatty(fd);
 }
+
+/**
+ * Map %o to `util.inspect()`, all on a single line.
+ */
+
+exports.formatters.o = function(v) {
+  this.inspectOpts.colors = this.useColors;
+  return util.inspect(v, this.inspectOpts)
+    .split('\n').map(function(str) {
+      return str.trim()
+    }).join(' ');
+};
+
+/**
+ * Map %o to `util.inspect()`, allowing multiple lines if needed.
+ */
+
+exports.formatters.O = function(v) {
+  this.inspectOpts.colors = this.useColors;
+  return util.inspect(v, this.inspectOpts);
+};
 
 /**
  * Adds ANSI color escape codes if enabled.
@@ -3025,33 +2831,27 @@ function useColors() {
  */
 
 function formatArgs(args) {
-	const {namespace: name, useColors} = this;
+  var name = this.namespace;
+  var useColors = this.useColors;
 
-	if (useColors) {
-		const c = this.color;
-		const colorCode = '\u001B[3' + (c < 8 ? c : '8;5;' + c);
-		const prefix = `  ${colorCode};1m${name} \u001B[0m`;
+  if (useColors) {
+    var c = this.color;
+    var prefix = '  \u001b[3' + c + ';1m' + name + ' ' + '\u001b[0m';
 
-		args[0] = prefix + args[0].split('\n').join('\n' + prefix);
-		args.push(colorCode + 'm+' + module.exports.humanize(this.diff) + '\u001B[0m');
-	} else {
-		args[0] = getDate() + name + ' ' + args[0];
-	}
-}
-
-function getDate() {
-	if (exports.inspectOpts.hideDate) {
-		return '';
-	}
-	return new Date().toISOString() + ' ';
+    args[0] = prefix + args[0].split('\n').join('\n' + prefix);
+    args.push('\u001b[3' + c + 'm+' + exports.humanize(this.diff) + '\u001b[0m');
+  } else {
+    args[0] = new Date().toUTCString()
+      + ' ' + name + ' ' + args[0];
+  }
 }
 
 /**
- * Invokes `util.format()` with the specified arguments and writes to stderr.
+ * Invokes `util.format()` with the specified arguments and writes to `stream`.
  */
 
-function log(...args) {
-	return process.stderr.write(util.format(...args) + '\n');
+function log() {
+  return stream.write(util.format.apply(util, arguments) + '\n');
 }
 
 /**
@@ -3060,14 +2860,15 @@ function log(...args) {
  * @param {String} namespaces
  * @api private
  */
+
 function save(namespaces) {
-	if (namespaces) {
-		process.env.DEBUG = namespaces;
-	} else {
-		// If you set a process.env field to null or undefined, it gets cast to the
-		// string 'null' or 'undefined'. Just delete instead.
-		delete process.env.DEBUG;
-	}
+  if (null == namespaces) {
+    // If you set a process.env field to null or undefined, it gets cast to the
+    // string 'null' or 'undefined'. Just delete instead.
+    delete process.env.DEBUG;
+  } else {
+    process.env.DEBUG = namespaces;
+  }
 }
 
 /**
@@ -3078,7 +2879,75 @@ function save(namespaces) {
  */
 
 function load() {
-	return process.env.DEBUG;
+  return process.env.DEBUG;
+}
+
+/**
+ * Copied from `node/src/node.js`.
+ *
+ * XXX: It's lame that node doesn't expose this API out-of-the-box. It also
+ * relies on the undocumented `tty_wrap.guessHandleType()` which is also lame.
+ */
+
+function createWritableStdioStream (fd) {
+  var stream;
+  var tty_wrap = process.binding('tty_wrap');
+
+  // Note stream._type is used for test-module-load-list.js
+
+  switch (tty_wrap.guessHandleType(fd)) {
+    case 'TTY':
+      stream = new tty.WriteStream(fd);
+      stream._type = 'tty';
+
+      // Hack to have stream not keep the event loop alive.
+      // See https://github.com/joyent/node/issues/1726
+      if (stream._handle && stream._handle.unref) {
+        stream._handle.unref();
+      }
+      break;
+
+    case 'FILE':
+      var fs = __webpack_require__(6);
+      stream = new fs.SyncWriteStream(fd, { autoClose: false });
+      stream._type = 'fs';
+      break;
+
+    case 'PIPE':
+    case 'TCP':
+      var net = __webpack_require__(16);
+      stream = new net.Socket({
+        fd: fd,
+        readable: false,
+        writable: true
+      });
+
+      // FIXME Should probably have an option in net.Socket to create a
+      // stream from an existing fd which is writable only. But for now
+      // we'll just add this hack and set the `readable` member to false.
+      // Test: ./node test/fixtures/echo.js < /etc/passwd
+      stream.readable = false;
+      stream.read = null;
+      stream._type = 'pipe';
+
+      // FIXME Hack to have stream not keep the event loop alive.
+      // See https://github.com/joyent/node/issues/1726
+      if (stream._handle && stream._handle.unref) {
+        stream._handle.unref();
+      }
+      break;
+
+    default:
+      // Probably an error on in uv_guess_handle()
+      throw new Error('Implement me. Unknown stream file type!');
+  }
+
+  // For supporting legacy API we put the FD here.
+  stream.fd = fd;
+
+  stream._isStdio = true;
+
+  return stream;
 }
 
 /**
@@ -3088,37 +2957,20 @@ function load() {
  * differently for a particular `debug` instance.
  */
 
-function init(debug) {
-	debug.inspectOpts = {};
+function init (debug) {
+  debug.inspectOpts = {};
 
-	const keys = Object.keys(exports.inspectOpts);
-	for (let i = 0; i < keys.length; i++) {
-		debug.inspectOpts[keys[i]] = exports.inspectOpts[keys[i]];
-	}
+  var keys = Object.keys(exports.inspectOpts);
+  for (var i = 0; i < keys.length; i++) {
+    debug.inspectOpts[keys[i]] = exports.inspectOpts[keys[i]];
+  }
 }
 
-module.exports = __webpack_require__(11)(exports);
-
-const {formatters} = module.exports;
-
 /**
- * Map %o to `util.inspect()`, all on a single line.
+ * Enable namespaces listed in `process.env.DEBUG` initially.
  */
 
-formatters.o = function (v) {
-	this.inspectOpts.colors = this.useColors;
-	return util.inspect(v, this.inspectOpts)
-		.replace(/\s*\n\s*/g, ' ');
-};
-
-/**
- * Map %O to `util.inspect()`, allowing multiple lines if needed.
- */
-
-formatters.O = function (v) {
-	this.inspectOpts.colors = this.useColors;
-	return util.inspect(v, this.inspectOpts);
-};
+exports.enable(load());
 
 
 /***/ }),
@@ -3135,165 +2987,12 @@ module.exports = require("util");
 
 /***/ }),
 /* 16 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, exports) {
 
-"use strict";
-
-const os = __webpack_require__(17);
-const hasFlag = __webpack_require__(18);
-
-const env = process.env;
-
-let forceColor;
-if (hasFlag('no-color') ||
-	hasFlag('no-colors') ||
-	hasFlag('color=false')) {
-	forceColor = false;
-} else if (hasFlag('color') ||
-	hasFlag('colors') ||
-	hasFlag('color=true') ||
-	hasFlag('color=always')) {
-	forceColor = true;
-}
-if ('FORCE_COLOR' in env) {
-	forceColor = env.FORCE_COLOR.length === 0 || parseInt(env.FORCE_COLOR, 10) !== 0;
-}
-
-function translateLevel(level) {
-	if (level === 0) {
-		return false;
-	}
-
-	return {
-		level,
-		hasBasic: true,
-		has256: level >= 2,
-		has16m: level >= 3
-	};
-}
-
-function supportsColor(stream) {
-	if (forceColor === false) {
-		return 0;
-	}
-
-	if (hasFlag('color=16m') ||
-		hasFlag('color=full') ||
-		hasFlag('color=truecolor')) {
-		return 3;
-	}
-
-	if (hasFlag('color=256')) {
-		return 2;
-	}
-
-	if (stream && !stream.isTTY && forceColor !== true) {
-		return 0;
-	}
-
-	const min = forceColor ? 1 : 0;
-
-	if (process.platform === 'win32') {
-		// Node.js 7.5.0 is the first version of Node.js to include a patch to
-		// libuv that enables 256 color output on Windows. Anything earlier and it
-		// won't work. However, here we target Node.js 8 at minimum as it is an LTS
-		// release, and Node.js 7 is not. Windows 10 build 10586 is the first Windows
-		// release that supports 256 colors. Windows 10 build 14931 is the first release
-		// that supports 16m/TrueColor.
-		const osRelease = os.release().split('.');
-		if (
-			Number(process.versions.node.split('.')[0]) >= 8 &&
-			Number(osRelease[0]) >= 10 &&
-			Number(osRelease[2]) >= 10586
-		) {
-			return Number(osRelease[2]) >= 14931 ? 3 : 2;
-		}
-
-		return 1;
-	}
-
-	if ('CI' in env) {
-		if (['TRAVIS', 'CIRCLECI', 'APPVEYOR', 'GITLAB_CI'].some(sign => sign in env) || env.CI_NAME === 'codeship') {
-			return 1;
-		}
-
-		return min;
-	}
-
-	if ('TEAMCITY_VERSION' in env) {
-		return /^(9\.(0*[1-9]\d*)\.|\d{2,}\.)/.test(env.TEAMCITY_VERSION) ? 1 : 0;
-	}
-
-	if (env.COLORTERM === 'truecolor') {
-		return 3;
-	}
-
-	if ('TERM_PROGRAM' in env) {
-		const version = parseInt((env.TERM_PROGRAM_VERSION || '').split('.')[0], 10);
-
-		switch (env.TERM_PROGRAM) {
-			case 'iTerm.app':
-				return version >= 3 ? 3 : 2;
-			case 'Apple_Terminal':
-				return 2;
-			// No default
-		}
-	}
-
-	if (/-256(color)?$/i.test(env.TERM)) {
-		return 2;
-	}
-
-	if (/^screen|^xterm|^vt100|^rxvt|color|ansi|cygwin|linux/i.test(env.TERM)) {
-		return 1;
-	}
-
-	if ('COLORTERM' in env) {
-		return 1;
-	}
-
-	if (env.TERM === 'dumb') {
-		return min;
-	}
-
-	return min;
-}
-
-function getSupportLevel(stream) {
-	const level = supportsColor(stream);
-	return translateLevel(level);
-}
-
-module.exports = {
-	supportsColor: getSupportLevel,
-	stdout: getSupportLevel(process.stdout),
-	stderr: getSupportLevel(process.stderr)
-};
-
+module.exports = require("net");
 
 /***/ }),
 /* 17 */
-/***/ (function(module, exports) {
-
-module.exports = require("os");
-
-/***/ }),
-/* 18 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-module.exports = (flag, argv) => {
-	argv = argv || process.argv;
-	const prefix = flag.startsWith('-') ? '' : (flag.length === 1 ? '-' : '--');
-	const pos = argv.indexOf(prefix + flag);
-	const terminatorPos = argv.indexOf('--');
-	return pos !== -1 && (terminatorPos === -1 ? true : pos < terminatorPos);
-};
-
-
-/***/ }),
-/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -4020,564 +3719,507 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
 
 /***/ }),
+/* 18 */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(19).default;
+
+
+/***/ }),
+/* 19 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _messageformatFormatters = _interopRequireDefault(__webpack_require__(20));
+
+var _compiler = _interopRequireDefault(__webpack_require__(25));
+
+var _utils = __webpack_require__(27);
+
+var _plurals = __webpack_require__(28);
+
+var _runtime = _interopRequireDefault(__webpack_require__(31));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+class MessageFormat {
+  /**
+   * The default locale
+   *
+   * Used by the constructor when no `locale` has been set to initialise the value
+   * of its instance counterpart, `MessageFormat#defaultLocale`.
+   *
+   * @memberof MessageFormat
+   * @default 'en'
+   */
+
+  /** Escape special characaters
+   *
+   *  Surround the characters `{` and `}` in the input string with 'quotes'.
+   *  This will allow those characters to not be considered as MessageFormat
+   *  control characters.
+   *
+   * @memberof MessageFormat
+   * @param {string} str - The input string
+   * @param {boolean} [octothorpe=false] - Include `#` in the escaped characters
+   * @returns {string} The escaped string
+   */
+  static escape(str, octothorpe) {
+    const esc = octothorpe ? /[#{}]/g : /[{}]/g;
+    return String(str).replace(esc, "'$&'");
+  }
+
+  /**
+   * Create a new MessageFormat compiler
+   *
+   * If set, the `locale` parameter limits the compiler to use a subset of the 204
+   * languages' pluralisation rules made available by the Unicode CLDR.
+   *
+   * Leaving `locale` undefined or using an array of strings will create a
+   * MessageFormat instance with multi-language support. To select which to use,
+   * use the second parameter of `{@link MessageFormat#compile compile()}`, or use
+   * message keys corresponding to your locales. The default locale will be the
+   * first entry of the array, or `{@link MessageFormat.defaultLocale defaultLocale}`
+   * if not set.
+   *
+   * A string `locale` will create a single-locale MessageFormat instance.
+   *
+   * Using an object `locale` with all properties of type `function` allows for
+   * the use of custom or externally defined pluralisation rules; in this case
+   *
+   * @class MessageFormat
+   * @classdesc MessageFormat-to-JavaScript compiler
+   * @param {string|string[]|Object} [locale] - The locale(s) to use
+   * @param {Object} [options] - Compiler options
+   * @param {boolean} [options.biDiSupport=false] - Add Unicode control
+   *   characters to all input parts to preserve the integrity of the output
+   *   when mixing LTR and RTL text
+   * @param {Object} [options.customFormatters] - Map of custom formatting
+   *   functions to include. See the {@tutorial guide} for more details.
+   * @param {boolean} [options.pluralKeyChecks=true] - Validate plural and
+   *   selectordinal case keys according to the current locale
+   * @param {boolean} [options.strictNumberSign=false] - Allow `#` only directly
+   *   within a plural or selectordinal case, rather than in any inner select
+   *   case as well.
+   *
+   * ```
+   * import MessageFormat from 'messageformat'
+   * ```
+   */
+  constructor(locale, options) {
+    this.options = Object.assign({
+      biDiSupport: false,
+      customFormatters: null,
+      pluralKeyChecks: true,
+      strictNumberSign: false
+    }, options);
+    this.pluralFuncs = {};
+
+    if (typeof locale === 'string') {
+      this.pluralFuncs[locale] = (0, _plurals.getPlural)(locale, this.options);
+      this.defaultLocale = locale;
+    } else if (Array.isArray(locale)) {
+      locale.forEach(lc => {
+        this.pluralFuncs[lc] = (0, _plurals.getPlural)(lc, this.options);
+      });
+      this.defaultLocale = locale[0];
+    } else {
+      if (locale) {
+        const lcKeys = Object.keys(locale);
+
+        for (let i = 0; i < lcKeys.length; ++i) {
+          const lc = lcKeys[i];
+
+          if (typeof locale[lc] !== 'function') {
+            const errMsg = 'Expected function value for locale ' + String(lc);
+            throw new Error(errMsg);
+          }
+
+          this.pluralFuncs[lc] = locale[lc];
+          if (!this.defaultLocale) this.defaultLocale = lc;
+        }
+      }
+
+      if (this.defaultLocale) {
+        this.hasCustomPluralFuncs = true;
+      } else {
+        this.defaultLocale = MessageFormat.defaultLocale;
+        this.hasCustomPluralFuncs = false;
+      }
+    }
+
+    this.fmt = Object.assign({}, this.options.customFormatters);
+    this.runtime = new _runtime.default(this);
+  }
+  /**
+   * Add custom formatter functions to this MessageFormat instance. See the
+   * {@tutorial guide} for more details.
+   *
+   * The general syntax for calling a formatting function in MessageFormat is
+   * `{var, fn[, arg]}`, where `var` is the variable that will be set by the
+   * user code, `fn` determines the formatting function, and `arg` is an
+   * optional string argument.
+   *
+   * In JavaScript, each formatting function is called with three parameters;
+   * the variable value `v`, the current locale `lc`, and `arg` as a string, or
+   * undefined if not set. `arg` will be trimmed of surrounding whitespace.
+   * Formatting functions should not have side effects.
+   *
+   * @memberof MessageFormat
+   * @instance
+   * @param {Object.<string,function>} fmt - A map of formatting functions
+   * @returns {MessageFormat} The MessageFormat instance, to allow for chaining
+   *
+   * @example
+   * const mf = new MessageFormat('en-GB')
+   * mf.addFormatters({
+   *   upcase: function(v) { return v.toUpperCase() },
+   *   locale: function(v, lc) { return lc },
+   *   prop: function(v, lc, p) { return v[p] }
+   * })
+   * const messages = mf.compile({
+   *   describe: 'This is {VAR, upcase}.',
+   *   locale: 'The current locale is {_, locale}.',
+   *   answer: 'Answer: {obj, prop, a}'
+   * }
+   *
+   * messages.describe({ VAR: 'big' })        // 'This is BIG.'
+   * messages.locale({})                      // 'The current locale is en-GB.'
+   * messages.answer({ obj: {q: 3, a: 42} })  // 'Answer: 42'
+   */
+
+
+  addFormatters(fmt) {
+    const fmtKeys = Object.keys(fmt);
+
+    for (let i = 0; i < fmtKeys.length; ++i) {
+      const name = fmtKeys[i];
+      this.fmt[name] = fmt[name];
+    }
+
+    return this;
+  }
+  /**
+   * Disable the validation of plural & selectordinal keys
+   *
+   * Previous versions of messageformat allowed the use of plural &
+   * selectordinal statements with any keys; now we throw an error when a
+   * statement uses a non-numerical key that will never be matched as a
+   * pluralization category for the current locale.
+   *
+   * Use this method to disable the validation and allow usage as previously.
+   * To re-enable, you'll need to create a new MessageFormat instance.
+   *
+   * @memberof MessageFormat
+   * @instance
+   * @returns {MessageFormat} The MessageFormat instance, to allow for chaining
+   *
+   * @example
+   * const mf = new MessageFormat('en')
+   * const msg = '{X, plural, zero{no answers} one{an answer} other{# answers}}'
+   *
+   * mf.compile(msg)
+   * // Error: Invalid key `zero` for argument `X`. Valid plural keys for this
+   * //        locale are `one`, `other`, and explicit keys like `=0`.
+   *
+   * mf.disablePluralKeyChecks()
+   * mf.compile(msg)({ X: 0 })  // '0 answers'
+   */
+
+
+  disablePluralKeyChecks() {
+    this.options.pluralKeyChecks = false;
+
+    for (const lc in this.pluralFuncs) {
+      const pf = this.pluralFuncs[lc];
+
+      if (pf) {
+        pf.cardinal = [];
+        pf.ordinal = [];
+      }
+    }
+
+    return this;
+  }
+  /**
+   * Enable or disable the addition of Unicode control characters to all input
+   * to preserve the integrity of the output when mixing LTR and RTL text.
+   *
+   * @see http://cldr.unicode.org/development/development-process/design-proposals/bidi-handling-of-structured-text
+   *
+   * @memberof MessageFormat
+   * @instance
+   * @param {boolean} [enable=true]
+   * @returns {MessageFormat} The MessageFormat instance, to allow for chaining
+   *
+   * @example
+   * // upper case stands for RTL characters, output is shown as rendered
+   * const mf = new MessageFormat('en')
+   *
+   * mf.compile('{0} >> {1} >> {2}')(['first', 'SECOND', 'THIRD'])
+   *   // 'first >> THIRD << SECOND'
+   *
+   * mf.setBiDiSupport(true)
+   * mf.compile('{0} >> {1} >> {2}')(['first', 'SECOND', 'THIRD'])
+   *   // 'first >> SECOND >> THIRD'
+   */
+
+
+  setBiDiSupport(enable) {
+    this.options.biDiSupport = !!enable || typeof enable == 'undefined';
+    return this;
+  }
+  /**
+   * According to the ICU MessageFormat spec, a `#` character directly inside a
+   * `plural` or `selectordinal` statement should be replaced by the number
+   * matching the surrounding statement. By default, messageformat will replace
+   * `#` signs with the value of the nearest surrounding `plural` or
+   * `selectordinal` statement.
+   *
+   * Set this to true to follow the stricter ICU MessageFormat spec, and to
+   * throw a runtime error if `#` is used with non-numeric input.
+   *
+   * @memberof MessageFormat
+   * @instance
+   * @param {boolean} [enable=true]
+   * @returns {MessageFormat} The MessageFormat instance, to allow for chaining
+   *
+   * @example
+   * const mf = new MessageFormat('en')
+   * const src = {
+   *   cookie: '#: {X, plural, =0{no cookies} one{a cookie} other{# cookies}}',
+   *   pastry: `{X, plural,
+   *     one {{P, select, cookie{a cookie} other{a pie}}}
+   *     other {{P, select, cookie{# cookies} other{# pies}}}
+   *   }`
+   * }
+   * let messages = mf.compile(src)
+   *
+   * messages.cookie({ X: 3 })            // '#: 3 cookies'
+   * messages.pastry({ X: 3, P: 'pie' })  // '3 pies'
+   *
+   * mf.setStrictNumberSign(true)
+   * messages = mf.compile(src)
+   * messages.pastry({ X: 3, P: 'pie' })  // '# pies'
+   */
+
+
+  setStrictNumberSign(enable) {
+    this.options.strictNumberSign = !!enable || typeof enable == 'undefined';
+    this.runtime.setStrictNumber(this.options.strictNumberSign);
+    return this;
+  }
+  /**
+   * Compile messages into storable functions
+   *
+   * If `messages` is a single string including ICU MessageFormat declarations,
+   * the result of `compile()` is a function taking a single Object parameter
+   * `d` representing each of the input's defined variables.
+   *
+   * If `messages` is a hierarchical structure of such strings, the output of
+   * `compile()` will match that structure, with each string replaced by its
+   * corresponding JavaScript function.
+   *
+   * If the input `messages` -- and therefore the output -- of `compile()` is an
+   * object, the output object will have a `toString(global)` method that may be
+   * used to store or cache the compiled functions to disk, for later inclusion
+   * in any JS environment, without a local MessageFormat instance required. If
+   * its `global` parameter is null or undefined, the result is an ES6 module
+   * with a default export. If `global` is a string containing `.`, the result
+   * will be a script setting its value. Otherwise, the output defaults to an UMD
+   * pattern that sets the value of `global` if used outside of AMD and CommonJS
+   * loaders.
+   *
+   * If `locale` is not set, it will default to
+   * `{@link MessageFormat.defaultLocale defaultLocale}`; using a key at any
+   * depth of `messages` that is a declared locale will set its child elements to
+   * use that locale.
+   *
+   * If `locale` is set, it is used for all messages, ignoring any otherwise
+   * matching locale keys. If the constructor declared any locales, `locale`
+   * needs to be one of them.
+   *
+   * If `compile()` is called with a `messages` object on a MessageFormat
+   * instance that does not specify any locales, it will match keys to *all* 204
+   * available locales. This is really useful if you want your messages to be
+   * completely determined by your data, but may provide surprising results if
+   * your input includes any 2-3 letter strings that are not locale identifiers.
+   *
+   * @memberof MessageFormat
+   * @instance
+   * @param {string|Object} messages - The input message(s) to be compiled, in ICU MessageFormat
+   * @param {string} [locale] - A locale to use for the messages
+   * @returns {function|Object} The first match found for the given locale(s)
+   *
+   * @example
+   * const mf = new MessageFormat('en')
+   * const msg = mf.compile('A {TYPE} example.')
+   *
+   * msg({ TYPE: 'simple' })  // 'A simple example.'
+   *
+   * @example
+   * const mf = new MessageFormat(['en', 'fi'])
+   * const messages = mf.compile({
+   *   en: { a: 'A {TYPE} example.',
+   *         b: 'This is the {COUNT, selectordinal, one{#st} two{#nd} few{#rd} other{#th}} example.' },
+   *   fi: { a: '{TYPE} esimerkki.',
+   *         b: 'Tämä on {COUNT, selectordinal, other{#.}} esimerkki.' }
+   * })
+   *
+   * messages.en.b({ COUNT: 2 })  // 'This is the 2nd example.'
+   * messages.fi.b({ COUNT: 2 })  // 'Tämä on 2. esimerkki.'
+   *
+   * @example
+   * const fs = require('fs')
+   * const mf = new MessageFormat('en')
+   * const msgSet = {
+   *   a: 'A {TYPE} example.',
+   *   b: 'This has {COUNT, plural, one{one member} other{# members}}.',
+   *   c: 'We have {P, number, percent} code coverage.'
+   * }
+   * const msgStr = mf.compile(msgSet).toString('module.exports')
+   * fs.writeFileSync('messages.js', msgStr)
+   *
+   * ...
+   *
+   * const messages = require('./messages')
+   *
+   * messages.a({ TYPE: 'more complex' })  // 'A more complex example.'
+   * messages.b({ COUNT: 3 })              // 'This has 3 members.'
+   */
+
+
+  compile(messages, locale) {
+    function _stringify(obj, level) {
+      if (!level) level = 0;
+      if (typeof obj != 'object') return obj;
+      let indent = '';
+
+      for (let i = 0; i < level; ++i) indent += '  ';
+
+      const o = [];
+
+      for (const k in obj) {
+        const v = _stringify(obj[k], level + 1);
+
+        o.push(`\n${indent}  ${(0, _utils.propname)(k)}: ${v}`);
+      }
+
+      return `{${o.join(',')}\n${indent}}`;
+    }
+
+    let pf = {};
+
+    if (Object.keys(this.pluralFuncs).length === 0) {
+      if (locale) {
+        const pfn0 = (0, _plurals.getPlural)(locale, this.options);
+
+        if (!pfn0) {
+          const lcs = JSON.stringify(locale);
+          throw new Error(`Locale ${lcs} not found!`);
+        }
+
+        pf[locale] = pfn0;
+      } else {
+        locale = this.defaultLocale;
+        pf = (0, _plurals.getAllPlurals)(this.options);
+      }
+    } else if (locale) {
+      const pfn1 = this.pluralFuncs[locale];
+
+      if (!pfn1) {
+        const lcs = JSON.stringify(locale);
+        const pfs = JSON.stringify(this.pluralFuncs);
+        throw new Error(`Locale ${lcs} not found in ${pfs}!`);
+      }
+
+      pf[locale] = pfn1;
+    } else {
+      locale = this.defaultLocale;
+      pf = this.pluralFuncs;
+    }
+
+    const compiler = new _compiler.default(this);
+    const obj = compiler.compile(messages, locale, pf);
+
+    if (typeof messages != 'object') {
+      const fn = new Function('number, plural, select, fmt', (0, _utils.funcname)(locale), 'return ' + obj);
+      const rt = this.runtime;
+      return fn(rt.number, rt.plural, rt.select, this.fmt, pf[locale]);
+    }
+
+    const rtStr = this.runtime.toString(pf, compiler) + '\n';
+
+    const objStr = _stringify(obj);
+
+    const result = new Function(rtStr + 'return ' + objStr)(); // eslint-disable-next-line no-prototype-builtins
+
+    if (result.hasOwnProperty('toString')) throw new Error('The top-level message key `toString` is reserved');
+
+    result.toString = function (global) {
+      if (!global || global === 'export default') {
+        return rtStr + 'export default ' + objStr;
+      } else if (global.indexOf('.') > -1) {
+        return rtStr + global + ' = ' + objStr;
+      } else {
+        return rtStr + ['(function (root, G) {', '  if (typeof define === "function" && define.amd) { define(G); }', '  else if (typeof exports === "object") { module.exports = G; }', '  else { ' + (0, _utils.propname)(global, 'root') + ' = G; }', '})(this, ' + objStr + ');'].join('\n');
+      }
+    };
+
+    return result;
+  }
+
+}
+
+exports.default = MessageFormat;
+MessageFormat.defaultLocale = 'en';
+MessageFormat.formatters = _messageformatFormatters.default;
+
+/***/ }),
 /* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/** @file messageformat.js - ICU PluralFormat + SelectFormat for JavaScript
+/**
+ * @classdesc
+ * Default number formatting functions in the style of ICU's
+ * {@link http://icu-project.org/apiref/icu4j/com/ibm/icu/text/MessageFormat.html simpleArg syntax}
+ * implemented using the
+ * {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl Intl}
+ * object defined by ECMA-402.
  *
- * @author Alex Sexton - @SlexAxton, Eemeli Aro
- * @version 0.3.1
- * @copyright 2012-2016 Alex Sexton, Eemeli Aro, and Contributors
- * @license To use or fork, MIT. To contribute back, Dojo CLA  */
+ * In MessageFormat source, a formatter function is called with the syntax
+ * `{var, name, arg}`, where `var` is a variable, `name` is the formatter name
+ * (by default, either `date`, `duration`, `number` or `time`; `spellout` and
+ * `ordinal` are not supported by default), and `arg` is an optional string
+ * argument.
+ *
+ * In JavaScript, a formatter is a function called with three parameters:
+ *   - The **`value`** of the variable; this can be of any user-defined type
+ *   - The current **`locale`** code
+ *   - The trimmed **`arg`** string value, or `null` if not set
+ *
+ * As formatter functions may be used in a precompiled context, they should not
+ * refer to any variables that are not defined by the function parameters or
+ * within the function body. To add your own formatter, either add it to the
+ * static `MessageFormat.formatters` object, or use
+ * {@link MessageFormat#addFormatters} to add it to a MessageFormat instance.
+ *
+ * @class Formatters
+ * @hideconstructor
+ */
 
-
-/** Utility function for quoting an Object's key value iff required
- *
- * @private  */
-function propname(key, obj) {
-  /* Quote the key if it contains invalid characters or is an
-   * ECMAScript 3rd Edition reserved word.
-   */
-  if (/^[A-Z_$][0-9A-Z_$]*$/i.test(key) &&
-     ['break', 'continue', 'delete', 'else', 'for', 'function', 'if', 'in', 'new',
-      'return', 'this', 'typeof', 'var', 'void', 'while', 'with', 'case', 'catch',
-      'default', 'do', 'finally', 'instanceof', 'switch', 'throw', 'try'].indexOf(key) < 0) {
-    return obj ? obj + '.' + key : key;
-  } else {
-    var jkey = JSON.stringify(key);
-    return obj ? obj + '[' + jkey + ']' : jkey;
-  }
-}
-
-/** Utility formatter function for enforcing Bidi Structured Text by using UCC
- *
- * @private  */
-function bidiMarkText(text, locale) {
-  function isLocaleRTL(locale) {
-    /* list inlined from data extracted from CLDR v27 & v28
-     * to verify/recreate, use the following:
-     *   git clone https://github.com/unicode-cldr/cldr-misc-full.git
-     *   cd cldr-misc-full/main/
-     *   grep characterOrder -r . | tr '"/' '\t' | cut -f2,6 | grep -C4 right-to-left
-     */
-    var rtlLanguages = ['ar', 'ckb', 'fa', 'he', 'ks($|[^bfh])', 'lrc', 'mzn', 'pa-Arab', 'ps', 'ug', 'ur', 'uz-Arab', 'yi'];
-    return new RegExp('^' + rtlLanguages.join('|^')).test(locale);
-  }
-  var mark = JSON.stringify(isLocaleRTL(locale) ? '\u200F' : '\u200E');
-  return mark + ' + ' + text + ' + ' + mark;
-}
-
-/** Create a new message formatter
- *
- * @class
- * @param {string|string[]} [locale="en"] - The locale to use, with fallbacks
- * @param {function} [pluralFunc] - Optional custom pluralization function
- * @param {function[]} [formatters] - Optional custom formatting functions  */
-function MessageFormat(locale, pluralFunc, formatters) {
-  if (!locale) {
-    this.lc = ['en'];
-  } else if (typeof locale == 'string') {
-    this.lc = [];
-    for (var l = locale; l; l = l.replace(/[-_]?[^-_]*$/, '')) this.lc.push(l);
-  } else {
-    this.lc = locale;
-  }
-  if (!pluralFunc) {
-    if (this.lc.every(function(l){
-      pluralFunc = MessageFormat.plurals[l];
-      return !pluralFunc;
-    })) {
-      throw new Error('Plural function for locale `' + this.lc.join(',') + '` not found');
-    }
-  }
-  this.runtime = new Runtime(this.lc[0], pluralFunc, formatters);
-}
-
-module.exports = MessageFormat;
-
-
-/** Parse an input string to its AST
- *
- *  Precompiled from `lib/messageformat-parser.pegjs` by
- *  {@link http://pegjs.org/ PEG.js}. Included in MessageFormat object
- *  to enable testing.
- *
- * @private  */
-MessageFormat._parse = __webpack_require__(21).parse;
-
-
-/** Pluralization functions from
- *  {@link http://github.com/eemeli/make-plural.js make-plural}
- *
- * @memberof MessageFormat
- * @type Object.<string,function>  */
-MessageFormat.plurals = __webpack_require__(22);
-
-
-/** Default number formatting functions in the style of ICU's
- *  {@link http://icu-project.org/apiref/icu4j/com/ibm/icu/text/MessageFormat.html simpleArg syntax}
- *  implemented using the
- *  {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl Intl}
- *  object defined by ECMA-402.
- *
- *  **Note**: Intl is not defined in default Node until 0.11.15 / 0.12.0, so
- *  earlier versions require a {@link https://www.npmjs.com/package/intl polyfill}.
- *  Therefore {@link MessageFormat.withIntlSupport} needs to be true for these
- *  functions to be available for inclusion in the output.
- *
- * @see MessageFormat#setIntlSupport
- *
- * @namespace
- * @memberof MessageFormat
- * @property {function} number - Represent a number as an integer, percent or currency value
- * @property {function} date - Represent a date as a full/long/default/short string
- * @property {function} time - Represent a time as a full/long/default/short string
- *
- * @example
- * var mf = new MessageFormat('en').setIntlSupport(true);
- * mf.currency = 'EUR';
- * var cf = mf.compile('The total is {V,number,currency}.');
- *
- * cf({ V: 5.5 })
- * // 'The total is €5.50.'
- *
- * @example
- * var mf = new MessageFormat('en', null, {number: MessageFormat.number});
- * mf.currency = 'EUR';
- * var cf = mf.compile('The total is {V,number,currency}.');
- *
- * cf({ V: 5.5 })
- * // 'The total is €5.50.'  */
-MessageFormat.formatters = {
-  number: function(self) {
-    return new Function("v,lc,p",
-      "return Intl.NumberFormat(lc,\n" +
-      "    p=='integer' ? {maximumFractionDigits:0}\n" +
-      "  : p=='percent' ? {style:'percent'}\n" +
-      "  : p=='currency' ? {style:'currency', currency:'" + (self.currency || 'USD') + "', minimumFractionDigits:2, maximumFractionDigits:2}\n" +
-      "  : {}).format(v)"
-    );
-  },
-  date: function(v,lc,p) {
-    var o = {day:'numeric', month:'short', year:'numeric'};
-    switch (p) {
-      case 'full': o.weekday = 'long';
-      case 'long': o.month = 'long'; break;
-      case 'short': o.month = 'numeric';
-    }
-    return (new Date(v)).toLocaleDateString(lc, o)
-  },
-  time: function(v,lc,p) {
-    var o = {second:'numeric', minute:'numeric', hour:'numeric'};
-    switch (p) {
-      case 'full': case 'long': o.timeZoneName = 'short'; break;
-      case 'short': delete o.minute;
-    }
-    return (new Date(v)).toLocaleTimeString(lc, o)
-  }
-};
-
-/** Enable or disable the addition of Unicode control characters to all input
- *  to preserve the integrity of the output when mixing LTR and RTL text.
- *
- * @see http://cldr.unicode.org/development/development-process/design-proposals/bidi-handling-of-structured-text
- *
- * @memberof MessageFormat
- * @param {boolean} [enable=true]
- * @returns {MessageFormat} The MessageFormat instance, to allow for chaining
- *
- * @example
- * // upper case stands for RTL characters, output is shown as rendered
- * var mf = new MessageFormat('en');
- *
- * mf.compile('{0} >> {1} >> {2}')(['first', 'SECOND', 'THIRD']);
- * // 'first >> THIRD << SECOND'
- *
- * mf.setBiDiSupport(true);
- * mf.compile('{0} >> {1} >> {2}')(['first', 'SECOND', 'THIRD']);
- * // 'first >> SECOND >> THIRD'  */
-MessageFormat.prototype.setBiDiSupport = function(enable) {
-    this.bidiSupport = !!enable || (typeof enable == 'undefined');
-    return this;
-};
-
-
-/** Enable or disable support for the default formatters, which require the
- *  `Intl` object. Note that this can't be autodetected, as the environment
- *  in which the formatted text is compiled into Javascript functions is not
- *  necessarily the same environment in which they will get executed.
- *
- * @see MessageFormat.formatters
- *
- * @memberof MessageFormat
- * @param {boolean} [enable=true]
- * @returns {MessageFormat} The MessageFormat instance, to allow for chaining
- *
- * @example
- * // Intl is not defined in default Node until 0.11.15 / 0.12.0
- * var Intl = require('intl');
- * var mf = new MessageFormat('en').setIntlSupport(true);
- * mf.currency = 'EUR';
- *
- * mf.compile('The total is {V,number,currency}.')({ V: 5.5 });
- * // 'The total is €5.50.'  */
-MessageFormat.prototype.setIntlSupport = function(enable) {
-    this.withIntlSupport = !!enable || (typeof enable == 'undefined');
-    return this;
-};
-
-
-/** A set of utility functions that are called by the compiled Javascript
- *  functions, these are included locally in the output of {@link
- *  MessageFormat#compile compile()}.
- *
- * @class
- * @param {string} [locale] - The parsed locale
- * @param {function} [pluralFunc] - Pluralization function for the locale
- * @param {function[]} [formatters] - Optional custom formatting functions  */
-function Runtime(locale, pluralFunc, formatters) {
-
-  /** Pluralization functions included in compiled output
-   *
-   * @instance
-   * @type Object.<string,function>  */
-  this.pluralFuncs = {};
-  this.pluralFuncs[locale] = pluralFunc;
-
-  /** Custom formatting functions called by `{var, fn[, args]*}` syntax
-   *
-   *  For examples, see {@link MessageFormat.formatters}
-   *
-   * @instance
-   * @see MessageFormat.formatters
-   * @type Object.<string,function>  */
-  this.fmt = {};
-  if (formatters) for (var f in formatters) {
-    this.fmt[f] = formatters[f];
-  }
-}
-
-Runtime.prototype = {
-
-  /** Utility function for `#` in plural rules
-   *
-   * @param {number} value - The value to operate on
-   * @param {number} [offset=0] - An optional offset, set by the surrounding context  */
-  number: function(value, offset) {
-    if (isNaN(value)) throw new Error("'" + value + "' isn't a number.");
-    return value - (offset || 0);
-  },
-
-  /** Utility function for `{N, plural|selectordinal, ...}`
-   *
-   * @param {number} value - The key to use to find a pluralization rule
-   * @param {number} offset - An offset to apply to `value`
-   * @param {function} lcfunc - A locale function from `pluralFuncs`
-   * @param {Object.<string,string>} data - The object from which results are looked up
-   * @param {?boolean} isOrdinal - If true, use ordinal rather than cardinal rules
-   * @returns {string} The result of the pluralization  */
-  plural: function(value, offset, lcfunc, data, isOrdinal) {
-    if ({}.hasOwnProperty.call(data, value)) return data[value]();
-    if (offset) value -= offset;
-    var key = lcfunc(value, isOrdinal);
-    if (key in data) return data[key]();
-    return data.other();
-  },
-
-  /** Utility function for `{N, select, ...}`
-   *
-   * @param {number} value - The key to use to find a selection
-   * @param {Object.<string,string>} data - The object from which results are looked up
-   * @returns {string} The result of the select statement  */
-  select: function(value, data) {
-    if ({}.hasOwnProperty.call(data, value)) return data[value]();
-    return data.other()
-  },
-
-  /** Custom stringifier
-   *
-   * @example
-   * var mf = new MessageFormat('en');
-   * console.log(mf.runtime.toString())
-   * > var pluralFuncs = {
-   * >   en: function (n, ord) {
-   * >     var s = String(n).split('.'), v0 = !s[1], t0 = Number(s[0]) == n,
-   * >         n10 = t0 && s[0].slice(-1), n100 = t0 && s[0].slice(-2);
-   * >     if (ord) return (n10 == 1 && n100 != 11) ? 'one'
-   * >         : (n10 == 2 && n100 != 12) ? 'two'
-   * >         : (n10 == 3 && n100 != 13) ? 'few'
-   * >         : 'other';
-   * >     return (n == 1 && v0) ? 'one' : 'other';
-   * >   }
-   * > };
-   * > var fmt = {};
-   * > var number = function (value, offset) {
-   * >   if (isNaN(value)) throw new Error("'" + value + "' isn't a number.");
-   * >   return value - (offset || 0);
-   * > };
-   * > var plural = function (value, offset, lcfunc, data, isOrdinal) {
-   * >   if ({}.hasOwnProperty.call(data, value)) return data[value]();
-   * >   if (offset) value -= offset;
-   * >   var key = lcfunc(value, isOrdinal);
-   * >   if (key in data) return data[key]();
-   * >   return data.other();
-   * > };
-   * > var select = function (value, data) {
-   * >   if ({}.hasOwnProperty.call(data, value)) return data[value]();
-   * >   return data.other()
-   * > };  */
-  toString: function () {
-    var _stringify = function(o, level) {
-      if (typeof o != 'object') {
-        var funcStr = o.toString().replace(/^(function )\w*/, '$1');
-        var indent = /([ \t]*)\S.*$/.exec(funcStr);
-        return indent ? funcStr.replace(new RegExp('^' + indent[1], 'mg'), '') : funcStr;
-      }
-      var s = [];
-      for (var i in o) if (i != 'toString') {
-        if (level == 0) s.push('var ' + i + ' = ' + _stringify(o[i], level + 1) + ';\n');
-        else s.push(propname(i) + ': ' + _stringify(o[i], level + 1));
-      }
-      if (level == 0) return s.join('');
-      if (s.length == 0) return '{}';
-      var indent = '  '; while (--level) indent += '  ';
-      return '{\n' + s.join(',\n').replace(/^/gm, indent) + '\n}';
-    };
-    return _stringify(this, 0);
-  }
-};
-
-
-/** Recursively map an AST to its resulting string
- *
- * @memberof MessageFormat
- * @param ast - the Ast node for which the JS code should be generated
- * @private  */
-MessageFormat.prototype._precompile = function(ast, data) {
-  data = data || { keys: {}, offset: {} };
-  var r = [], i, tmp, args = [];
-
-  switch ( ast.type ) {
-    case 'messageFormatPattern':
-      for ( i = 0; i < ast.statements.length; ++i ) {
-        r.push(this._precompile( ast.statements[i], data ));
-      }
-      tmp = r.join(' + ') || '""';
-      return data.pf_count ? tmp : 'function(d) { return ' + tmp + '; }';
-
-    case 'messageFormatElement':
-      data.pf_count = data.pf_count || 0;
-      if ( ast.output ) {
-        var ret = propname(ast.argumentIndex, 'd');
-        return this.bidiSupport ? bidiMarkText(ret, this.lc) : ret;
-      }
-      else {
-        data.keys[data.pf_count] = ast.argumentIndex;
-        return this._precompile( ast.elementFormat, data );
-      }
-      return '';
-
-    case 'elementFormat':
-      args = [ propname(data.keys[data.pf_count], 'd') ];
-      switch (ast.key) {
-        case 'select':
-          args.push(this._precompile(ast.val, data));
-          return 'select(' + args.join(', ') + ')';
-        case 'selectordinal':
-          args = args.concat([ 0, propname(this.lc[0], 'pluralFuncs'), this._precompile(ast.val, data), 1 ]);
-          return 'plural(' + args.join(', ') + ')';
-        case 'plural':
-          data.offset[data.pf_count || 0] = ast.val.offset || 0;
-          args = args.concat([ data.offset[data.pf_count] || 0, propname(this.lc[0], 'pluralFuncs'), this._precompile(ast.val, data) ]);
-          return 'plural(' + args.join(', ') + ')';
-        default:
-          if (this.withIntlSupport && !(ast.key in this.runtime.fmt) && (ast.key in MessageFormat.formatters)) {
-            tmp = MessageFormat.formatters[ast.key];
-            this.runtime.fmt[ast.key] = (typeof tmp(this) == 'function') ? tmp(this) : tmp;
-          }
-          args.push(JSON.stringify(this.lc));
-          if (ast.val && ast.val.length) args.push(JSON.stringify(ast.val.length == 1 ? ast.val[0] : ast.val));
-          return 'fmt.' + ast.key + '(' + args.join(', ') + ')';
-      }
-
-    case 'pluralFormatPattern':
-    case 'selectFormatPattern':
-      data.pf_count = data.pf_count || 0;
-      if (ast.type == 'selectFormatPattern') data.offset[data.pf_count] = 0;
-      var needOther = true;
-      for (i = 0; i < ast.pluralForms.length; ++i) {
-        var key = ast.pluralForms[i].key;
-        if (key === 'other') needOther = false;
-        var data_copy = JSON.parse(JSON.stringify(data));
-        data_copy.pf_count++;
-        r.push(propname(key) + ': function() { return ' + this._precompile(ast.pluralForms[i].val, data_copy) + ';}');
-      }
-      if (needOther) throw new Error("No 'other' form found in " + ast.type + " " + data.pf_count);
-      return '{ ' + r.join(', ') + ' }';
-
-    case 'string':
-      return JSON.stringify(ast.val || "");
-
-    case 'octothorpe':
-      if (!data.pf_count) return '"#"';
-      args = [ propname(data.keys[data.pf_count-1], 'd') ];
-      if (data.offset[data.pf_count-1]) args.push(data.offset[data.pf_count-1]);
-      return 'number(' + args.join(', ') + ')';
-
-    default:
-      throw new Error( 'Bad AST type: ' + ast.type );
-  }
-};
-
-/** Compile messages into an executable function with clean string
- *  representation.
- *
- *  If `messages` is a single string including ICU MessageFormat declarations,
- *  `opt` is ignored and the returned function takes a single Object parameter
- *  `d` representing each of the input's defined variables. The returned
- *  function will be defined in a local scope that includes all the required
- *  runtime variables.
- *
- *  If `messages` is a map of keys to strings, or a map of namespace keys to
- *  such key/string maps, the returned function will fill the specified global
- *  with javascript functions matching the structure of the input. In such use,
- *  the result of `compile()` may be serialized using its `toString()` method,
- *  including all required runtime function definitions. If `opt.global` is
- *  null, calling the output function will return the object itself.
- *
- *  Together, the input parameters should match the following patterns:
- *  ```js
- *  messages = "string" || { key0: "string0", key1: "string1", ... } || {
- *    ns0: { key0: "string0", key1: "string1", ...  },
- *    ns1: { key0: "string0", key1: "string1", ...  },
- *    ...
- *  }
- *
- *  opt = null || {
- *    locale: null || {
- *      ns0: "lc0" || [ "lc0", ... ],
- *      ns1: "lc1" || [ "lc1", ... ],
- *      ...
- *    },
- *    global: null || "module.exports" || "exports" || "i18n" || ...
- *  }
- *  ```
- *
- * @memberof MessageFormat
- * @param {string|Object}
- *     messages - The input message(s) to be compiled, in ICU MessageFormat
- * @param {Object} [opt={}] - Options controlling output for non-simple intput
- * @param {Object} [opt.locale] - The locales to use for the messages, with a
- *     structure matching that of `messages`
- * @param {string} [opt.global=""] - The global variable that the output
- *     function should use, or a null string for none. "exports" and
- *     "module.exports" are recognised as special cases.
- * @returns {function} The first match found for the given locale(s)
- *
- * @example
- * var mf = new MessageFormat('en');
- * var cf = mf.compile('A {TYPE} example.');
- *
- * cf({ TYPE: 'simple' })
- * // 'A simple example.'
- *
- * cf.toString()
- * // 'function (d) { return "A " + d.TYPE + " example."; }'
- *
- * @example
- * var fs = require('fs');
- * var mf = new MessageFormat('en');
- * var msgSet = {
- *   a: 'A {TYPE} example.',
- *   b: 'This has {COUNT, plural, one{one member} other{# members}}.'
- * };
- * var cfSet = mf.compile(msgSet, { global: 'module.exports' });
- * var str = cfSet.toString().replace(/^[^{]*{/, '').replace(/}\s*$/, '').trim();
- * fs.writeFileSync('messages.js', str);
- * ...
- * var messages = require('./messages');
- *
- * messages.a({ TYPE: 'more complex' })
- * // 'A more complex example.'
- *
- * messages.b({ COUNT: 2 })
- * // 'This has 2 members.'
- *
- * @example
- * var mf = new MessageFormat('en');
- * mf.runtime.pluralFuncs.fi = MessageFormat.plurals.fi;
- * mf.compile({
- *   en: { a: 'A {TYPE} example.',
- *         b: 'This is the {COUNT, selectordinal, one{#st} two{#nd} few{#rd} other{#th}} example.' },
- *   fi: { a: '{TYPE} esimerkki.',
- *         b: 'Tämä on {COUNT, selectordinal, other{#.}} esimerkki.' }
- * }, {
- *   locale: { en: 'en', fi: 'fi' },
- *   global: 'i18n'
- * })(this);
- *
- * i18n.en.b({ COUNT: 3 })
- * // 'This is the 3rd example.'
- *
- * i18n.fi.b({ COUNT: 3 })
- * // 'Tämä on 3. esimerkki.'  */
-MessageFormat.prototype.compile = function ( messages, opt ) {
-  var r = {}, lc0 = this.lc,
-      compileMsg = function(self, msg) {
-        try {
-          var ast = MessageFormat._parse(msg);
-          return self._precompile(ast);
-        } catch (e) {
-          throw new Error((ast ? 'Precompiler' : 'Parser') + ' error: ' + e.toString());
-        }
-      },
-      stringify = function(r, level) {
-        if (!level) level = 0;
-        if (typeof r != 'object') return r;
-        var o = [], indent = '';
-        for (var i = 0; i < level; ++i) indent += '  ';
-        for (var k in r) o.push('\n' + indent + '  ' + propname(k) + ': ' + stringify(r[k], level + 1));
-        return '{' + o.join(',') + '\n' + indent + '}';
-      };
-
-  if (typeof messages == 'string') {
-    var f = new Function(
-        'number, plural, select, pluralFuncs, fmt',
-        'return ' + compileMsg(this, messages));
-    return f(this.runtime.number, this.runtime.plural, this.runtime.select,
-        this.runtime.pluralFuncs, this.runtime.fmt);
-  }
-
-  opt = opt || {};
-
-  for (var ns in messages) {
-    if (opt.locale) this.lc = opt.locale[ns] && [].concat(opt.locale[ns]) || lc0;
-    if (typeof messages[ns] == 'string') {
-      try { r[ns] = compileMsg(this, messages[ns]); }
-      catch (e) { e.message = e.message.replace(':', ' with `' + ns + '`:'); throw e; }
-    } else {
-      r[ns] = {};
-      for (var key in messages[ns]) {
-        try { r[ns][key] = compileMsg(this, messages[ns][key]); }
-        catch (e) { e.message = e.message.replace(':', ' with `' + key + '` in `' + ns + '`:'); throw e; }
-      }
-    }
-  }
-
-  this.lc = lc0;
-  var s = this.runtime.toString() + '\n';
-  switch (opt.global || '') {
-    case 'exports':
-      var o = [];
-      for (var k in r) o.push(propname(k, 'exports') + ' = ' + stringify(r[k]));
-      return new Function(s + o.join(';\n'));
-    case 'module.exports':
-      return new Function(s + 'module.exports = ' + stringify(r));
-    case '':
-      return new Function(s + 'return ' + stringify(r));
-    default:
-      return new Function('G', s + propname(opt.global, 'G') + ' = ' + stringify(r));
-  }
+module.exports = {
+  date: __webpack_require__(21),
+  duration: __webpack_require__(22),
+  number: __webpack_require__(23),
+  time: __webpack_require__(24)
 };
 
 
@@ -4585,424 +4227,898 @@ MessageFormat.prototype.compile = function ( messages, opt ) {
 /* 21 */
 /***/ (function(module, exports) {
 
-module.exports = (function() {
-  "use strict";
+/* eslint-disable no-fallthrough */
 
-  /*
-   * Generated by PEG.js 0.9.0.
+/** Represent a date as a short/default/long/full string
+ *
+ * The input value needs to be in a form that the
+ * {@link https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Date Date object}
+ * can process using its single-argument form, `new Date(value)`.
+ *
+ * @memberof Formatters
+ * @param {number|string} value - Either a Unix epoch time in milliseconds, or a string value representing a date
+ * @param {string} [type='default'] - One of `'short'`, `'default'`, `'long'` , or `full`
+ *
+ * @example
+ * var mf = new MessageFormat(['en', 'fi']);
+ *
+ * mf.compile('Today is {T, date}')({ T: Date.now() })
+ * // 'Today is Feb 21, 2016'
+ *
+ * mf.compile('Tänään on {T, date}', 'fi')({ T: Date.now() })
+ * // 'Tänään on 21. helmikuuta 2016'
+ *
+ * mf.compile('Unix time started on {T, date, full}')({ T: 0 })
+ * // 'Unix time started on Thursday, January 1, 1970'
+ *
+ * var cf = mf.compile('{sys} became operational on {d0, date, short}');
+ * cf({ sys: 'HAL 9000', d0: '12 January 1999' })
+ * // 'HAL 9000 became operational on 1/12/1999'
+ */
+function date(v, lc, p) {
+  var o = { day: 'numeric', month: 'short', year: 'numeric' };
+  switch (p) {
+    case 'full':
+      o.weekday = 'long';
+    case 'long':
+      o.month = 'long';
+      break;
+    case 'short':
+      o.month = 'numeric';
+  }
+  return new Date(v).toLocaleDateString(lc, o);
+}
+
+module.exports = function() {
+  return date;
+};
+
+
+/***/ }),
+/* 22 */
+/***/ (function(module, exports) {
+
+/**
+ * Represent a duration in seconds as a string
+ *
+ * Input should be a finite number; output will include one or two `:`
+ * separators, and match the pattern `hhhh:mm:ss`, possibly with a leading `-`
+ * for negative values and a trailing `.sss` part for non-integer input
+ *
+ * @memberof Formatters
+ * @param {number|string} value - A finite number, or its string representation
+ *
+ * @example
+ * var mf = new MessageFormat();
+ *
+ * mf.compile('It has been {D, duration}')({ D: 123 })
+ * // 'It has been 2:03'
+ *
+ * mf.compile('Countdown: {D, duration}')({ D: -151200.42 })
+ * // 'Countdown: -42:00:00.420'
+ */
+function duration(value) {
+  if (!isFinite(value)) return String(value);
+  var sign = '';
+  if (value < 0) {
+    sign = '-';
+    value = Math.abs(value);
+  } else {
+    value = Number(value);
+  }
+  var sec = value % 60;
+  var parts = [Math.round(sec) === sec ? sec : sec.toFixed(3)];
+  if (value < 60) {
+    parts.unshift(0); // at least one : is required
+  } else {
+    value = Math.round((value - parts[0]) / 60);
+    parts.unshift(value % 60); // minutes
+    if (value >= 60) {
+      value = Math.round((value - parts[0]) / 60);
+      parts.unshift(value); // hours
+    }
+  }
+  var first = parts.shift();
+  return (
+    sign +
+    first +
+    ':' +
+    parts
+      .map(function(n) {
+        return n < 10 ? '0' + String(n) : String(n);
+      })
+      .join(':')
+  );
+}
+
+module.exports = function() {
+  return duration;
+};
+
+
+/***/ }),
+/* 23 */
+/***/ (function(module, exports) {
+
+/* global CURRENCY, Intl */
+
+/** Represent a number as an integer, percent or currency value
+ *
+ *  Available in MessageFormat strings as `{VAR, number, integer|percent|currency}`.
+ *  Internally, calls Intl.NumberFormat with appropriate parameters. `currency` will
+ *  default to USD; to change, set `MessageFormat#currency` to the appropriate
+ *  three-letter currency code, or use the `currency:EUR` form of the argument.
+ *
+ * @memberof Formatters
+ * @param {number} value - The value to operate on
+ * @param {string} type - One of `'integer'`, `'percent'` , `'currency'`, or `/currency:[A-Z]{3}/`
+ *
+ * @example
+ * var mf = new MessageFormat('en');
+ * mf.currency = 'EUR';  // needs to be set before first compile() call
+ *
+ * mf.compile('{N} is almost {N, number, integer}')({ N: 3.14 })
+ * // '3.14 is almost 3'
+ *
+ * mf.compile('{P, number, percent} complete')({ P: 0.99 })
+ * // '99% complete'
+ *
+ * mf.compile('The total is {V, number, currency}.')({ V: 5.5 })
+ * // 'The total is €5.50.'
+ *
+ * mf.compile('The total is {V, number, currency:GBP}.')({ V: 5.5 })
+ * // 'The total is £5.50.'
+ */
+
+function number(value, lc, arg) {
+  var a = (arg && arg.split(':')) || [];
+  var opt = {
+    integer: { maximumFractionDigits: 0 },
+    percent: { style: 'percent' },
+    currency: {
+      style: 'currency',
+      currency: (a[1] && a[1].trim()) || CURRENCY,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }
+  };
+  return new Intl.NumberFormat(lc, opt[a[0]] || {}).format(value);
+}
+
+module.exports = function(mf) {
+  var parts = number
+    .toString()
+    .replace('CURRENCY', JSON.stringify(mf.currency || 'USD'))
+    .match(/\(([^)]*)\)[^{]*{([\s\S]*)}/);
+  return new Function(parts[1], parts[2]);
+};
+
+
+/***/ }),
+/* 24 */
+/***/ (function(module, exports) {
+
+/** Represent a time as a short/default/long string
+ *
+ * The input value needs to be in a form that the
+ * {@link https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Date Date object}
+ * can process using its single-argument form, `new Date(value)`.
+ *
+ * @memberof Formatters
+ * @param {number|string} value - Either a Unix epoch time in milliseconds, or a string value representing a date
+ * @param {string} [type='default'] - One of `'short'`, `'default'`, `'long'` , or `full`
+ *
+ * @example
+ * var mf = new MessageFormat(['en', 'fi']);
+ *
+ * mf.compile('The time is now {T, time}')({ T: Date.now() })
+ * // 'The time is now 11:26:35 PM'
+ *
+ * mf.compile('Kello on nyt {T, time}', 'fi')({ T: Date.now() })
+ * // 'Kello on nyt 23.26.35'
+ *
+ * var cf = mf.compile('The Eagle landed at {T, time, full} on {T, date, full}');
+ * cf({ T: '1969-07-20 20:17:40 UTC' })
+ * // 'The Eagle landed at 10:17:40 PM GMT+2 on Sunday, July 20, 1969'
+ */
+function time(v, lc, p) {
+  var o = { second: 'numeric', minute: 'numeric', hour: 'numeric' };
+  switch (p) {
+    case 'full':
+    case 'long':
+      o.timeZoneName = 'short';
+      break;
+    case 'short':
+      delete o.second;
+  }
+  return new Date(v).toLocaleTimeString(lc, o);
+}
+
+module.exports = function() {
+  return time;
+};
+
+
+/***/ }),
+/* 25 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _messageformatParser = __webpack_require__(26);
+
+var _utils = __webpack_require__(27);
+
+/** @private */
+class Compiler {
+  /** Creates a new message compiler. Called internally from {@link MessageFormat#compile}.
    *
-   * http://pegjs.org/
+   * @private
+   * @param {MessageFormat} mf - A MessageFormat instance
+   * @property {object} locales - The locale identifiers that are used by the compiled functions
+   * @property {object} runtime - Names of the core runtime functions that are used by the compiled functions
+   * @property {object} formatters - The formatter functions that are used by the compiled functions
+   */
+  constructor(mf) {
+    this.mf = mf;
+    this.lc = null;
+    this.locales = {};
+    this.runtime = {};
+    this.formatters = {};
+  }
+  /** Recursively compile a string or a tree of strings to JavaScript function sources
+   *
+   *  If `src` is an object with a key that is also present in `plurals`, the key
+   *  in question will be used as the locale identifier for its value. To disable
+   *  the compile-time checks for plural & selectordinal keys while maintaining
+   *  multi-locale support, use falsy values in `plurals`.
+   *
+   * @private
+   * @param {string|object} src - the source for which the JS code should be generated
+   * @param {string} lc - the default locale
+   * @param {object} plurals - a map of pluralization keys for all available locales
    */
 
-  function peg$subclass(child, parent) {
-    function ctor() { this.constructor = child; }
-    ctor.prototype = parent.prototype;
-    child.prototype = new ctor();
-  }
 
-  function peg$SyntaxError(message, expected, found, location) {
-    this.message  = message;
-    this.expected = expected;
-    this.found    = found;
-    this.location = location;
-    this.name     = "SyntaxError";
+  compile(src, lc, plurals) {
+    if (typeof src != 'object') {
+      this.lc = lc;
+      const pc = plurals[lc] || {
+        cardinal: [],
+        ordinal: []
+      };
+      pc.strict = !!this.mf.options.strictNumberSign;
+      const r = (0, _messageformatParser.parse)(src, pc).map(token => this.token(token));
+      return `function(d) { return ${r.join(' + ') || '""'}; }`;
+    } else {
+      const result = {};
 
-    if (typeof Error.captureStackTrace === "function") {
-      Error.captureStackTrace(this, peg$SyntaxError);
-    }
-  }
-
-  peg$subclass(peg$SyntaxError, Error);
-
-  function peg$parse(input) {
-    var options = arguments.length > 1 ? arguments[1] : {},
-        parser  = this,
-
-        peg$FAILED = {},
-
-        peg$startRuleFunctions = { start: peg$parsestart },
-        peg$startRuleFunction  = peg$parsestart,
-
-        peg$c0 = function(st) {
-              return { type: 'messageFormatPattern', statements: st };
-            },
-        peg$c1 = "{",
-        peg$c2 = { type: "literal", value: "{", description: "\"{\"" },
-        peg$c3 = ",",
-        peg$c4 = { type: "literal", value: ",", description: "\",\"" },
-        peg$c5 = "}",
-        peg$c6 = { type: "literal", value: "}", description: "\"}\"" },
-        peg$c7 = function(argIdx, efmt) {
-              var res = {
-                type: "messageFormatElement",
-                argumentIndex: argIdx
-              };
-              if (efmt && efmt.length) {
-                res.elementFormat = efmt[1];
-              } else {
-                res.output = true;
-              }
-              return res;
-            },
-        peg$c8 = "plural",
-        peg$c9 = { type: "literal", value: "plural", description: "\"plural\"" },
-        peg$c10 = function(t, s) {
-              return { type: "elementFormat", key: t, val: s };
-            },
-        peg$c11 = "selectordinal",
-        peg$c12 = { type: "literal", value: "selectordinal", description: "\"selectordinal\"" },
-        peg$c13 = "select",
-        peg$c14 = { type: "literal", value: "select", description: "\"select\"" },
-        peg$c15 = function(t, p) {
-              return { type: "elementFormat", key: t, val: p };
-            },
-        peg$c16 = function(op, pf) {
-              return { type: "pluralFormatPattern", pluralForms: pf, offset: op || 0 };
-            },
-        peg$c17 = "offset",
-        peg$c18 = { type: "literal", value: "offset", description: "\"offset\"" },
-        peg$c19 = ":",
-        peg$c20 = { type: "literal", value: ":", description: "\":\"" },
-        peg$c21 = function(d) { return d; },
-        peg$c22 = function(k, mfp) {
-              return { key: k, val: mfp };
-            },
-        peg$c23 = function(i) { return i; },
-        peg$c24 = "=",
-        peg$c25 = { type: "literal", value: "=", description: "\"=\"" },
-        peg$c26 = function(pf) { return { type: "selectFormatPattern", pluralForms: pf }; },
-        peg$c27 = function(p) { return p; },
-        peg$c28 = "#",
-        peg$c29 = { type: "literal", value: "#", description: "\"#\"" },
-        peg$c30 = function() { return {type: 'octothorpe'}; },
-        peg$c31 = function(s) { return { type: "string", val: s.join('') }; },
-        peg$c32 = { type: "other", description: "identifier" },
-        peg$c33 = /^[0-9a-zA-Z$_]/,
-        peg$c34 = { type: "class", value: "[0-9a-zA-Z$_]", description: "[0-9a-zA-Z$_]" },
-        peg$c35 = /^[^ \t\n\r,.+={}]/,
-        peg$c36 = { type: "class", value: "[^ \\t\\n\\r,.+={}]", description: "[^ \\t\\n\\r,.+={}]" },
-        peg$c37 = function(s) { return s; },
-        peg$c38 = function(chars) { return chars.join(''); },
-        peg$c39 = /^[^{}#\\\0-\x1F \t\n\r]/,
-        peg$c40 = { type: "class", value: "[^{}#\\\\\\0-\\x1F\\x7f \\t\\n\\r]", description: "[^{}#\\\\\\0-\\x1F\\x7f \\t\\n\\r]" },
-        peg$c41 = function(x) { return x; },
-        peg$c42 = "\\\\",
-        peg$c43 = { type: "literal", value: "\\\\", description: "\"\\\\\\\\\"" },
-        peg$c44 = function() { return "\\"; },
-        peg$c45 = "\\#",
-        peg$c46 = { type: "literal", value: "\\#", description: "\"\\\\#\"" },
-        peg$c47 = function() { return "#"; },
-        peg$c48 = "\\{",
-        peg$c49 = { type: "literal", value: "\\{", description: "\"\\\\{\"" },
-        peg$c50 = function() { return "\u007B"; },
-        peg$c51 = "\\}",
-        peg$c52 = { type: "literal", value: "\\}", description: "\"\\\\}\"" },
-        peg$c53 = function() { return "\u007D"; },
-        peg$c54 = "\\u",
-        peg$c55 = { type: "literal", value: "\\u", description: "\"\\\\u\"" },
-        peg$c56 = function(h1, h2, h3, h4) {
-              return String.fromCharCode(parseInt("0x" + h1 + h2 + h3 + h4));
-            },
-        peg$c57 = /^[0-9]/,
-        peg$c58 = { type: "class", value: "[0-9]", description: "[0-9]" },
-        peg$c59 = function(ds) {
-            //the number might start with 0 but must not be interpreted as an octal number
-            //Hence, the base is passed to parseInt explicitely
-            return parseInt((ds.join('')), 10);
-          },
-        peg$c60 = /^[0-9a-fA-F]/,
-        peg$c61 = { type: "class", value: "[0-9a-fA-F]", description: "[0-9a-fA-F]" },
-        peg$c62 = { type: "other", description: "whitespace" },
-        peg$c63 = function(w) { return w.join(''); },
-        peg$c64 = /^[ \t\n\r]/,
-        peg$c65 = { type: "class", value: "[ \\t\\n\\r]", description: "[ \\t\\n\\r]" },
-
-        peg$currPos          = 0,
-        peg$savedPos         = 0,
-        peg$posDetailsCache  = [{ line: 1, column: 1, seenCR: false }],
-        peg$maxFailPos       = 0,
-        peg$maxFailExpected  = [],
-        peg$silentFails      = 0,
-
-        peg$result;
-
-    if ("startRule" in options) {
-      if (!(options.startRule in peg$startRuleFunctions)) {
-        throw new Error("Can't start parsing from rule \"" + options.startRule + "\".");
+      for (var key in src) {
+        // eslint-disable-next-line no-prototype-builtins
+        var lcKey = plurals.hasOwnProperty(key) ? key : lc;
+        result[key] = this.compile(src[key], lcKey, plurals);
       }
 
-      peg$startRuleFunction = peg$startRuleFunctions[options.startRule];
+      return result;
     }
+  }
+  /** @private */
 
-    function text() {
-      return input.substring(peg$savedPos, peg$currPos);
-    }
 
-    function location() {
-      return peg$computeLocation(peg$savedPos, peg$currPos);
-    }
+  cases(token, plural) {
+    let needOther = token.type === 'select' || !this.mf.hasCustomPluralFuncs;
+    const r = token.cases.map(({
+      key,
+      tokens
+    }) => {
+      if (key === 'other') needOther = false;
+      const s = tokens.map(tok => this.token(tok, plural));
+      return (0, _utils.propname)(key) + ': ' + (s.join(' + ') || '""');
+    });
+    if (needOther) throw new Error("No 'other' form found in " + JSON.stringify(token));
+    return `{ ${r.join(', ')} }`;
+  }
+  /** @private */
 
-    function expected(description) {
-      throw peg$buildException(
-        null,
-        [{ type: "other", description: description }],
-        input.substring(peg$savedPos, peg$currPos),
-        peg$computeLocation(peg$savedPos, peg$currPos)
-      );
-    }
 
-    function error(message) {
-      throw peg$buildException(
-        message,
-        null,
-        input.substring(peg$savedPos, peg$currPos),
-        peg$computeLocation(peg$savedPos, peg$currPos)
-      );
-    }
+  token(token, plural) {
+    if (typeof token == 'string') return JSON.stringify(token);
+    let fn;
+    let args = [(0, _utils.propname)(token.arg, 'd')];
 
-    function peg$computePosDetails(pos) {
-      var details = peg$posDetailsCache[pos],
-          p, ch;
+    switch (token.type) {
+      case 'argument':
+        return this.mf.options.biDiSupport ? (0, _utils.biDiMarkText)(args[0], this.lc) : args[0];
 
-      if (details) {
-        return details;
-      } else {
-        p = pos - 1;
-        while (!peg$posDetailsCache[p]) {
-          p--;
+      case 'select':
+        fn = 'select';
+        if (plural && this.mf.options.strictNumberSign) plural = null;
+        args.push(this.cases(token, plural));
+        this.runtime.select = true;
+        break;
+
+      case 'selectordinal':
+        fn = 'plural';
+        args.push(0, (0, _utils.funcname)(this.lc), this.cases(token, token), 1);
+        this.locales[this.lc] = true;
+        this.runtime.plural = true;
+        break;
+
+      case 'plural':
+        fn = 'plural';
+        args.push(token.offset || 0, (0, _utils.funcname)(this.lc), this.cases(token, token));
+        this.locales[this.lc] = true;
+        this.runtime.plural = true;
+        break;
+
+      case 'function':
+        if (!(token.key in this.mf.fmt) && token.key in this.mf.constructor.formatters) {
+          const fmt = this.mf.constructor.formatters[token.key];
+          this.mf.fmt[token.key] = fmt(this.mf);
         }
 
-        details = peg$posDetailsCache[p];
-        details = {
-          line:   details.line,
-          column: details.column,
-          seenCR: details.seenCR
-        };
+        if (!this.mf.fmt[token.key]) throw new Error(`Formatting function ${JSON.stringify(token.key)} not found!`);
+        args.push(JSON.stringify(this.lc));
 
-        while (p < pos) {
-          ch = input.charAt(p);
-          if (ch === "\n") {
-            if (!details.seenCR) { details.line++; }
-            details.column = 1;
-            details.seenCR = false;
-          } else if (ch === "\r" || ch === "\u2028" || ch === "\u2029") {
-            details.line++;
-            details.column = 1;
-            details.seenCR = true;
-          } else {
-            details.column++;
-            details.seenCR = false;
+        if (token.param) {
+          if (plural && this.mf.options.strictNumberSign) plural = null;
+          const s = token.param.tokens.map(tok => this.token(tok, plural));
+          args.push('(' + (s.join(' + ') || '""') + ').trim()');
+        }
+
+        fn = (0, _utils.propname)(token.key, 'fmt');
+        this.formatters[token.key] = true;
+        break;
+
+      case 'octothorpe':
+        if (!plural) return '"#"';
+        fn = 'number';
+        args = [(0, _utils.propname)(plural.arg, 'd'), JSON.stringify(plural.arg)];
+        if (plural.offset) args.push(plural.offset);
+        this.runtime.number = true;
+        break;
+    }
+
+    if (!fn) throw new Error('Parser error for token ' + JSON.stringify(token));
+    return `${fn}(${args.join(', ')})`;
+  }
+
+}
+
+exports.default = Compiler;
+
+/***/ }),
+/* 26 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/*
+ * Generated by PEG.js 0.10.0.
+ *
+ * http://pegjs.org/
+ */
+
+
+
+function peg$subclass(child, parent) {
+  function ctor() { this.constructor = child; }
+  ctor.prototype = parent.prototype;
+  child.prototype = new ctor();
+}
+
+function peg$SyntaxError(message, expected, found, location) {
+  this.message  = message;
+  this.expected = expected;
+  this.found    = found;
+  this.location = location;
+  this.name     = "SyntaxError";
+
+  if (typeof Error.captureStackTrace === "function") {
+    Error.captureStackTrace(this, peg$SyntaxError);
+  }
+}
+
+peg$subclass(peg$SyntaxError, Error);
+
+peg$SyntaxError.buildMessage = function(expected, found) {
+  var DESCRIBE_EXPECTATION_FNS = {
+        literal: function(expectation) {
+          return "\"" + literalEscape(expectation.text) + "\"";
+        },
+
+        "class": function(expectation) {
+          var escapedParts = "",
+              i;
+
+          for (i = 0; i < expectation.parts.length; i++) {
+            escapedParts += expectation.parts[i] instanceof Array
+              ? classEscape(expectation.parts[i][0]) + "-" + classEscape(expectation.parts[i][1])
+              : classEscape(expectation.parts[i]);
           }
 
-          p++;
-        }
-
-        peg$posDetailsCache[pos] = details;
-        return details;
-      }
-    }
-
-    function peg$computeLocation(startPos, endPos) {
-      var startPosDetails = peg$computePosDetails(startPos),
-          endPosDetails   = peg$computePosDetails(endPos);
-
-      return {
-        start: {
-          offset: startPos,
-          line:   startPosDetails.line,
-          column: startPosDetails.column
+          return "[" + (expectation.inverted ? "^" : "") + escapedParts + "]";
         },
-        end: {
-          offset: endPos,
-          line:   endPosDetails.line,
-          column: endPosDetails.column
+
+        any: function(expectation) {
+          return "any character";
+        },
+
+        end: function(expectation) {
+          return "end of input";
+        },
+
+        other: function(expectation) {
+          return expectation.description;
         }
       };
+
+  function hex(ch) {
+    return ch.charCodeAt(0).toString(16).toUpperCase();
+  }
+
+  function literalEscape(s) {
+    return s
+      .replace(/\\/g, '\\\\')
+      .replace(/"/g,  '\\"')
+      .replace(/\0/g, '\\0')
+      .replace(/\t/g, '\\t')
+      .replace(/\n/g, '\\n')
+      .replace(/\r/g, '\\r')
+      .replace(/[\x00-\x0F]/g,          function(ch) { return '\\x0' + hex(ch); })
+      .replace(/[\x10-\x1F\x7F-\x9F]/g, function(ch) { return '\\x'  + hex(ch); });
+  }
+
+  function classEscape(s) {
+    return s
+      .replace(/\\/g, '\\\\')
+      .replace(/\]/g, '\\]')
+      .replace(/\^/g, '\\^')
+      .replace(/-/g,  '\\-')
+      .replace(/\0/g, '\\0')
+      .replace(/\t/g, '\\t')
+      .replace(/\n/g, '\\n')
+      .replace(/\r/g, '\\r')
+      .replace(/[\x00-\x0F]/g,          function(ch) { return '\\x0' + hex(ch); })
+      .replace(/[\x10-\x1F\x7F-\x9F]/g, function(ch) { return '\\x'  + hex(ch); });
+  }
+
+  function describeExpectation(expectation) {
+    return DESCRIBE_EXPECTATION_FNS[expectation.type](expectation);
+  }
+
+  function describeExpected(expected) {
+    var descriptions = new Array(expected.length),
+        i, j;
+
+    for (i = 0; i < expected.length; i++) {
+      descriptions[i] = describeExpectation(expected[i]);
     }
 
-    function peg$fail(expected) {
-      if (peg$currPos < peg$maxFailPos) { return; }
+    descriptions.sort();
 
-      if (peg$currPos > peg$maxFailPos) {
-        peg$maxFailPos = peg$currPos;
-        peg$maxFailExpected = [];
+    if (descriptions.length > 0) {
+      for (i = 1, j = 1; i < descriptions.length; i++) {
+        if (descriptions[i - 1] !== descriptions[i]) {
+          descriptions[j] = descriptions[i];
+          j++;
+        }
+      }
+      descriptions.length = j;
+    }
+
+    switch (descriptions.length) {
+      case 1:
+        return descriptions[0];
+
+      case 2:
+        return descriptions[0] + " or " + descriptions[1];
+
+      default:
+        return descriptions.slice(0, -1).join(", ")
+          + ", or "
+          + descriptions[descriptions.length - 1];
+    }
+  }
+
+  function describeFound(found) {
+    return found ? "\"" + literalEscape(found) + "\"" : "end of input";
+  }
+
+  return "Expected " + describeExpected(expected) + " but " + describeFound(found) + " found.";
+};
+
+function peg$parse(input, options) {
+  options = options !== void 0 ? options : {};
+
+  var peg$FAILED = {},
+
+      peg$startRuleFunctions = { start: peg$parsestart },
+      peg$startRuleFunction  = peg$parsestart,
+
+      peg$c0 = "#",
+      peg$c1 = peg$literalExpectation("#", false),
+      peg$c2 = function() { return inPlural[0]; },
+      peg$c3 = function() { return { type: 'octothorpe' }; },
+      peg$c4 = function(str) { return str.join(''); },
+      peg$c5 = "{",
+      peg$c6 = peg$literalExpectation("{", false),
+      peg$c7 = "}",
+      peg$c8 = peg$literalExpectation("}", false),
+      peg$c9 = function(arg) {
+          return {
+            type: 'argument',
+            arg: arg
+          };
+        },
+      peg$c10 = ",",
+      peg$c11 = peg$literalExpectation(",", false),
+      peg$c12 = "select",
+      peg$c13 = peg$literalExpectation("select", false),
+      peg$c14 = function(arg, m) { if (options.strict) { inPlural.unshift(false); } return m; },
+      peg$c15 = function(arg, cases) {
+          if (options.strict) inPlural.shift()
+          return {
+            type: 'select',
+            arg: arg,
+            cases: cases
+          };
+        },
+      peg$c16 = "plural",
+      peg$c17 = peg$literalExpectation("plural", false),
+      peg$c18 = "selectordinal",
+      peg$c19 = peg$literalExpectation("selectordinal", false),
+      peg$c20 = function(arg, m) { inPlural.unshift(true); return m; },
+      peg$c21 = function(arg, type, offset, cases) {
+          var ls = ((type === 'selectordinal') ? options.ordinal : options.cardinal)
+                   || ['zero', 'one', 'two', 'few', 'many', 'other'];
+          if (ls && ls.length) cases.forEach(function(c) {
+            if (isNaN(c.key) && ls.indexOf(c.key) < 0) throw new Error(
+              'Invalid key `' + c.key + '` for argument `' + arg + '`.' +
+              ' Valid ' + type + ' keys for this locale are `' + ls.join('`, `') +
+              '`, and explicit keys like `=0`.');
+          });
+          inPlural.shift()
+          return {
+            type: type,
+            arg: arg,
+            offset: offset || 0,
+            cases: cases
+          };
+        },
+      peg$c22 = function(arg, key, param) {
+          return {
+            type: 'function',
+            arg: arg,
+            key: key,
+            param: param
+          };
+        },
+      peg$c23 = peg$otherExpectation("identifier"),
+      peg$c24 = /^[^\t-\r \x85\u200E\u200F\u2028\u2029!-\/:-@[-\^`{-~\xA1-\xA7\xA9\xAB\xAC\xAE\xB0\xB1\xB6\xBB\xBF\xD7\xF7\u2010-\u2027\u2030-\u203E\u2041-\u2053\u2055-\u205E\u2190-\u245F\u2500-\u2775\u2794-\u2BFF\u2E00-\u2E7F\u3001-\u3003\u3008-\u3020\u3030\uFD3E\uFD3F\uFE45\uFE46]/,
+      peg$c25 = peg$classExpectation([["\t", "\r"], " ", "\x85", "\u200E", "\u200F", "\u2028", "\u2029", ["!", "/"], [":", "@"], ["[", "^"], "`", ["{", "~"], ["\xA1", "\xA7"], "\xA9", "\xAB", "\xAC", "\xAE", "\xB0", "\xB1", "\xB6", "\xBB", "\xBF", "\xD7", "\xF7", ["\u2010", "\u2027"], ["\u2030", "\u203E"], ["\u2041", "\u2053"], ["\u2055", "\u205E"], ["\u2190", "\u245F"], ["\u2500", "\u2775"], ["\u2794", "\u2BFF"], ["\u2E00", "\u2E7F"], ["\u3001", "\u3003"], ["\u3008", "\u3020"], "\u3030", "\uFD3E", "\uFD3F", "\uFE45", "\uFE46"], true, false),
+      peg$c26 = function(key, tokens) { return { key: key, tokens: tokens }; },
+      peg$c27 = function(tokens) { return tokens; },
+      peg$c28 = peg$otherExpectation("plural offset"),
+      peg$c29 = "offset",
+      peg$c30 = peg$literalExpectation("offset", false),
+      peg$c31 = ":",
+      peg$c32 = peg$literalExpectation(":", false),
+      peg$c33 = function(d) { return d; },
+      peg$c34 = "=",
+      peg$c35 = peg$literalExpectation("=", false),
+      peg$c36 = "number",
+      peg$c37 = peg$literalExpectation("number", false),
+      peg$c38 = "date",
+      peg$c39 = peg$literalExpectation("date", false),
+      peg$c40 = "time",
+      peg$c41 = peg$literalExpectation("time", false),
+      peg$c42 = "spellout",
+      peg$c43 = peg$literalExpectation("spellout", false),
+      peg$c44 = "ordinal",
+      peg$c45 = peg$literalExpectation("ordinal", false),
+      peg$c46 = "duration",
+      peg$c47 = peg$literalExpectation("duration", false),
+      peg$c48 = function(key) {
+            if (options.strict || /^\d/.test(key)) return false
+            switch (key.toLowerCase()) {
+              case 'select':
+              case 'plural':
+              case 'selectordinal':
+                return false
+              default:
+                return true
+            }
+          },
+      peg$c49 = function(key) { return key },
+      peg$c50 = function(tokens) { return !options.strict },
+      peg$c51 = function(tokens) { return { tokens: tokens } },
+      peg$c52 = function(parts) { return { tokens: [parts.join('')] } },
+      peg$c53 = peg$otherExpectation("a valid (strict) function parameter"),
+      peg$c54 = /^[^'{}]/,
+      peg$c55 = peg$classExpectation(["'", "{", "}"], true, false),
+      peg$c56 = function(p) { return p.join('') },
+      peg$c57 = "'",
+      peg$c58 = peg$literalExpectation("'", false),
+      peg$c59 = function(quoted) { return quoted },
+      peg$c60 = function(p) { return '{' + p.join('') + '}' },
+      peg$c61 = peg$otherExpectation("doubled apostrophe"),
+      peg$c62 = "''",
+      peg$c63 = peg$literalExpectation("''", false),
+      peg$c64 = function() { return "'"; },
+      peg$c65 = /^[^']/,
+      peg$c66 = peg$classExpectation(["'"], true, false),
+      peg$c67 = "'{",
+      peg$c68 = peg$literalExpectation("'{", false),
+      peg$c69 = function(str) { return '\u007B'+str.join(''); },
+      peg$c70 = "'}",
+      peg$c71 = peg$literalExpectation("'}", false),
+      peg$c72 = function(str) { return '\u007D'+str.join(''); },
+      peg$c73 = peg$otherExpectation("escaped string"),
+      peg$c74 = "'#",
+      peg$c75 = peg$literalExpectation("'#", false),
+      peg$c76 = function(str) { return "#"+str.join(''); },
+      peg$c77 = function(quotedOcto) { return quotedOcto[0]; },
+      peg$c78 = peg$otherExpectation("plain char"),
+      peg$c79 = /^[^{}#\0-\x08\x0E-\x1F\x7F]/,
+      peg$c80 = peg$classExpectation(["{", "}", "#", ["\0", "\b"], ["\x0E", "\x1F"], "\x7F"], true, false),
+      peg$c81 = function(octo) { return !inPlural[0]; },
+      peg$c82 = function(octo) { return octo; },
+      peg$c83 = peg$otherExpectation("integer"),
+      peg$c84 = /^[0-9]/,
+      peg$c85 = peg$classExpectation([["0", "9"]], false, false),
+      peg$c86 = peg$otherExpectation("white space"),
+      peg$c87 = /^[\t-\r \x85\u200E\u200F\u2028\u2029]/,
+      peg$c88 = peg$classExpectation([["\t", "\r"], " ", "\x85", "\u200E", "\u200F", "\u2028", "\u2029"], false, false),
+
+      peg$currPos          = 0,
+      peg$savedPos         = 0,
+      peg$posDetailsCache  = [{ line: 1, column: 1 }],
+      peg$maxFailPos       = 0,
+      peg$maxFailExpected  = [],
+      peg$silentFails      = 0,
+
+      peg$result;
+
+  if ("startRule" in options) {
+    if (!(options.startRule in peg$startRuleFunctions)) {
+      throw new Error("Can't start parsing from rule \"" + options.startRule + "\".");
+    }
+
+    peg$startRuleFunction = peg$startRuleFunctions[options.startRule];
+  }
+
+  function text() {
+    return input.substring(peg$savedPos, peg$currPos);
+  }
+
+  function location() {
+    return peg$computeLocation(peg$savedPos, peg$currPos);
+  }
+
+  function expected(description, location) {
+    location = location !== void 0 ? location : peg$computeLocation(peg$savedPos, peg$currPos)
+
+    throw peg$buildStructuredError(
+      [peg$otherExpectation(description)],
+      input.substring(peg$savedPos, peg$currPos),
+      location
+    );
+  }
+
+  function error(message, location) {
+    location = location !== void 0 ? location : peg$computeLocation(peg$savedPos, peg$currPos)
+
+    throw peg$buildSimpleError(message, location);
+  }
+
+  function peg$literalExpectation(text, ignoreCase) {
+    return { type: "literal", text: text, ignoreCase: ignoreCase };
+  }
+
+  function peg$classExpectation(parts, inverted, ignoreCase) {
+    return { type: "class", parts: parts, inverted: inverted, ignoreCase: ignoreCase };
+  }
+
+  function peg$anyExpectation() {
+    return { type: "any" };
+  }
+
+  function peg$endExpectation() {
+    return { type: "end" };
+  }
+
+  function peg$otherExpectation(description) {
+    return { type: "other", description: description };
+  }
+
+  function peg$computePosDetails(pos) {
+    var details = peg$posDetailsCache[pos], p;
+
+    if (details) {
+      return details;
+    } else {
+      p = pos - 1;
+      while (!peg$posDetailsCache[p]) {
+        p--;
       }
 
-      peg$maxFailExpected.push(expected);
+      details = peg$posDetailsCache[p];
+      details = {
+        line:   details.line,
+        column: details.column
+      };
+
+      while (p < pos) {
+        if (input.charCodeAt(p) === 10) {
+          details.line++;
+          details.column = 1;
+        } else {
+          details.column++;
+        }
+
+        p++;
+      }
+
+      peg$posDetailsCache[pos] = details;
+      return details;
+    }
+  }
+
+  function peg$computeLocation(startPos, endPos) {
+    var startPosDetails = peg$computePosDetails(startPos),
+        endPosDetails   = peg$computePosDetails(endPos);
+
+    return {
+      start: {
+        offset: startPos,
+        line:   startPosDetails.line,
+        column: startPosDetails.column
+      },
+      end: {
+        offset: endPos,
+        line:   endPosDetails.line,
+        column: endPosDetails.column
+      }
+    };
+  }
+
+  function peg$fail(expected) {
+    if (peg$currPos < peg$maxFailPos) { return; }
+
+    if (peg$currPos > peg$maxFailPos) {
+      peg$maxFailPos = peg$currPos;
+      peg$maxFailExpected = [];
     }
 
-    function peg$buildException(message, expected, found, location) {
-      function cleanupExpected(expected) {
-        var i = 1;
+    peg$maxFailExpected.push(expected);
+  }
 
-        expected.sort(function(a, b) {
-          if (a.description < b.description) {
-            return -1;
-          } else if (a.description > b.description) {
-            return 1;
-          } else {
-            return 0;
+  function peg$buildSimpleError(message, location) {
+    return new peg$SyntaxError(message, null, null, location);
+  }
+
+  function peg$buildStructuredError(expected, found, location) {
+    return new peg$SyntaxError(
+      peg$SyntaxError.buildMessage(expected, found),
+      expected,
+      found,
+      location
+    );
+  }
+
+  function peg$parsestart() {
+    var s0, s1;
+
+    s0 = [];
+    s1 = peg$parsetoken();
+    while (s1 !== peg$FAILED) {
+      s0.push(s1);
+      s1 = peg$parsetoken();
+    }
+
+    return s0;
+  }
+
+  function peg$parsetoken() {
+    var s0, s1, s2;
+
+    s0 = peg$parseargument();
+    if (s0 === peg$FAILED) {
+      s0 = peg$parseselect();
+      if (s0 === peg$FAILED) {
+        s0 = peg$parseplural();
+        if (s0 === peg$FAILED) {
+          s0 = peg$parsefunction();
+          if (s0 === peg$FAILED) {
+            s0 = peg$currPos;
+            if (input.charCodeAt(peg$currPos) === 35) {
+              s1 = peg$c0;
+              peg$currPos++;
+            } else {
+              s1 = peg$FAILED;
+              if (peg$silentFails === 0) { peg$fail(peg$c1); }
+            }
+            if (s1 !== peg$FAILED) {
+              peg$savedPos = peg$currPos;
+              s2 = peg$c2();
+              if (s2) {
+                s2 = void 0;
+              } else {
+                s2 = peg$FAILED;
+              }
+              if (s2 !== peg$FAILED) {
+                peg$savedPos = s0;
+                s1 = peg$c3();
+                s0 = s1;
+              } else {
+                peg$currPos = s0;
+                s0 = peg$FAILED;
+              }
+            } else {
+              peg$currPos = s0;
+              s0 = peg$FAILED;
+            }
+            if (s0 === peg$FAILED) {
+              s0 = peg$currPos;
+              s1 = [];
+              s2 = peg$parsechar();
+              if (s2 !== peg$FAILED) {
+                while (s2 !== peg$FAILED) {
+                  s1.push(s2);
+                  s2 = peg$parsechar();
+                }
+              } else {
+                s1 = peg$FAILED;
+              }
+              if (s1 !== peg$FAILED) {
+                peg$savedPos = s0;
+                s1 = peg$c4(s1);
+              }
+              s0 = s1;
+            }
           }
-        });
-
-        while (i < expected.length) {
-          if (expected[i - 1] === expected[i]) {
-            expected.splice(i, 1);
-          } else {
-            i++;
-          }
         }
       }
-
-      function buildMessage(expected, found) {
-        function stringEscape(s) {
-          function hex(ch) { return ch.charCodeAt(0).toString(16).toUpperCase(); }
-
-          return s
-            .replace(/\\/g,   '\\\\')
-            .replace(/"/g,    '\\"')
-            .replace(/\x08/g, '\\b')
-            .replace(/\t/g,   '\\t')
-            .replace(/\n/g,   '\\n')
-            .replace(/\f/g,   '\\f')
-            .replace(/\r/g,   '\\r')
-            .replace(/[\x00-\x07\x0B\x0E\x0F]/g, function(ch) { return '\\x0' + hex(ch); })
-            .replace(/[\x10-\x1F\x80-\xFF]/g,    function(ch) { return '\\x'  + hex(ch); })
-            .replace(/[\u0100-\u0FFF]/g,         function(ch) { return '\\u0' + hex(ch); })
-            .replace(/[\u1000-\uFFFF]/g,         function(ch) { return '\\u'  + hex(ch); });
-        }
-
-        var expectedDescs = new Array(expected.length),
-            expectedDesc, foundDesc, i;
-
-        for (i = 0; i < expected.length; i++) {
-          expectedDescs[i] = expected[i].description;
-        }
-
-        expectedDesc = expected.length > 1
-          ? expectedDescs.slice(0, -1).join(", ")
-              + " or "
-              + expectedDescs[expected.length - 1]
-          : expectedDescs[0];
-
-        foundDesc = found ? "\"" + stringEscape(found) + "\"" : "end of input";
-
-        return "Expected " + expectedDesc + " but " + foundDesc + " found.";
-      }
-
-      if (expected !== null) {
-        cleanupExpected(expected);
-      }
-
-      return new peg$SyntaxError(
-        message !== null ? message : buildMessage(expected, found),
-        expected,
-        found,
-        location
-      );
     }
 
-    function peg$parsestart() {
-      var s0;
+    return s0;
+  }
 
-      s0 = peg$parsemessageFormatPattern();
+  function peg$parseargument() {
+    var s0, s1, s2, s3, s4, s5;
 
-      return s0;
+    s0 = peg$currPos;
+    if (input.charCodeAt(peg$currPos) === 123) {
+      s1 = peg$c5;
+      peg$currPos++;
+    } else {
+      s1 = peg$FAILED;
+      if (peg$silentFails === 0) { peg$fail(peg$c6); }
     }
-
-    function peg$parsemessageFormatPattern() {
-      var s0, s1, s2;
-
-      s0 = peg$currPos;
-      s1 = [];
-      s2 = peg$parsemessageFormatElement();
-      if (s2 === peg$FAILED) {
-        s2 = peg$parsestring();
-        if (s2 === peg$FAILED) {
-          s2 = peg$parseoctothorpe();
-        }
-      }
-      while (s2 !== peg$FAILED) {
-        s1.push(s2);
-        s2 = peg$parsemessageFormatElement();
-        if (s2 === peg$FAILED) {
-          s2 = peg$parsestring();
-          if (s2 === peg$FAILED) {
-            s2 = peg$parseoctothorpe();
-          }
-        }
-      }
-      if (s1 !== peg$FAILED) {
-        peg$savedPos = s0;
-        s1 = peg$c0(s1);
-      }
-      s0 = s1;
-
-      return s0;
-    }
-
-    function peg$parsemessageFormatElement() {
-      var s0, s1, s2, s3, s4, s5, s6;
-
-      s0 = peg$currPos;
-      if (input.charCodeAt(peg$currPos) === 123) {
-        s1 = peg$c1;
-        peg$currPos++;
-      } else {
-        s1 = peg$FAILED;
-        if (peg$silentFails === 0) { peg$fail(peg$c2); }
-      }
-      if (s1 !== peg$FAILED) {
-        s2 = peg$parse_();
-        if (s2 !== peg$FAILED) {
-          s3 = peg$parseid();
-          if (s3 !== peg$FAILED) {
-            s4 = peg$currPos;
-            if (input.charCodeAt(peg$currPos) === 44) {
-              s5 = peg$c3;
+    if (s1 !== peg$FAILED) {
+      s2 = peg$parse_();
+      if (s2 !== peg$FAILED) {
+        s3 = peg$parseid();
+        if (s3 !== peg$FAILED) {
+          s4 = peg$parse_();
+          if (s4 !== peg$FAILED) {
+            if (input.charCodeAt(peg$currPos) === 125) {
+              s5 = peg$c7;
               peg$currPos++;
             } else {
               s5 = peg$FAILED;
-              if (peg$silentFails === 0) { peg$fail(peg$c4); }
+              if (peg$silentFails === 0) { peg$fail(peg$c8); }
             }
             if (s5 !== peg$FAILED) {
-              s6 = peg$parseelementFormat();
-              if (s6 !== peg$FAILED) {
-                s5 = [s5, s6];
-                s4 = s5;
-              } else {
-                peg$currPos = s4;
-                s4 = peg$FAILED;
-              }
-            } else {
-              peg$currPos = s4;
-              s4 = peg$FAILED;
-            }
-            if (s4 === peg$FAILED) {
-              s4 = null;
-            }
-            if (s4 !== peg$FAILED) {
-              s5 = peg$parse_();
-              if (s5 !== peg$FAILED) {
-                if (input.charCodeAt(peg$currPos) === 125) {
-                  s6 = peg$c5;
-                  peg$currPos++;
-                } else {
-                  s6 = peg$FAILED;
-                  if (peg$silentFails === 0) { peg$fail(peg$c6); }
-                }
-                if (s6 !== peg$FAILED) {
-                  peg$savedPos = s0;
-                  s1 = peg$c7(s3, s4);
-                  s0 = s1;
-                } else {
-                  peg$currPos = s0;
-                  s0 = peg$FAILED;
-                }
-              } else {
-                peg$currPos = s0;
-                s0 = peg$FAILED;
-              }
+              peg$savedPos = s0;
+              s1 = peg$c9(s3);
+              s0 = s1;
             } else {
               peg$currPos = s0;
               s0 = peg$FAILED;
@@ -5019,102 +5135,108 @@ module.exports = (function() {
         peg$currPos = s0;
         s0 = peg$FAILED;
       }
-
-      return s0;
+    } else {
+      peg$currPos = s0;
+      s0 = peg$FAILED;
     }
 
-    function peg$parseelementFormat() {
-      var s0, s1, s2, s3, s4, s5, s6, s7;
+    return s0;
+  }
 
-      s0 = peg$currPos;
-      s1 = peg$parse_();
-      if (s1 !== peg$FAILED) {
-        if (input.substr(peg$currPos, 6) === peg$c8) {
-          s2 = peg$c8;
-          peg$currPos += 6;
-        } else {
-          s2 = peg$FAILED;
-          if (peg$silentFails === 0) { peg$fail(peg$c9); }
-        }
-        if (s2 !== peg$FAILED) {
-          s3 = peg$parse_();
-          if (s3 !== peg$FAILED) {
+  function peg$parseselect() {
+    var s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13;
+
+    s0 = peg$currPos;
+    if (input.charCodeAt(peg$currPos) === 123) {
+      s1 = peg$c5;
+      peg$currPos++;
+    } else {
+      s1 = peg$FAILED;
+      if (peg$silentFails === 0) { peg$fail(peg$c6); }
+    }
+    if (s1 !== peg$FAILED) {
+      s2 = peg$parse_();
+      if (s2 !== peg$FAILED) {
+        s3 = peg$parseid();
+        if (s3 !== peg$FAILED) {
+          s4 = peg$parse_();
+          if (s4 !== peg$FAILED) {
             if (input.charCodeAt(peg$currPos) === 44) {
-              s4 = peg$c3;
+              s5 = peg$c10;
               peg$currPos++;
             } else {
-              s4 = peg$FAILED;
-              if (peg$silentFails === 0) { peg$fail(peg$c4); }
+              s5 = peg$FAILED;
+              if (peg$silentFails === 0) { peg$fail(peg$c11); }
             }
-            if (s4 !== peg$FAILED) {
-              s5 = peg$parse_();
-              if (s5 !== peg$FAILED) {
-                s6 = peg$parsepluralFormatPattern();
-                if (s6 !== peg$FAILED) {
-                  s7 = peg$parse_();
-                  if (s7 !== peg$FAILED) {
-                    peg$savedPos = s0;
-                    s1 = peg$c10(s2, s6);
-                    s0 = s1;
-                  } else {
-                    peg$currPos = s0;
-                    s0 = peg$FAILED;
-                  }
+            if (s5 !== peg$FAILED) {
+              s6 = peg$parse_();
+              if (s6 !== peg$FAILED) {
+                s7 = peg$currPos;
+                if (input.substr(peg$currPos, 6) === peg$c12) {
+                  s8 = peg$c12;
+                  peg$currPos += 6;
                 } else {
-                  peg$currPos = s0;
-                  s0 = peg$FAILED;
+                  s8 = peg$FAILED;
+                  if (peg$silentFails === 0) { peg$fail(peg$c13); }
                 }
-              } else {
-                peg$currPos = s0;
-                s0 = peg$FAILED;
-              }
-            } else {
-              peg$currPos = s0;
-              s0 = peg$FAILED;
-            }
-          } else {
-            peg$currPos = s0;
-            s0 = peg$FAILED;
-          }
-        } else {
-          peg$currPos = s0;
-          s0 = peg$FAILED;
-        }
-      } else {
-        peg$currPos = s0;
-        s0 = peg$FAILED;
-      }
-      if (s0 === peg$FAILED) {
-        s0 = peg$currPos;
-        s1 = peg$parse_();
-        if (s1 !== peg$FAILED) {
-          if (input.substr(peg$currPos, 13) === peg$c11) {
-            s2 = peg$c11;
-            peg$currPos += 13;
-          } else {
-            s2 = peg$FAILED;
-            if (peg$silentFails === 0) { peg$fail(peg$c12); }
-          }
-          if (s2 !== peg$FAILED) {
-            s3 = peg$parse_();
-            if (s3 !== peg$FAILED) {
-              if (input.charCodeAt(peg$currPos) === 44) {
-                s4 = peg$c3;
-                peg$currPos++;
-              } else {
-                s4 = peg$FAILED;
-                if (peg$silentFails === 0) { peg$fail(peg$c4); }
-              }
-              if (s4 !== peg$FAILED) {
-                s5 = peg$parse_();
-                if (s5 !== peg$FAILED) {
-                  s6 = peg$parsepluralFormatPattern();
-                  if (s6 !== peg$FAILED) {
-                    s7 = peg$parse_();
-                    if (s7 !== peg$FAILED) {
-                      peg$savedPos = s0;
-                      s1 = peg$c10(s2, s6);
-                      s0 = s1;
+                if (s8 !== peg$FAILED) {
+                  peg$savedPos = s7;
+                  s8 = peg$c14(s3, s8);
+                }
+                s7 = s8;
+                if (s7 !== peg$FAILED) {
+                  s8 = peg$parse_();
+                  if (s8 !== peg$FAILED) {
+                    if (input.charCodeAt(peg$currPos) === 44) {
+                      s9 = peg$c10;
+                      peg$currPos++;
+                    } else {
+                      s9 = peg$FAILED;
+                      if (peg$silentFails === 0) { peg$fail(peg$c11); }
+                    }
+                    if (s9 !== peg$FAILED) {
+                      s10 = peg$parse_();
+                      if (s10 !== peg$FAILED) {
+                        s11 = [];
+                        s12 = peg$parseselectCase();
+                        if (s12 !== peg$FAILED) {
+                          while (s12 !== peg$FAILED) {
+                            s11.push(s12);
+                            s12 = peg$parseselectCase();
+                          }
+                        } else {
+                          s11 = peg$FAILED;
+                        }
+                        if (s11 !== peg$FAILED) {
+                          s12 = peg$parse_();
+                          if (s12 !== peg$FAILED) {
+                            if (input.charCodeAt(peg$currPos) === 125) {
+                              s13 = peg$c7;
+                              peg$currPos++;
+                            } else {
+                              s13 = peg$FAILED;
+                              if (peg$silentFails === 0) { peg$fail(peg$c8); }
+                            }
+                            if (s13 !== peg$FAILED) {
+                              peg$savedPos = s0;
+                              s1 = peg$c15(s3, s11);
+                              s0 = s1;
+                            } else {
+                              peg$currPos = s0;
+                              s0 = peg$FAILED;
+                            }
+                          } else {
+                            peg$currPos = s0;
+                            s0 = peg$FAILED;
+                          }
+                        } else {
+                          peg$currPos = s0;
+                          s0 = peg$FAILED;
+                        }
+                      } else {
+                        peg$currPos = s0;
+                        s0 = peg$FAILED;
+                      }
                     } else {
                       peg$currPos = s0;
                       s0 = peg$FAILED;
@@ -5143,36 +5265,217 @@ module.exports = (function() {
           peg$currPos = s0;
           s0 = peg$FAILED;
         }
-        if (s0 === peg$FAILED) {
-          s0 = peg$currPos;
-          s1 = peg$parse_();
-          if (s1 !== peg$FAILED) {
-            if (input.substr(peg$currPos, 6) === peg$c13) {
-              s2 = peg$c13;
-              peg$currPos += 6;
+      } else {
+        peg$currPos = s0;
+        s0 = peg$FAILED;
+      }
+    } else {
+      peg$currPos = s0;
+      s0 = peg$FAILED;
+    }
+
+    return s0;
+  }
+
+  function peg$parseplural() {
+    var s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14;
+
+    s0 = peg$currPos;
+    if (input.charCodeAt(peg$currPos) === 123) {
+      s1 = peg$c5;
+      peg$currPos++;
+    } else {
+      s1 = peg$FAILED;
+      if (peg$silentFails === 0) { peg$fail(peg$c6); }
+    }
+    if (s1 !== peg$FAILED) {
+      s2 = peg$parse_();
+      if (s2 !== peg$FAILED) {
+        s3 = peg$parseid();
+        if (s3 !== peg$FAILED) {
+          s4 = peg$parse_();
+          if (s4 !== peg$FAILED) {
+            if (input.charCodeAt(peg$currPos) === 44) {
+              s5 = peg$c10;
+              peg$currPos++;
             } else {
-              s2 = peg$FAILED;
-              if (peg$silentFails === 0) { peg$fail(peg$c14); }
+              s5 = peg$FAILED;
+              if (peg$silentFails === 0) { peg$fail(peg$c11); }
             }
-            if (s2 !== peg$FAILED) {
-              s3 = peg$parse_();
-              if (s3 !== peg$FAILED) {
-                if (input.charCodeAt(peg$currPos) === 44) {
-                  s4 = peg$c3;
-                  peg$currPos++;
+            if (s5 !== peg$FAILED) {
+              s6 = peg$parse_();
+              if (s6 !== peg$FAILED) {
+                s7 = peg$currPos;
+                if (input.substr(peg$currPos, 6) === peg$c16) {
+                  s8 = peg$c16;
+                  peg$currPos += 6;
                 } else {
-                  s4 = peg$FAILED;
-                  if (peg$silentFails === 0) { peg$fail(peg$c4); }
+                  s8 = peg$FAILED;
+                  if (peg$silentFails === 0) { peg$fail(peg$c17); }
                 }
-                if (s4 !== peg$FAILED) {
-                  s5 = peg$parse_();
-                  if (s5 !== peg$FAILED) {
-                    s6 = peg$parseselectFormatPattern();
-                    if (s6 !== peg$FAILED) {
-                      s7 = peg$parse_();
-                      if (s7 !== peg$FAILED) {
+                if (s8 === peg$FAILED) {
+                  if (input.substr(peg$currPos, 13) === peg$c18) {
+                    s8 = peg$c18;
+                    peg$currPos += 13;
+                  } else {
+                    s8 = peg$FAILED;
+                    if (peg$silentFails === 0) { peg$fail(peg$c19); }
+                  }
+                }
+                if (s8 !== peg$FAILED) {
+                  peg$savedPos = s7;
+                  s8 = peg$c20(s3, s8);
+                }
+                s7 = s8;
+                if (s7 !== peg$FAILED) {
+                  s8 = peg$parse_();
+                  if (s8 !== peg$FAILED) {
+                    if (input.charCodeAt(peg$currPos) === 44) {
+                      s9 = peg$c10;
+                      peg$currPos++;
+                    } else {
+                      s9 = peg$FAILED;
+                      if (peg$silentFails === 0) { peg$fail(peg$c11); }
+                    }
+                    if (s9 !== peg$FAILED) {
+                      s10 = peg$parse_();
+                      if (s10 !== peg$FAILED) {
+                        s11 = peg$parseoffset();
+                        if (s11 === peg$FAILED) {
+                          s11 = null;
+                        }
+                        if (s11 !== peg$FAILED) {
+                          s12 = [];
+                          s13 = peg$parsepluralCase();
+                          if (s13 !== peg$FAILED) {
+                            while (s13 !== peg$FAILED) {
+                              s12.push(s13);
+                              s13 = peg$parsepluralCase();
+                            }
+                          } else {
+                            s12 = peg$FAILED;
+                          }
+                          if (s12 !== peg$FAILED) {
+                            s13 = peg$parse_();
+                            if (s13 !== peg$FAILED) {
+                              if (input.charCodeAt(peg$currPos) === 125) {
+                                s14 = peg$c7;
+                                peg$currPos++;
+                              } else {
+                                s14 = peg$FAILED;
+                                if (peg$silentFails === 0) { peg$fail(peg$c8); }
+                              }
+                              if (s14 !== peg$FAILED) {
+                                peg$savedPos = s0;
+                                s1 = peg$c21(s3, s7, s11, s12);
+                                s0 = s1;
+                              } else {
+                                peg$currPos = s0;
+                                s0 = peg$FAILED;
+                              }
+                            } else {
+                              peg$currPos = s0;
+                              s0 = peg$FAILED;
+                            }
+                          } else {
+                            peg$currPos = s0;
+                            s0 = peg$FAILED;
+                          }
+                        } else {
+                          peg$currPos = s0;
+                          s0 = peg$FAILED;
+                        }
+                      } else {
+                        peg$currPos = s0;
+                        s0 = peg$FAILED;
+                      }
+                    } else {
+                      peg$currPos = s0;
+                      s0 = peg$FAILED;
+                    }
+                  } else {
+                    peg$currPos = s0;
+                    s0 = peg$FAILED;
+                  }
+                } else {
+                  peg$currPos = s0;
+                  s0 = peg$FAILED;
+                }
+              } else {
+                peg$currPos = s0;
+                s0 = peg$FAILED;
+              }
+            } else {
+              peg$currPos = s0;
+              s0 = peg$FAILED;
+            }
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
+        } else {
+          peg$currPos = s0;
+          s0 = peg$FAILED;
+        }
+      } else {
+        peg$currPos = s0;
+        s0 = peg$FAILED;
+      }
+    } else {
+      peg$currPos = s0;
+      s0 = peg$FAILED;
+    }
+
+    return s0;
+  }
+
+  function peg$parsefunction() {
+    var s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10;
+
+    s0 = peg$currPos;
+    if (input.charCodeAt(peg$currPos) === 123) {
+      s1 = peg$c5;
+      peg$currPos++;
+    } else {
+      s1 = peg$FAILED;
+      if (peg$silentFails === 0) { peg$fail(peg$c6); }
+    }
+    if (s1 !== peg$FAILED) {
+      s2 = peg$parse_();
+      if (s2 !== peg$FAILED) {
+        s3 = peg$parseid();
+        if (s3 !== peg$FAILED) {
+          s4 = peg$parse_();
+          if (s4 !== peg$FAILED) {
+            if (input.charCodeAt(peg$currPos) === 44) {
+              s5 = peg$c10;
+              peg$currPos++;
+            } else {
+              s5 = peg$FAILED;
+              if (peg$silentFails === 0) { peg$fail(peg$c11); }
+            }
+            if (s5 !== peg$FAILED) {
+              s6 = peg$parse_();
+              if (s6 !== peg$FAILED) {
+                s7 = peg$parsefunctionKey();
+                if (s7 !== peg$FAILED) {
+                  s8 = peg$parse_();
+                  if (s8 !== peg$FAILED) {
+                    s9 = peg$parsefunctionParam();
+                    if (s9 === peg$FAILED) {
+                      s9 = null;
+                    }
+                    if (s9 !== peg$FAILED) {
+                      if (input.charCodeAt(peg$currPos) === 125) {
+                        s10 = peg$c7;
+                        peg$currPos++;
+                      } else {
+                        s10 = peg$FAILED;
+                        if (peg$silentFails === 0) { peg$fail(peg$c8); }
+                      }
+                      if (s10 !== peg$FAILED) {
                         peg$savedPos = s0;
-                        s1 = peg$c10(s2, s6);
+                        s1 = peg$c22(s3, s7, s9);
                         s0 = s1;
                       } else {
                         peg$currPos = s0;
@@ -5202,21 +5505,256 @@ module.exports = (function() {
             peg$currPos = s0;
             s0 = peg$FAILED;
           }
-          if (s0 === peg$FAILED) {
-            s0 = peg$currPos;
-            s1 = peg$parse_();
-            if (s1 !== peg$FAILED) {
-              s2 = peg$parseid();
-              if (s2 !== peg$FAILED) {
-                s3 = [];
-                s4 = peg$parseargStylePattern();
-                while (s4 !== peg$FAILED) {
-                  s3.push(s4);
-                  s4 = peg$parseargStylePattern();
-                }
-                if (s3 !== peg$FAILED) {
+        } else {
+          peg$currPos = s0;
+          s0 = peg$FAILED;
+        }
+      } else {
+        peg$currPos = s0;
+        s0 = peg$FAILED;
+      }
+    } else {
+      peg$currPos = s0;
+      s0 = peg$FAILED;
+    }
+
+    return s0;
+  }
+
+  function peg$parseid() {
+    var s0, s1, s2;
+
+    peg$silentFails++;
+    s0 = peg$currPos;
+    s1 = [];
+    if (peg$c24.test(input.charAt(peg$currPos))) {
+      s2 = input.charAt(peg$currPos);
+      peg$currPos++;
+    } else {
+      s2 = peg$FAILED;
+      if (peg$silentFails === 0) { peg$fail(peg$c25); }
+    }
+    if (s2 !== peg$FAILED) {
+      while (s2 !== peg$FAILED) {
+        s1.push(s2);
+        if (peg$c24.test(input.charAt(peg$currPos))) {
+          s2 = input.charAt(peg$currPos);
+          peg$currPos++;
+        } else {
+          s2 = peg$FAILED;
+          if (peg$silentFails === 0) { peg$fail(peg$c25); }
+        }
+      }
+    } else {
+      s1 = peg$FAILED;
+    }
+    if (s1 !== peg$FAILED) {
+      s0 = input.substring(s0, peg$currPos);
+    } else {
+      s0 = s1;
+    }
+    peg$silentFails--;
+    if (s0 === peg$FAILED) {
+      s1 = peg$FAILED;
+      if (peg$silentFails === 0) { peg$fail(peg$c23); }
+    }
+
+    return s0;
+  }
+
+  function peg$parseselectCase() {
+    var s0, s1, s2, s3, s4;
+
+    s0 = peg$currPos;
+    s1 = peg$parse_();
+    if (s1 !== peg$FAILED) {
+      s2 = peg$parseid();
+      if (s2 !== peg$FAILED) {
+        s3 = peg$parse_();
+        if (s3 !== peg$FAILED) {
+          s4 = peg$parsecaseTokens();
+          if (s4 !== peg$FAILED) {
+            peg$savedPos = s0;
+            s1 = peg$c26(s2, s4);
+            s0 = s1;
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
+        } else {
+          peg$currPos = s0;
+          s0 = peg$FAILED;
+        }
+      } else {
+        peg$currPos = s0;
+        s0 = peg$FAILED;
+      }
+    } else {
+      peg$currPos = s0;
+      s0 = peg$FAILED;
+    }
+
+    return s0;
+  }
+
+  function peg$parsepluralCase() {
+    var s0, s1, s2, s3, s4;
+
+    s0 = peg$currPos;
+    s1 = peg$parse_();
+    if (s1 !== peg$FAILED) {
+      s2 = peg$parsepluralKey();
+      if (s2 !== peg$FAILED) {
+        s3 = peg$parse_();
+        if (s3 !== peg$FAILED) {
+          s4 = peg$parsecaseTokens();
+          if (s4 !== peg$FAILED) {
+            peg$savedPos = s0;
+            s1 = peg$c26(s2, s4);
+            s0 = s1;
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
+        } else {
+          peg$currPos = s0;
+          s0 = peg$FAILED;
+        }
+      } else {
+        peg$currPos = s0;
+        s0 = peg$FAILED;
+      }
+    } else {
+      peg$currPos = s0;
+      s0 = peg$FAILED;
+    }
+
+    return s0;
+  }
+
+  function peg$parsecaseTokens() {
+    var s0, s1, s2, s3, s4, s5;
+
+    s0 = peg$currPos;
+    if (input.charCodeAt(peg$currPos) === 123) {
+      s1 = peg$c5;
+      peg$currPos++;
+    } else {
+      s1 = peg$FAILED;
+      if (peg$silentFails === 0) { peg$fail(peg$c6); }
+    }
+    if (s1 !== peg$FAILED) {
+      s2 = peg$currPos;
+      s3 = peg$parse_();
+      if (s3 !== peg$FAILED) {
+        s4 = peg$currPos;
+        peg$silentFails++;
+        if (input.charCodeAt(peg$currPos) === 123) {
+          s5 = peg$c5;
+          peg$currPos++;
+        } else {
+          s5 = peg$FAILED;
+          if (peg$silentFails === 0) { peg$fail(peg$c6); }
+        }
+        peg$silentFails--;
+        if (s5 !== peg$FAILED) {
+          peg$currPos = s4;
+          s4 = void 0;
+        } else {
+          s4 = peg$FAILED;
+        }
+        if (s4 !== peg$FAILED) {
+          s3 = [s3, s4];
+          s2 = s3;
+        } else {
+          peg$currPos = s2;
+          s2 = peg$FAILED;
+        }
+      } else {
+        peg$currPos = s2;
+        s2 = peg$FAILED;
+      }
+      if (s2 === peg$FAILED) {
+        s2 = null;
+      }
+      if (s2 !== peg$FAILED) {
+        s3 = [];
+        s4 = peg$parsetoken();
+        while (s4 !== peg$FAILED) {
+          s3.push(s4);
+          s4 = peg$parsetoken();
+        }
+        if (s3 !== peg$FAILED) {
+          s4 = peg$parse_();
+          if (s4 !== peg$FAILED) {
+            if (input.charCodeAt(peg$currPos) === 125) {
+              s5 = peg$c7;
+              peg$currPos++;
+            } else {
+              s5 = peg$FAILED;
+              if (peg$silentFails === 0) { peg$fail(peg$c8); }
+            }
+            if (s5 !== peg$FAILED) {
+              peg$savedPos = s0;
+              s1 = peg$c27(s3);
+              s0 = s1;
+            } else {
+              peg$currPos = s0;
+              s0 = peg$FAILED;
+            }
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
+        } else {
+          peg$currPos = s0;
+          s0 = peg$FAILED;
+        }
+      } else {
+        peg$currPos = s0;
+        s0 = peg$FAILED;
+      }
+    } else {
+      peg$currPos = s0;
+      s0 = peg$FAILED;
+    }
+
+    return s0;
+  }
+
+  function peg$parseoffset() {
+    var s0, s1, s2, s3, s4, s5, s6, s7;
+
+    peg$silentFails++;
+    s0 = peg$currPos;
+    s1 = peg$parse_();
+    if (s1 !== peg$FAILED) {
+      if (input.substr(peg$currPos, 6) === peg$c29) {
+        s2 = peg$c29;
+        peg$currPos += 6;
+      } else {
+        s2 = peg$FAILED;
+        if (peg$silentFails === 0) { peg$fail(peg$c30); }
+      }
+      if (s2 !== peg$FAILED) {
+        s3 = peg$parse_();
+        if (s3 !== peg$FAILED) {
+          if (input.charCodeAt(peg$currPos) === 58) {
+            s4 = peg$c31;
+            peg$currPos++;
+          } else {
+            s4 = peg$FAILED;
+            if (peg$silentFails === 0) { peg$fail(peg$c32); }
+          }
+          if (s4 !== peg$FAILED) {
+            s5 = peg$parse_();
+            if (s5 !== peg$FAILED) {
+              s6 = peg$parsedigits();
+              if (s6 !== peg$FAILED) {
+                s7 = peg$parse_();
+                if (s7 !== peg$FAILED) {
                   peg$savedPos = s0;
-                  s1 = peg$c15(s2, s3);
+                  s1 = peg$c33(s6);
                   s0 = s1;
                 } else {
                   peg$currPos = s0;
@@ -5230,35 +5768,49 @@ module.exports = (function() {
               peg$currPos = s0;
               s0 = peg$FAILED;
             }
-          }
-        }
-      }
-
-      return s0;
-    }
-
-    function peg$parsepluralFormatPattern() {
-      var s0, s1, s2, s3;
-
-      s0 = peg$currPos;
-      s1 = peg$parseoffsetPattern();
-      if (s1 === peg$FAILED) {
-        s1 = null;
-      }
-      if (s1 !== peg$FAILED) {
-        s2 = [];
-        s3 = peg$parsepluralForm();
-        if (s3 !== peg$FAILED) {
-          while (s3 !== peg$FAILED) {
-            s2.push(s3);
-            s3 = peg$parsepluralForm();
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
           }
         } else {
-          s2 = peg$FAILED;
+          peg$currPos = s0;
+          s0 = peg$FAILED;
         }
+      } else {
+        peg$currPos = s0;
+        s0 = peg$FAILED;
+      }
+    } else {
+      peg$currPos = s0;
+      s0 = peg$FAILED;
+    }
+    peg$silentFails--;
+    if (s0 === peg$FAILED) {
+      s1 = peg$FAILED;
+      if (peg$silentFails === 0) { peg$fail(peg$c28); }
+    }
+
+    return s0;
+  }
+
+  function peg$parsepluralKey() {
+    var s0, s1, s2;
+
+    s0 = peg$parseid();
+    if (s0 === peg$FAILED) {
+      s0 = peg$currPos;
+      if (input.charCodeAt(peg$currPos) === 61) {
+        s1 = peg$c34;
+        peg$currPos++;
+      } else {
+        s1 = peg$FAILED;
+        if (peg$silentFails === 0) { peg$fail(peg$c35); }
+      }
+      if (s1 !== peg$FAILED) {
+        s2 = peg$parsedigits();
         if (s2 !== peg$FAILED) {
           peg$savedPos = s0;
-          s1 = peg$c16(s1, s2);
+          s1 = peg$c33(s2);
           s0 = s1;
         } else {
           peg$currPos = s0;
@@ -5268,567 +5820,126 @@ module.exports = (function() {
         peg$currPos = s0;
         s0 = peg$FAILED;
       }
-
-      return s0;
     }
 
-    function peg$parseoffsetPattern() {
-      var s0, s1, s2, s3, s4, s5, s6, s7;
+    return s0;
+  }
 
-      s0 = peg$currPos;
-      s1 = peg$parse_();
-      if (s1 !== peg$FAILED) {
-        if (input.substr(peg$currPos, 6) === peg$c17) {
-          s2 = peg$c17;
-          peg$currPos += 6;
-        } else {
-          s2 = peg$FAILED;
-          if (peg$silentFails === 0) { peg$fail(peg$c18); }
-        }
-        if (s2 !== peg$FAILED) {
-          s3 = peg$parse_();
-          if (s3 !== peg$FAILED) {
-            if (input.charCodeAt(peg$currPos) === 58) {
-              s4 = peg$c19;
-              peg$currPos++;
-            } else {
-              s4 = peg$FAILED;
-              if (peg$silentFails === 0) { peg$fail(peg$c20); }
-            }
-            if (s4 !== peg$FAILED) {
-              s5 = peg$parse_();
-              if (s5 !== peg$FAILED) {
-                s6 = peg$parsedigits();
-                if (s6 !== peg$FAILED) {
-                  s7 = peg$parse_();
-                  if (s7 !== peg$FAILED) {
-                    peg$savedPos = s0;
-                    s1 = peg$c21(s6);
-                    s0 = s1;
-                  } else {
-                    peg$currPos = s0;
-                    s0 = peg$FAILED;
-                  }
-                } else {
-                  peg$currPos = s0;
-                  s0 = peg$FAILED;
-                }
-              } else {
-                peg$currPos = s0;
-                s0 = peg$FAILED;
-              }
-            } else {
-              peg$currPos = s0;
-              s0 = peg$FAILED;
-            }
-          } else {
-            peg$currPos = s0;
-            s0 = peg$FAILED;
-          }
-        } else {
-          peg$currPos = s0;
-          s0 = peg$FAILED;
-        }
+  function peg$parsefunctionKey() {
+    var s0, s1, s2, s3, s4, s5;
+
+    if (input.substr(peg$currPos, 6) === peg$c36) {
+      s0 = peg$c36;
+      peg$currPos += 6;
+    } else {
+      s0 = peg$FAILED;
+      if (peg$silentFails === 0) { peg$fail(peg$c37); }
+    }
+    if (s0 === peg$FAILED) {
+      if (input.substr(peg$currPos, 4) === peg$c38) {
+        s0 = peg$c38;
+        peg$currPos += 4;
       } else {
-        peg$currPos = s0;
         s0 = peg$FAILED;
+        if (peg$silentFails === 0) { peg$fail(peg$c39); }
       }
-
-      return s0;
-    }
-
-    function peg$parsepluralForm() {
-      var s0, s1, s2, s3, s4, s5, s6, s7, s8;
-
-      s0 = peg$currPos;
-      s1 = peg$parse_();
-      if (s1 !== peg$FAILED) {
-        s2 = peg$parsepluralKey();
-        if (s2 !== peg$FAILED) {
-          s3 = peg$parse_();
-          if (s3 !== peg$FAILED) {
-            if (input.charCodeAt(peg$currPos) === 123) {
-              s4 = peg$c1;
-              peg$currPos++;
-            } else {
-              s4 = peg$FAILED;
-              if (peg$silentFails === 0) { peg$fail(peg$c2); }
-            }
-            if (s4 !== peg$FAILED) {
-              s5 = peg$parse_();
-              if (s5 !== peg$FAILED) {
-                s6 = peg$parsemessageFormatPattern();
-                if (s6 !== peg$FAILED) {
-                  s7 = peg$parse_();
-                  if (s7 !== peg$FAILED) {
-                    if (input.charCodeAt(peg$currPos) === 125) {
-                      s8 = peg$c5;
-                      peg$currPos++;
-                    } else {
-                      s8 = peg$FAILED;
-                      if (peg$silentFails === 0) { peg$fail(peg$c6); }
-                    }
-                    if (s8 !== peg$FAILED) {
-                      peg$savedPos = s0;
-                      s1 = peg$c22(s2, s6);
-                      s0 = s1;
-                    } else {
-                      peg$currPos = s0;
-                      s0 = peg$FAILED;
-                    }
-                  } else {
-                    peg$currPos = s0;
-                    s0 = peg$FAILED;
-                  }
-                } else {
-                  peg$currPos = s0;
-                  s0 = peg$FAILED;
-                }
-              } else {
-                peg$currPos = s0;
-                s0 = peg$FAILED;
-              }
-            } else {
-              peg$currPos = s0;
-              s0 = peg$FAILED;
-            }
-          } else {
-            peg$currPos = s0;
-            s0 = peg$FAILED;
-          }
-        } else {
-          peg$currPos = s0;
-          s0 = peg$FAILED;
-        }
-      } else {
-        peg$currPos = s0;
-        s0 = peg$FAILED;
-      }
-
-      return s0;
-    }
-
-    function peg$parsepluralKey() {
-      var s0, s1, s2;
-
-      s0 = peg$currPos;
-      s1 = peg$parseid();
-      if (s1 !== peg$FAILED) {
-        peg$savedPos = s0;
-        s1 = peg$c23(s1);
-      }
-      s0 = s1;
       if (s0 === peg$FAILED) {
-        s0 = peg$currPos;
-        if (input.charCodeAt(peg$currPos) === 61) {
-          s1 = peg$c24;
-          peg$currPos++;
+        if (input.substr(peg$currPos, 4) === peg$c40) {
+          s0 = peg$c40;
+          peg$currPos += 4;
         } else {
-          s1 = peg$FAILED;
-          if (peg$silentFails === 0) { peg$fail(peg$c25); }
-        }
-        if (s1 !== peg$FAILED) {
-          s2 = peg$parsedigits();
-          if (s2 !== peg$FAILED) {
-            peg$savedPos = s0;
-            s1 = peg$c21(s2);
-            s0 = s1;
-          } else {
-            peg$currPos = s0;
-            s0 = peg$FAILED;
-          }
-        } else {
-          peg$currPos = s0;
           s0 = peg$FAILED;
+          if (peg$silentFails === 0) { peg$fail(peg$c41); }
         }
-      }
-
-      return s0;
-    }
-
-    function peg$parseselectFormatPattern() {
-      var s0, s1, s2;
-
-      s0 = peg$currPos;
-      s1 = [];
-      s2 = peg$parseselectForm();
-      if (s2 !== peg$FAILED) {
-        while (s2 !== peg$FAILED) {
-          s1.push(s2);
-          s2 = peg$parseselectForm();
-        }
-      } else {
-        s1 = peg$FAILED;
-      }
-      if (s1 !== peg$FAILED) {
-        peg$savedPos = s0;
-        s1 = peg$c26(s1);
-      }
-      s0 = s1;
-
-      return s0;
-    }
-
-    function peg$parseselectForm() {
-      var s0, s1, s2, s3, s4, s5, s6, s7, s8;
-
-      s0 = peg$currPos;
-      s1 = peg$parse_();
-      if (s1 !== peg$FAILED) {
-        s2 = peg$parseid();
-        if (s2 !== peg$FAILED) {
-          s3 = peg$parse_();
-          if (s3 !== peg$FAILED) {
-            if (input.charCodeAt(peg$currPos) === 123) {
-              s4 = peg$c1;
-              peg$currPos++;
-            } else {
-              s4 = peg$FAILED;
-              if (peg$silentFails === 0) { peg$fail(peg$c2); }
-            }
-            if (s4 !== peg$FAILED) {
-              s5 = peg$parse_();
-              if (s5 !== peg$FAILED) {
-                s6 = peg$parsemessageFormatPattern();
-                if (s6 !== peg$FAILED) {
-                  s7 = peg$parse_();
-                  if (s7 !== peg$FAILED) {
-                    if (input.charCodeAt(peg$currPos) === 125) {
-                      s8 = peg$c5;
-                      peg$currPos++;
-                    } else {
-                      s8 = peg$FAILED;
-                      if (peg$silentFails === 0) { peg$fail(peg$c6); }
-                    }
-                    if (s8 !== peg$FAILED) {
-                      peg$savedPos = s0;
-                      s1 = peg$c22(s2, s6);
-                      s0 = s1;
-                    } else {
-                      peg$currPos = s0;
-                      s0 = peg$FAILED;
-                    }
-                  } else {
-                    peg$currPos = s0;
-                    s0 = peg$FAILED;
-                  }
-                } else {
-                  peg$currPos = s0;
-                  s0 = peg$FAILED;
-                }
-              } else {
-                peg$currPos = s0;
-                s0 = peg$FAILED;
-              }
-            } else {
-              peg$currPos = s0;
-              s0 = peg$FAILED;
-            }
-          } else {
-            peg$currPos = s0;
-            s0 = peg$FAILED;
-          }
-        } else {
-          peg$currPos = s0;
-          s0 = peg$FAILED;
-        }
-      } else {
-        peg$currPos = s0;
-        s0 = peg$FAILED;
-      }
-
-      return s0;
-    }
-
-    function peg$parseargStylePattern() {
-      var s0, s1, s2, s3, s4, s5;
-
-      s0 = peg$currPos;
-      s1 = peg$parse_();
-      if (s1 !== peg$FAILED) {
-        if (input.charCodeAt(peg$currPos) === 44) {
-          s2 = peg$c3;
-          peg$currPos++;
-        } else {
-          s2 = peg$FAILED;
-          if (peg$silentFails === 0) { peg$fail(peg$c4); }
-        }
-        if (s2 !== peg$FAILED) {
-          s3 = peg$parse_();
-          if (s3 !== peg$FAILED) {
-            s4 = peg$parseid();
-            if (s4 !== peg$FAILED) {
-              s5 = peg$parse_();
-              if (s5 !== peg$FAILED) {
-                peg$savedPos = s0;
-                s1 = peg$c27(s4);
-                s0 = s1;
-              } else {
-                peg$currPos = s0;
-                s0 = peg$FAILED;
-              }
-            } else {
-              peg$currPos = s0;
-              s0 = peg$FAILED;
-            }
-          } else {
-            peg$currPos = s0;
-            s0 = peg$FAILED;
-          }
-        } else {
-          peg$currPos = s0;
-          s0 = peg$FAILED;
-        }
-      } else {
-        peg$currPos = s0;
-        s0 = peg$FAILED;
-      }
-
-      return s0;
-    }
-
-    function peg$parseoctothorpe() {
-      var s0, s1;
-
-      s0 = peg$currPos;
-      if (input.charCodeAt(peg$currPos) === 35) {
-        s1 = peg$c28;
-        peg$currPos++;
-      } else {
-        s1 = peg$FAILED;
-        if (peg$silentFails === 0) { peg$fail(peg$c29); }
-      }
-      if (s1 !== peg$FAILED) {
-        peg$savedPos = s0;
-        s1 = peg$c30();
-      }
-      s0 = s1;
-
-      return s0;
-    }
-
-    function peg$parsestring() {
-      var s0, s1, s2;
-
-      s0 = peg$currPos;
-      s1 = [];
-      s2 = peg$parsechars();
-      if (s2 === peg$FAILED) {
-        s2 = peg$parsewhitespace();
-      }
-      if (s2 !== peg$FAILED) {
-        while (s2 !== peg$FAILED) {
-          s1.push(s2);
-          s2 = peg$parsechars();
-          if (s2 === peg$FAILED) {
-            s2 = peg$parsewhitespace();
-          }
-        }
-      } else {
-        s1 = peg$FAILED;
-      }
-      if (s1 !== peg$FAILED) {
-        peg$savedPos = s0;
-        s1 = peg$c31(s1);
-      }
-      s0 = s1;
-
-      return s0;
-    }
-
-    function peg$parseid() {
-      var s0, s1, s2, s3, s4, s5, s6;
-
-      peg$silentFails++;
-      s0 = peg$currPos;
-      s1 = peg$parse_();
-      if (s1 !== peg$FAILED) {
-        s2 = peg$currPos;
-        s3 = peg$currPos;
-        if (peg$c33.test(input.charAt(peg$currPos))) {
-          s4 = input.charAt(peg$currPos);
-          peg$currPos++;
-        } else {
-          s4 = peg$FAILED;
-          if (peg$silentFails === 0) { peg$fail(peg$c34); }
-        }
-        if (s4 !== peg$FAILED) {
-          s5 = [];
-          if (peg$c35.test(input.charAt(peg$currPos))) {
-            s6 = input.charAt(peg$currPos);
-            peg$currPos++;
-          } else {
-            s6 = peg$FAILED;
-            if (peg$silentFails === 0) { peg$fail(peg$c36); }
-          }
-          while (s6 !== peg$FAILED) {
-            s5.push(s6);
-            if (peg$c35.test(input.charAt(peg$currPos))) {
-              s6 = input.charAt(peg$currPos);
-              peg$currPos++;
-            } else {
-              s6 = peg$FAILED;
-              if (peg$silentFails === 0) { peg$fail(peg$c36); }
-            }
-          }
-          if (s5 !== peg$FAILED) {
-            s4 = [s4, s5];
-            s3 = s4;
-          } else {
-            peg$currPos = s3;
-            s3 = peg$FAILED;
-          }
-        } else {
-          peg$currPos = s3;
-          s3 = peg$FAILED;
-        }
-        if (s3 !== peg$FAILED) {
-          s2 = input.substring(s2, peg$currPos);
-        } else {
-          s2 = s3;
-        }
-        if (s2 !== peg$FAILED) {
-          s3 = peg$parse_();
-          if (s3 !== peg$FAILED) {
-            peg$savedPos = s0;
-            s1 = peg$c37(s2);
-            s0 = s1;
-          } else {
-            peg$currPos = s0;
-            s0 = peg$FAILED;
-          }
-        } else {
-          peg$currPos = s0;
-          s0 = peg$FAILED;
-        }
-      } else {
-        peg$currPos = s0;
-        s0 = peg$FAILED;
-      }
-      peg$silentFails--;
-      if (s0 === peg$FAILED) {
-        s1 = peg$FAILED;
-        if (peg$silentFails === 0) { peg$fail(peg$c32); }
-      }
-
-      return s0;
-    }
-
-    function peg$parsechars() {
-      var s0, s1, s2;
-
-      s0 = peg$currPos;
-      s1 = [];
-      s2 = peg$parsechar();
-      if (s2 !== peg$FAILED) {
-        while (s2 !== peg$FAILED) {
-          s1.push(s2);
-          s2 = peg$parsechar();
-        }
-      } else {
-        s1 = peg$FAILED;
-      }
-      if (s1 !== peg$FAILED) {
-        peg$savedPos = s0;
-        s1 = peg$c38(s1);
-      }
-      s0 = s1;
-
-      return s0;
-    }
-
-    function peg$parsechar() {
-      var s0, s1, s2, s3, s4, s5;
-
-      s0 = peg$currPos;
-      if (peg$c39.test(input.charAt(peg$currPos))) {
-        s1 = input.charAt(peg$currPos);
-        peg$currPos++;
-      } else {
-        s1 = peg$FAILED;
-        if (peg$silentFails === 0) { peg$fail(peg$c40); }
-      }
-      if (s1 !== peg$FAILED) {
-        peg$savedPos = s0;
-        s1 = peg$c41(s1);
-      }
-      s0 = s1;
-      if (s0 === peg$FAILED) {
-        s0 = peg$currPos;
-        if (input.substr(peg$currPos, 2) === peg$c42) {
-          s1 = peg$c42;
-          peg$currPos += 2;
-        } else {
-          s1 = peg$FAILED;
-          if (peg$silentFails === 0) { peg$fail(peg$c43); }
-        }
-        if (s1 !== peg$FAILED) {
-          peg$savedPos = s0;
-          s1 = peg$c44();
-        }
-        s0 = s1;
         if (s0 === peg$FAILED) {
-          s0 = peg$currPos;
-          if (input.substr(peg$currPos, 2) === peg$c45) {
-            s1 = peg$c45;
-            peg$currPos += 2;
+          if (input.substr(peg$currPos, 8) === peg$c42) {
+            s0 = peg$c42;
+            peg$currPos += 8;
           } else {
-            s1 = peg$FAILED;
-            if (peg$silentFails === 0) { peg$fail(peg$c46); }
+            s0 = peg$FAILED;
+            if (peg$silentFails === 0) { peg$fail(peg$c43); }
           }
-          if (s1 !== peg$FAILED) {
-            peg$savedPos = s0;
-            s1 = peg$c47();
-          }
-          s0 = s1;
           if (s0 === peg$FAILED) {
-            s0 = peg$currPos;
-            if (input.substr(peg$currPos, 2) === peg$c48) {
-              s1 = peg$c48;
-              peg$currPos += 2;
+            if (input.substr(peg$currPos, 7) === peg$c44) {
+              s0 = peg$c44;
+              peg$currPos += 7;
             } else {
-              s1 = peg$FAILED;
-              if (peg$silentFails === 0) { peg$fail(peg$c49); }
+              s0 = peg$FAILED;
+              if (peg$silentFails === 0) { peg$fail(peg$c45); }
             }
-            if (s1 !== peg$FAILED) {
-              peg$savedPos = s0;
-              s1 = peg$c50();
-            }
-            s0 = s1;
             if (s0 === peg$FAILED) {
-              s0 = peg$currPos;
-              if (input.substr(peg$currPos, 2) === peg$c51) {
-                s1 = peg$c51;
-                peg$currPos += 2;
+              if (input.substr(peg$currPos, 8) === peg$c46) {
+                s0 = peg$c46;
+                peg$currPos += 8;
               } else {
-                s1 = peg$FAILED;
-                if (peg$silentFails === 0) { peg$fail(peg$c52); }
+                s0 = peg$FAILED;
+                if (peg$silentFails === 0) { peg$fail(peg$c47); }
               }
-              if (s1 !== peg$FAILED) {
-                peg$savedPos = s0;
-                s1 = peg$c53();
-              }
-              s0 = s1;
               if (s0 === peg$FAILED) {
                 s0 = peg$currPos;
-                if (input.substr(peg$currPos, 2) === peg$c54) {
-                  s1 = peg$c54;
-                  peg$currPos += 2;
+                s1 = peg$currPos;
+                peg$silentFails++;
+                if (input.substr(peg$currPos, 6) === peg$c12) {
+                  s2 = peg$c12;
+                  peg$currPos += 6;
                 } else {
+                  s2 = peg$FAILED;
+                  if (peg$silentFails === 0) { peg$fail(peg$c13); }
+                }
+                peg$silentFails--;
+                if (s2 === peg$FAILED) {
+                  s1 = void 0;
+                } else {
+                  peg$currPos = s1;
                   s1 = peg$FAILED;
-                  if (peg$silentFails === 0) { peg$fail(peg$c55); }
                 }
                 if (s1 !== peg$FAILED) {
-                  s2 = peg$parsehexDigit();
+                  s2 = peg$currPos;
+                  peg$silentFails++;
+                  if (input.substr(peg$currPos, 6) === peg$c16) {
+                    s3 = peg$c16;
+                    peg$currPos += 6;
+                  } else {
+                    s3 = peg$FAILED;
+                    if (peg$silentFails === 0) { peg$fail(peg$c17); }
+                  }
+                  peg$silentFails--;
+                  if (s3 === peg$FAILED) {
+                    s2 = void 0;
+                  } else {
+                    peg$currPos = s2;
+                    s2 = peg$FAILED;
+                  }
                   if (s2 !== peg$FAILED) {
-                    s3 = peg$parsehexDigit();
+                    s3 = peg$currPos;
+                    peg$silentFails++;
+                    if (input.substr(peg$currPos, 13) === peg$c18) {
+                      s4 = peg$c18;
+                      peg$currPos += 13;
+                    } else {
+                      s4 = peg$FAILED;
+                      if (peg$silentFails === 0) { peg$fail(peg$c19); }
+                    }
+                    peg$silentFails--;
+                    if (s4 === peg$FAILED) {
+                      s3 = void 0;
+                    } else {
+                      peg$currPos = s3;
+                      s3 = peg$FAILED;
+                    }
                     if (s3 !== peg$FAILED) {
-                      s4 = peg$parsehexDigit();
+                      s4 = peg$parseid();
                       if (s4 !== peg$FAILED) {
-                        s5 = peg$parsehexDigit();
+                        peg$savedPos = peg$currPos;
+                        s5 = peg$c48(s4);
+                        if (s5) {
+                          s5 = void 0;
+                        } else {
+                          s5 = peg$FAILED;
+                        }
                         if (s5 !== peg$FAILED) {
                           peg$savedPos = s0;
-                          s1 = peg$c56(s2, s3, s4, s5);
+                          s1 = peg$c49(s4);
                           s0 = s1;
                         } else {
                           peg$currPos = s0;
@@ -5855,31 +5966,268 @@ module.exports = (function() {
           }
         }
       }
-
-      return s0;
     }
 
-    function peg$parsedigits() {
-      var s0, s1, s2;
+    return s0;
+  }
 
+  function peg$parsefunctionParam() {
+    var s0, s1, s2, s3, s4;
+
+    s0 = peg$currPos;
+    s1 = peg$parse_();
+    if (s1 !== peg$FAILED) {
+      if (input.charCodeAt(peg$currPos) === 44) {
+        s2 = peg$c10;
+        peg$currPos++;
+      } else {
+        s2 = peg$FAILED;
+        if (peg$silentFails === 0) { peg$fail(peg$c11); }
+      }
+      if (s2 !== peg$FAILED) {
+        s3 = [];
+        s4 = peg$parsetoken();
+        while (s4 !== peg$FAILED) {
+          s3.push(s4);
+          s4 = peg$parsetoken();
+        }
+        if (s3 !== peg$FAILED) {
+          peg$savedPos = peg$currPos;
+          s4 = peg$c50(s3);
+          if (s4) {
+            s4 = void 0;
+          } else {
+            s4 = peg$FAILED;
+          }
+          if (s4 !== peg$FAILED) {
+            peg$savedPos = s0;
+            s1 = peg$c51(s3);
+            s0 = s1;
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
+        } else {
+          peg$currPos = s0;
+          s0 = peg$FAILED;
+        }
+      } else {
+        peg$currPos = s0;
+        s0 = peg$FAILED;
+      }
+    } else {
+      peg$currPos = s0;
+      s0 = peg$FAILED;
+    }
+    if (s0 === peg$FAILED) {
+      s0 = peg$currPos;
+      s1 = peg$parse_();
+      if (s1 !== peg$FAILED) {
+        if (input.charCodeAt(peg$currPos) === 44) {
+          s2 = peg$c10;
+          peg$currPos++;
+        } else {
+          s2 = peg$FAILED;
+          if (peg$silentFails === 0) { peg$fail(peg$c11); }
+        }
+        if (s2 !== peg$FAILED) {
+          s3 = [];
+          s4 = peg$parsestrictFunctionParamPart();
+          while (s4 !== peg$FAILED) {
+            s3.push(s4);
+            s4 = peg$parsestrictFunctionParamPart();
+          }
+          if (s3 !== peg$FAILED) {
+            peg$savedPos = s0;
+            s1 = peg$c52(s3);
+            s0 = s1;
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
+        } else {
+          peg$currPos = s0;
+          s0 = peg$FAILED;
+        }
+      } else {
+        peg$currPos = s0;
+        s0 = peg$FAILED;
+      }
+    }
+
+    return s0;
+  }
+
+  function peg$parsestrictFunctionParamPart() {
+    var s0, s1, s2, s3;
+
+    peg$silentFails++;
+    s0 = peg$currPos;
+    s1 = [];
+    if (peg$c54.test(input.charAt(peg$currPos))) {
+      s2 = input.charAt(peg$currPos);
+      peg$currPos++;
+    } else {
+      s2 = peg$FAILED;
+      if (peg$silentFails === 0) { peg$fail(peg$c55); }
+    }
+    if (s2 !== peg$FAILED) {
+      while (s2 !== peg$FAILED) {
+        s1.push(s2);
+        if (peg$c54.test(input.charAt(peg$currPos))) {
+          s2 = input.charAt(peg$currPos);
+          peg$currPos++;
+        } else {
+          s2 = peg$FAILED;
+          if (peg$silentFails === 0) { peg$fail(peg$c55); }
+        }
+      }
+    } else {
+      s1 = peg$FAILED;
+    }
+    if (s1 !== peg$FAILED) {
+      peg$savedPos = s0;
+      s1 = peg$c56(s1);
+    }
+    s0 = s1;
+    if (s0 === peg$FAILED) {
+      s0 = peg$parsedoubleapos();
+      if (s0 === peg$FAILED) {
+        s0 = peg$currPos;
+        if (input.charCodeAt(peg$currPos) === 39) {
+          s1 = peg$c57;
+          peg$currPos++;
+        } else {
+          s1 = peg$FAILED;
+          if (peg$silentFails === 0) { peg$fail(peg$c58); }
+        }
+        if (s1 !== peg$FAILED) {
+          s2 = peg$parseinapos();
+          if (s2 !== peg$FAILED) {
+            if (input.charCodeAt(peg$currPos) === 39) {
+              s3 = peg$c57;
+              peg$currPos++;
+            } else {
+              s3 = peg$FAILED;
+              if (peg$silentFails === 0) { peg$fail(peg$c58); }
+            }
+            if (s3 !== peg$FAILED) {
+              peg$savedPos = s0;
+              s1 = peg$c59(s2);
+              s0 = s1;
+            } else {
+              peg$currPos = s0;
+              s0 = peg$FAILED;
+            }
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
+        } else {
+          peg$currPos = s0;
+          s0 = peg$FAILED;
+        }
+        if (s0 === peg$FAILED) {
+          s0 = peg$currPos;
+          if (input.charCodeAt(peg$currPos) === 123) {
+            s1 = peg$c5;
+            peg$currPos++;
+          } else {
+            s1 = peg$FAILED;
+            if (peg$silentFails === 0) { peg$fail(peg$c6); }
+          }
+          if (s1 !== peg$FAILED) {
+            s2 = [];
+            s3 = peg$parsestrictFunctionParamPart();
+            while (s3 !== peg$FAILED) {
+              s2.push(s3);
+              s3 = peg$parsestrictFunctionParamPart();
+            }
+            if (s2 !== peg$FAILED) {
+              if (input.charCodeAt(peg$currPos) === 125) {
+                s3 = peg$c7;
+                peg$currPos++;
+              } else {
+                s3 = peg$FAILED;
+                if (peg$silentFails === 0) { peg$fail(peg$c8); }
+              }
+              if (s3 !== peg$FAILED) {
+                peg$savedPos = s0;
+                s1 = peg$c60(s2);
+                s0 = s1;
+              } else {
+                peg$currPos = s0;
+                s0 = peg$FAILED;
+              }
+            } else {
+              peg$currPos = s0;
+              s0 = peg$FAILED;
+            }
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
+        }
+      }
+    }
+    peg$silentFails--;
+    if (s0 === peg$FAILED) {
+      s1 = peg$FAILED;
+      if (peg$silentFails === 0) { peg$fail(peg$c53); }
+    }
+
+    return s0;
+  }
+
+  function peg$parsedoubleapos() {
+    var s0, s1;
+
+    peg$silentFails++;
+    s0 = peg$currPos;
+    if (input.substr(peg$currPos, 2) === peg$c62) {
+      s1 = peg$c62;
+      peg$currPos += 2;
+    } else {
+      s1 = peg$FAILED;
+      if (peg$silentFails === 0) { peg$fail(peg$c63); }
+    }
+    if (s1 !== peg$FAILED) {
+      peg$savedPos = s0;
+      s1 = peg$c64();
+    }
+    s0 = s1;
+    peg$silentFails--;
+    if (s0 === peg$FAILED) {
+      s1 = peg$FAILED;
+      if (peg$silentFails === 0) { peg$fail(peg$c61); }
+    }
+
+    return s0;
+  }
+
+  function peg$parseinapos() {
+    var s0, s1, s2;
+
+    s0 = peg$parsedoubleapos();
+    if (s0 === peg$FAILED) {
       s0 = peg$currPos;
       s1 = [];
-      if (peg$c57.test(input.charAt(peg$currPos))) {
+      if (peg$c65.test(input.charAt(peg$currPos))) {
         s2 = input.charAt(peg$currPos);
         peg$currPos++;
       } else {
         s2 = peg$FAILED;
-        if (peg$silentFails === 0) { peg$fail(peg$c58); }
+        if (peg$silentFails === 0) { peg$fail(peg$c66); }
       }
       if (s2 !== peg$FAILED) {
         while (s2 !== peg$FAILED) {
           s1.push(s2);
-          if (peg$c57.test(input.charAt(peg$currPos))) {
+          if (peg$c65.test(input.charAt(peg$currPos))) {
             s2 = input.charAt(peg$currPos);
             peg$currPos++;
           } else {
             s2 = peg$FAILED;
-            if (peg$silentFails === 0) { peg$fail(peg$c58); }
+            if (peg$silentFails === 0) { peg$fail(peg$c66); }
           }
         }
       } else {
@@ -5887,95 +6235,777 @@ module.exports = (function() {
       }
       if (s1 !== peg$FAILED) {
         peg$savedPos = s0;
-        s1 = peg$c59(s1);
+        s1 = peg$c4(s1);
       }
       s0 = s1;
-
-      return s0;
     }
 
-    function peg$parsehexDigit() {
-      var s0;
+    return s0;
+  }
 
-      if (peg$c60.test(input.charAt(peg$currPos))) {
-        s0 = input.charAt(peg$currPos);
-        peg$currPos++;
-      } else {
-        s0 = peg$FAILED;
-        if (peg$silentFails === 0) { peg$fail(peg$c61); }
+  function peg$parsequotedCurly() {
+    var s0, s1, s2, s3;
+
+    s0 = peg$currPos;
+    if (input.substr(peg$currPos, 2) === peg$c67) {
+      s1 = peg$c67;
+      peg$currPos += 2;
+    } else {
+      s1 = peg$FAILED;
+      if (peg$silentFails === 0) { peg$fail(peg$c68); }
+    }
+    if (s1 !== peg$FAILED) {
+      s2 = [];
+      s3 = peg$parseinapos();
+      while (s3 !== peg$FAILED) {
+        s2.push(s3);
+        s3 = peg$parseinapos();
       }
-
-      return s0;
+      if (s2 !== peg$FAILED) {
+        if (input.charCodeAt(peg$currPos) === 39) {
+          s3 = peg$c57;
+          peg$currPos++;
+        } else {
+          s3 = peg$FAILED;
+          if (peg$silentFails === 0) { peg$fail(peg$c58); }
+        }
+        if (s3 !== peg$FAILED) {
+          peg$savedPos = s0;
+          s1 = peg$c69(s2);
+          s0 = s1;
+        } else {
+          peg$currPos = s0;
+          s0 = peg$FAILED;
+        }
+      } else {
+        peg$currPos = s0;
+        s0 = peg$FAILED;
+      }
+    } else {
+      peg$currPos = s0;
+      s0 = peg$FAILED;
+    }
+    if (s0 === peg$FAILED) {
+      s0 = peg$currPos;
+      if (input.substr(peg$currPos, 2) === peg$c70) {
+        s1 = peg$c70;
+        peg$currPos += 2;
+      } else {
+        s1 = peg$FAILED;
+        if (peg$silentFails === 0) { peg$fail(peg$c71); }
+      }
+      if (s1 !== peg$FAILED) {
+        s2 = [];
+        s3 = peg$parseinapos();
+        while (s3 !== peg$FAILED) {
+          s2.push(s3);
+          s3 = peg$parseinapos();
+        }
+        if (s2 !== peg$FAILED) {
+          if (input.charCodeAt(peg$currPos) === 39) {
+            s3 = peg$c57;
+            peg$currPos++;
+          } else {
+            s3 = peg$FAILED;
+            if (peg$silentFails === 0) { peg$fail(peg$c58); }
+          }
+          if (s3 !== peg$FAILED) {
+            peg$savedPos = s0;
+            s1 = peg$c72(s2);
+            s0 = s1;
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
+        } else {
+          peg$currPos = s0;
+          s0 = peg$FAILED;
+        }
+      } else {
+        peg$currPos = s0;
+        s0 = peg$FAILED;
+      }
     }
 
-    function peg$parse_() {
-      var s0, s1, s2;
+    return s0;
+  }
 
-      peg$silentFails++;
+  function peg$parsequoted() {
+    var s0, s1, s2, s3, s4, s5;
+
+    peg$silentFails++;
+    s0 = peg$parsequotedCurly();
+    if (s0 === peg$FAILED) {
       s0 = peg$currPos;
-      s1 = [];
-      s2 = peg$parsewhitespace();
-      while (s2 !== peg$FAILED) {
-        s1.push(s2);
-        s2 = peg$parsewhitespace();
+      s1 = peg$currPos;
+      s2 = peg$currPos;
+      if (input.substr(peg$currPos, 2) === peg$c74) {
+        s3 = peg$c74;
+        peg$currPos += 2;
+      } else {
+        s3 = peg$FAILED;
+        if (peg$silentFails === 0) { peg$fail(peg$c75); }
+      }
+      if (s3 !== peg$FAILED) {
+        s4 = [];
+        s5 = peg$parseinapos();
+        while (s5 !== peg$FAILED) {
+          s4.push(s5);
+          s5 = peg$parseinapos();
+        }
+        if (s4 !== peg$FAILED) {
+          if (input.charCodeAt(peg$currPos) === 39) {
+            s5 = peg$c57;
+            peg$currPos++;
+          } else {
+            s5 = peg$FAILED;
+            if (peg$silentFails === 0) { peg$fail(peg$c58); }
+          }
+          if (s5 !== peg$FAILED) {
+            peg$savedPos = s2;
+            s3 = peg$c76(s4);
+            s2 = s3;
+          } else {
+            peg$currPos = s2;
+            s2 = peg$FAILED;
+          }
+        } else {
+          peg$currPos = s2;
+          s2 = peg$FAILED;
+        }
+      } else {
+        peg$currPos = s2;
+        s2 = peg$FAILED;
+      }
+      if (s2 !== peg$FAILED) {
+        peg$savedPos = peg$currPos;
+        s3 = peg$c2();
+        if (s3) {
+          s3 = void 0;
+        } else {
+          s3 = peg$FAILED;
+        }
+        if (s3 !== peg$FAILED) {
+          s2 = [s2, s3];
+          s1 = s2;
+        } else {
+          peg$currPos = s1;
+          s1 = peg$FAILED;
+        }
+      } else {
+        peg$currPos = s1;
+        s1 = peg$FAILED;
       }
       if (s1 !== peg$FAILED) {
         peg$savedPos = s0;
-        s1 = peg$c63(s1);
+        s1 = peg$c77(s1);
       }
       s0 = s1;
-      peg$silentFails--;
       if (s0 === peg$FAILED) {
-        s1 = peg$FAILED;
-        if (peg$silentFails === 0) { peg$fail(peg$c62); }
+        if (input.charCodeAt(peg$currPos) === 39) {
+          s0 = peg$c57;
+          peg$currPos++;
+        } else {
+          s0 = peg$FAILED;
+          if (peg$silentFails === 0) { peg$fail(peg$c58); }
+        }
       }
-
-      return s0;
+    }
+    peg$silentFails--;
+    if (s0 === peg$FAILED) {
+      s1 = peg$FAILED;
+      if (peg$silentFails === 0) { peg$fail(peg$c73); }
     }
 
-    function peg$parsewhitespace() {
-      var s0;
-
-      if (peg$c64.test(input.charAt(peg$currPos))) {
-        s0 = input.charAt(peg$currPos);
-        peg$currPos++;
-      } else {
-        s0 = peg$FAILED;
-        if (peg$silentFails === 0) { peg$fail(peg$c65); }
-      }
-
-      return s0;
-    }
-
-    peg$result = peg$startRuleFunction();
-
-    if (peg$result !== peg$FAILED && peg$currPos === input.length) {
-      return peg$result;
-    } else {
-      if (peg$result !== peg$FAILED && peg$currPos < input.length) {
-        peg$fail({ type: "end", description: "end of input" });
-      }
-
-      throw peg$buildException(
-        null,
-        peg$maxFailExpected,
-        peg$maxFailPos < input.length ? input.charAt(peg$maxFailPos) : null,
-        peg$maxFailPos < input.length
-          ? peg$computeLocation(peg$maxFailPos, peg$maxFailPos + 1)
-          : peg$computeLocation(peg$maxFailPos, peg$maxFailPos)
-      );
-    }
+    return s0;
   }
 
-  return {
-    SyntaxError: peg$SyntaxError,
-    parse:       peg$parse
-  };
-})();
+  function peg$parseplainChar() {
+    var s0, s1;
+
+    peg$silentFails++;
+    if (peg$c79.test(input.charAt(peg$currPos))) {
+      s0 = input.charAt(peg$currPos);
+      peg$currPos++;
+    } else {
+      s0 = peg$FAILED;
+      if (peg$silentFails === 0) { peg$fail(peg$c80); }
+    }
+    peg$silentFails--;
+    if (s0 === peg$FAILED) {
+      s1 = peg$FAILED;
+      if (peg$silentFails === 0) { peg$fail(peg$c78); }
+    }
+
+    return s0;
+  }
+
+  function peg$parsechar() {
+    var s0, s1, s2;
+
+    s0 = peg$parsedoubleapos();
+    if (s0 === peg$FAILED) {
+      s0 = peg$parsequoted();
+      if (s0 === peg$FAILED) {
+        s0 = peg$currPos;
+        if (input.charCodeAt(peg$currPos) === 35) {
+          s1 = peg$c0;
+          peg$currPos++;
+        } else {
+          s1 = peg$FAILED;
+          if (peg$silentFails === 0) { peg$fail(peg$c1); }
+        }
+        if (s1 !== peg$FAILED) {
+          peg$savedPos = peg$currPos;
+          s2 = peg$c81(s1);
+          if (s2) {
+            s2 = void 0;
+          } else {
+            s2 = peg$FAILED;
+          }
+          if (s2 !== peg$FAILED) {
+            peg$savedPos = s0;
+            s1 = peg$c82(s1);
+            s0 = s1;
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
+        } else {
+          peg$currPos = s0;
+          s0 = peg$FAILED;
+        }
+        if (s0 === peg$FAILED) {
+          s0 = peg$parseplainChar();
+        }
+      }
+    }
+
+    return s0;
+  }
+
+  function peg$parsedigits() {
+    var s0, s1, s2;
+
+    peg$silentFails++;
+    s0 = peg$currPos;
+    s1 = [];
+    if (peg$c84.test(input.charAt(peg$currPos))) {
+      s2 = input.charAt(peg$currPos);
+      peg$currPos++;
+    } else {
+      s2 = peg$FAILED;
+      if (peg$silentFails === 0) { peg$fail(peg$c85); }
+    }
+    if (s2 !== peg$FAILED) {
+      while (s2 !== peg$FAILED) {
+        s1.push(s2);
+        if (peg$c84.test(input.charAt(peg$currPos))) {
+          s2 = input.charAt(peg$currPos);
+          peg$currPos++;
+        } else {
+          s2 = peg$FAILED;
+          if (peg$silentFails === 0) { peg$fail(peg$c85); }
+        }
+      }
+    } else {
+      s1 = peg$FAILED;
+    }
+    if (s1 !== peg$FAILED) {
+      s0 = input.substring(s0, peg$currPos);
+    } else {
+      s0 = s1;
+    }
+    peg$silentFails--;
+    if (s0 === peg$FAILED) {
+      s1 = peg$FAILED;
+      if (peg$silentFails === 0) { peg$fail(peg$c83); }
+    }
+
+    return s0;
+  }
+
+  function peg$parse_() {
+    var s0, s1, s2;
+
+    peg$silentFails++;
+    s0 = peg$currPos;
+    s1 = [];
+    if (peg$c87.test(input.charAt(peg$currPos))) {
+      s2 = input.charAt(peg$currPos);
+      peg$currPos++;
+    } else {
+      s2 = peg$FAILED;
+      if (peg$silentFails === 0) { peg$fail(peg$c88); }
+    }
+    while (s2 !== peg$FAILED) {
+      s1.push(s2);
+      if (peg$c87.test(input.charAt(peg$currPos))) {
+        s2 = input.charAt(peg$currPos);
+        peg$currPos++;
+      } else {
+        s2 = peg$FAILED;
+        if (peg$silentFails === 0) { peg$fail(peg$c88); }
+      }
+    }
+    if (s1 !== peg$FAILED) {
+      s0 = input.substring(s0, peg$currPos);
+    } else {
+      s0 = s1;
+    }
+    peg$silentFails--;
+    if (s0 === peg$FAILED) {
+      s1 = peg$FAILED;
+      if (peg$silentFails === 0) { peg$fail(peg$c86); }
+    }
+
+    return s0;
+  }
+
+
+    var inPlural = [false];
+
+
+  peg$result = peg$startRuleFunction();
+
+  if (peg$result !== peg$FAILED && peg$currPos === input.length) {
+    return peg$result;
+  } else {
+    if (peg$result !== peg$FAILED && peg$currPos < input.length) {
+      peg$fail(peg$endExpectation());
+    }
+
+    throw peg$buildStructuredError(
+      peg$maxFailExpected,
+      peg$maxFailPos < input.length ? input.charAt(peg$maxFailPos) : null,
+      peg$maxFailPos < input.length
+        ? peg$computeLocation(peg$maxFailPos, peg$maxFailPos + 1)
+        : peg$computeLocation(peg$maxFailPos, peg$maxFailPos)
+    );
+  }
+}
+
+module.exports = {
+  SyntaxError: peg$SyntaxError,
+  parse:       peg$parse
+};
 
 
 /***/ }),
-/* 22 */
+/* 27 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.propname = propname;
+exports.funcname = funcname;
+exports.biDiMarkText = biDiMarkText;
+const reservedES3 = {
+  break: true,
+  continue: true,
+  delete: true,
+  else: true,
+  for: true,
+  function: true,
+  if: true,
+  in: true,
+  new: true,
+  return: true,
+  this: true,
+  typeof: true,
+  var: true,
+  void: true,
+  while: true,
+  with: true,
+  case: true,
+  catch: true,
+  default: true,
+  do: true,
+  finally: true,
+  instanceof: true,
+  switch: true,
+  throw: true,
+  try: true
+};
+const reservedES5 = {
+  // in addition to reservedES3
+  debugger: true,
+  class: true,
+  enum: true,
+  extends: true,
+  super: true,
+  const: true,
+  export: true,
+  import: true,
+  null: true,
+  true: true,
+  false: true,
+  implements: true,
+  let: true,
+  private: true,
+  public: true,
+  yield: true,
+  interface: true,
+  package: true,
+  protected: true,
+  static: true
+};
+/**
+ * Utility function for quoting an Object's key value if required
+ *
+ * Quotes the key if it contains invalid characters or is an
+ * ECMAScript 3rd Edition reserved word (for IE8).
+ *
+ * @private
+ */
+
+function propname(key, obj) {
+  if (/^[A-Z_$][0-9A-Z_$]*$/i.test(key) && !reservedES3[key]) {
+    return obj ? `${obj}.${key}` : key;
+  } else {
+    const jkey = JSON.stringify(key);
+    return obj ? obj + `[${jkey}]` : jkey;
+  }
+}
+/**
+ * Utility function for escaping a function name if required
+ *
+ * @private
+ */
+
+
+function funcname(key) {
+  const fn = key.trim().replace(/\W+/g, '_');
+  return reservedES3[fn] || reservedES5[fn] || /^\d/.test(fn) ? '_' + fn : fn;
+}
+
+const rtlLanguages = ['ar', 'ckb', 'fa', 'he', 'ks($|[^bfh])', 'lrc', 'mzn', 'pa-Arab', 'ps', 'ug', 'ur', 'uz-Arab', 'yi'];
+const rtlRegExp = new RegExp('^' + rtlLanguages.join('|^'));
+/**
+ * Utility formatter function for enforcing Bidi Structured Text by using UCC
+ *
+ * List inlined from data extracted from CLDR v27 & v28
+ * To verify/recreate, use the following:
+ *
+ *    git clone https://github.com/unicode-cldr/cldr-misc-full.git
+ *    cd cldr-misc-full/main/
+ *    grep characterOrder -r . | tr '"/' '\t' | cut -f2,6 | grep -C4 right-to-left
+ *
+ * @private
+ */
+
+function biDiMarkText(text, locale) {
+  const isLocaleRTL = rtlRegExp.test(locale);
+  const mark = JSON.stringify(isLocaleRTL ? '\u200F' : '\u200E');
+  return `${mark} + ${text} + ${mark}`;
+}
+
+/***/ }),
+/* 28 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getPlural = getPlural;
+exports.getAllPlurals = getAllPlurals;
+
+var _pluralCategories = _interopRequireDefault(__webpack_require__(29));
+
+var _plurals = _interopRequireDefault(__webpack_require__(30));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * @class
+ * @private
+ * @hideconstructor
+ * @classdesc Utility getter/wrapper for pluralization functions from
+ * {@link http://github.com/eemeli/make-plural.js make-plural}
+ */
+function wrapPluralFunc(lc, pf, pluralKeyChecks) {
+  var fn = function () {
+    return pf.apply(this, arguments);
+  };
+
+  fn.toString = () => pf.toString();
+
+  if (pluralKeyChecks) {
+    const pc = _pluralCategories.default[lc] || {};
+    fn.cardinal = pc.cardinal;
+    fn.ordinal = pc.ordinal;
+  } else {
+    fn.cardinal = [];
+    fn.ordinal = [];
+  }
+
+  return fn;
+}
+
+function getPlural(locale, {
+  pluralKeyChecks
+}) {
+  for (let lc = String(locale); lc; lc = lc.replace(/[-_]?[^-_]*$/, '')) {
+    const pf = _plurals.default[lc];
+    if (pf) return wrapPluralFunc(lc, pf, pluralKeyChecks);
+  }
+
+  throw new Error('Localisation function not found for locale ' + JSON.stringify(locale));
+}
+
+function getAllPlurals({
+  pluralKeyChecks
+}) {
+  const locales = {};
+  const keys = Object.keys(_plurals.default);
+
+  for (let i = 0; i < keys.length; ++i) {
+    const lc = keys[i];
+    locales[lc] = wrapPluralFunc(lc, _plurals.default[lc], pluralKeyChecks);
+  }
+
+  return locales;
+}
+
+/***/ }),
+/* 29 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;var _cc = [
+  {cardinal:["other"],ordinal:["other"]},
+  {cardinal:["one","other"],ordinal:["other"]},
+  {cardinal:["one","other"],ordinal:["one","other"]},
+  {cardinal:["one","two","other"],ordinal:["other"]}
+];
+
+(function (root, pluralCategories) {
+  if (true) {
+    !(__WEBPACK_AMD_DEFINE_FACTORY__ = (pluralCategories),
+				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
+				(__WEBPACK_AMD_DEFINE_FACTORY__.call(exports, __webpack_require__, exports, module)) :
+				__WEBPACK_AMD_DEFINE_FACTORY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+  } else {}
+}(this, {
+af: _cc[1],
+ak: _cc[1],
+am: _cc[1],
+ar: {cardinal:["zero","one","two","few","many","other"],ordinal:["other"]},
+ars: {cardinal:["zero","one","two","few","many","other"],ordinal:["other"]},
+as: {cardinal:["one","other"],ordinal:["one","two","few","many","other"]},
+asa: _cc[1],
+ast: _cc[1],
+az: {cardinal:["one","other"],ordinal:["one","few","many","other"]},
+be: {cardinal:["one","few","many","other"],ordinal:["few","other"]},
+bem: _cc[1],
+bez: _cc[1],
+bg: _cc[1],
+bh: _cc[1],
+bm: _cc[0],
+bn: {cardinal:["one","other"],ordinal:["one","two","few","many","other"]},
+bo: _cc[0],
+br: {cardinal:["one","two","few","many","other"],ordinal:["other"]},
+brx: _cc[1],
+bs: {cardinal:["one","few","other"],ordinal:["other"]},
+ca: {cardinal:["one","other"],ordinal:["one","two","few","other"]},
+ce: _cc[1],
+cgg: _cc[1],
+chr: _cc[1],
+ckb: _cc[1],
+cs: {cardinal:["one","few","many","other"],ordinal:["other"]},
+cy: {cardinal:["zero","one","two","few","many","other"],ordinal:["zero","one","two","few","many","other"]},
+da: _cc[1],
+de: _cc[1],
+dsb: {cardinal:["one","two","few","other"],ordinal:["other"]},
+dv: _cc[1],
+dz: _cc[0],
+ee: _cc[1],
+el: _cc[1],
+en: {cardinal:["one","other"],ordinal:["one","two","few","other"]},
+eo: _cc[1],
+es: _cc[1],
+et: _cc[1],
+eu: _cc[1],
+fa: _cc[1],
+ff: _cc[1],
+fi: _cc[1],
+fil: _cc[2],
+fo: _cc[1],
+fr: _cc[2],
+fur: _cc[1],
+fy: _cc[1],
+ga: {cardinal:["one","two","few","many","other"],ordinal:["one","other"]},
+gd: {cardinal:["one","two","few","other"],ordinal:["one","two","few","other"]},
+gl: _cc[1],
+gsw: _cc[1],
+gu: {cardinal:["one","other"],ordinal:["one","two","few","many","other"]},
+guw: _cc[1],
+gv: {cardinal:["one","two","few","many","other"],ordinal:["other"]},
+ha: _cc[1],
+haw: _cc[1],
+he: {cardinal:["one","two","many","other"],ordinal:["other"]},
+hi: {cardinal:["one","other"],ordinal:["one","two","few","many","other"]},
+hr: {cardinal:["one","few","other"],ordinal:["other"]},
+hsb: {cardinal:["one","two","few","other"],ordinal:["other"]},
+hu: _cc[2],
+hy: _cc[2],
+ia: _cc[1],
+id: _cc[0],
+ig: _cc[0],
+ii: _cc[0],
+"in": _cc[0],
+io: _cc[1],
+is: _cc[1],
+it: {cardinal:["one","other"],ordinal:["many","other"]},
+iu: _cc[3],
+iw: {cardinal:["one","two","many","other"],ordinal:["other"]},
+ja: _cc[0],
+jbo: _cc[0],
+jgo: _cc[1],
+ji: _cc[1],
+jmc: _cc[1],
+jv: _cc[0],
+jw: _cc[0],
+ka: {cardinal:["one","other"],ordinal:["one","many","other"]},
+kab: _cc[1],
+kaj: _cc[1],
+kcg: _cc[1],
+kde: _cc[0],
+kea: _cc[0],
+kk: {cardinal:["one","other"],ordinal:["many","other"]},
+kkj: _cc[1],
+kl: _cc[1],
+km: _cc[0],
+kn: _cc[1],
+ko: _cc[0],
+ks: _cc[1],
+ksb: _cc[1],
+ksh: {cardinal:["zero","one","other"],ordinal:["other"]},
+ku: _cc[1],
+kw: _cc[3],
+ky: _cc[1],
+lag: {cardinal:["zero","one","other"],ordinal:["other"]},
+lb: _cc[1],
+lg: _cc[1],
+lkt: _cc[0],
+ln: _cc[1],
+lo: {cardinal:["other"],ordinal:["one","other"]},
+lt: {cardinal:["one","few","many","other"],ordinal:["other"]},
+lv: {cardinal:["zero","one","other"],ordinal:["other"]},
+mas: _cc[1],
+mg: _cc[1],
+mgo: _cc[1],
+mk: {cardinal:["one","other"],ordinal:["one","two","many","other"]},
+ml: _cc[1],
+mn: _cc[1],
+mo: {cardinal:["one","few","other"],ordinal:["one","other"]},
+mr: {cardinal:["one","other"],ordinal:["one","two","few","other"]},
+ms: {cardinal:["other"],ordinal:["one","other"]},
+mt: {cardinal:["one","few","many","other"],ordinal:["other"]},
+my: _cc[0],
+nah: _cc[1],
+naq: _cc[3],
+nb: _cc[1],
+nd: _cc[1],
+ne: _cc[2],
+nl: _cc[1],
+nn: _cc[1],
+nnh: _cc[1],
+no: _cc[1],
+nqo: _cc[0],
+nr: _cc[1],
+nso: _cc[1],
+ny: _cc[1],
+nyn: _cc[1],
+om: _cc[1],
+or: {cardinal:["one","other"],ordinal:["one","two","few","many","other"]},
+os: _cc[1],
+pa: _cc[1],
+pap: _cc[1],
+pl: {cardinal:["one","few","many","other"],ordinal:["other"]},
+prg: {cardinal:["zero","one","other"],ordinal:["other"]},
+ps: _cc[1],
+pt: _cc[1],
+"pt-PT": _cc[1],
+rm: _cc[1],
+ro: {cardinal:["one","few","other"],ordinal:["one","other"]},
+rof: _cc[1],
+root: _cc[0],
+ru: {cardinal:["one","few","many","other"],ordinal:["other"]},
+rwk: _cc[1],
+sah: _cc[0],
+saq: _cc[1],
+sc: {cardinal:["one","other"],ordinal:["many","other"]},
+scn: {cardinal:["one","other"],ordinal:["many","other"]},
+sd: _cc[1],
+sdh: _cc[1],
+se: _cc[3],
+seh: _cc[1],
+ses: _cc[0],
+sg: _cc[0],
+sh: {cardinal:["one","few","other"],ordinal:["other"]},
+shi: {cardinal:["one","few","other"],ordinal:["other"]},
+si: _cc[1],
+sk: {cardinal:["one","few","many","other"],ordinal:["other"]},
+sl: {cardinal:["one","two","few","other"],ordinal:["other"]},
+sma: _cc[3],
+smi: _cc[3],
+smj: _cc[3],
+smn: _cc[3],
+sms: _cc[3],
+sn: _cc[1],
+so: _cc[1],
+sq: {cardinal:["one","other"],ordinal:["one","many","other"]},
+sr: {cardinal:["one","few","other"],ordinal:["other"]},
+ss: _cc[1],
+ssy: _cc[1],
+st: _cc[1],
+sv: _cc[2],
+sw: _cc[1],
+syr: _cc[1],
+ta: _cc[1],
+te: _cc[1],
+teo: _cc[1],
+th: _cc[0],
+ti: _cc[1],
+tig: _cc[1],
+tk: {cardinal:["one","other"],ordinal:["few","other"]},
+tl: _cc[2],
+tn: _cc[1],
+to: _cc[0],
+tr: _cc[1],
+ts: _cc[1],
+tzm: _cc[1],
+ug: _cc[1],
+uk: {cardinal:["one","few","many","other"],ordinal:["few","other"]},
+ur: _cc[1],
+uz: _cc[1],
+ve: _cc[1],
+vi: {cardinal:["other"],ordinal:["one","other"]},
+vo: _cc[1],
+vun: _cc[1],
+wa: _cc[1],
+wae: _cc[1],
+wo: _cc[0],
+xh: _cc[1],
+xog: _cc[1],
+yi: _cc[1],
+yo: _cc[0],
+yue: _cc[0],
+zh: _cc[0],
+zu: _cc[1]
+}));
+
+
+/***/ }),
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;var _cp = [
@@ -6008,16 +7038,27 @@ function(n, ord) {
 				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
   } else {}
 }(this, {
-af: _cp[1],
+af: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-ak: _cp[2],
+ak: function(n, ord
+) {
+  if (ord) return 'other';
+  return ((n == 0
+          || n == 1)) ? 'one' : 'other';
+},
 
-am: function(n, ord) {
+am: function(n, ord
+) {
   if (ord) return 'other';
   return (n >= 0 && n <= 1) ? 'one' : 'other';
 },
 
-ar: function(n, ord) {
+ar: function(n, ord
+) {
   var s = String(n).split('.'), t0 = Number(s[0]) == n,
       n100 = t0 && s[0].slice(-2);
   if (ord) return 'other';
@@ -6029,7 +7070,21 @@ ar: function(n, ord) {
       : 'other';
 },
 
-as: function(n, ord) {
+ars: function(n, ord
+) {
+  var s = String(n).split('.'), t0 = Number(s[0]) == n,
+      n100 = t0 && s[0].slice(-2);
+  if (ord) return 'other';
+  return (n == 0) ? 'zero'
+      : (n == 1) ? 'one'
+      : (n == 2) ? 'two'
+      : ((n100 >= 3 && n100 <= 10)) ? 'few'
+      : ((n100 >= 11 && n100 <= 99)) ? 'many'
+      : 'other';
+},
+
+as: function(n, ord
+) {
   if (ord) return ((n == 1 || n == 5 || n == 7 || n == 8 || n == 9
           || n == 10)) ? 'one'
       : ((n == 2
@@ -6040,11 +7095,21 @@ as: function(n, ord) {
   return (n >= 0 && n <= 1) ? 'one' : 'other';
 },
 
-asa: _cp[1],
+asa: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-ast: _cp[3],
+ast: function(n, ord
+) {
+  var s = String(n).split('.'), v0 = !s[1];
+  if (ord) return 'other';
+  return (n == 1 && v0) ? 'one' : 'other';
+},
 
-az: function(n, ord) {
+az: function(n, ord
+) {
   var s = String(n).split('.'), i = s[0], i10 = i.slice(-1),
       i100 = i.slice(-2), i1000 = i.slice(-3);
   if (ord) return ((i10 == 1 || i10 == 2 || i10 == 5 || i10 == 7 || i10 == 8)
@@ -6060,7 +7125,8 @@ az: function(n, ord) {
   return (n == 1) ? 'one' : 'other';
 },
 
-be: function(n, ord) {
+be: function(n, ord
+) {
   var s = String(n).split('.'), t0 = Number(s[0]) == n,
       n10 = t0 && s[0].slice(-1), n100 = t0 && s[0].slice(-2);
   if (ord) return ((n10 == 2
@@ -6073,17 +7139,39 @@ be: function(n, ord) {
       : 'other';
 },
 
-bem: _cp[1],
+bem: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-bez: _cp[1],
+bez: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-bg: _cp[1],
+bg: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-bh: _cp[2],
+bh: function(n, ord
+) {
+  if (ord) return 'other';
+  return ((n == 0
+          || n == 1)) ? 'one' : 'other';
+},
 
-bm: _cp[0],
+bm: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-bn: function(n, ord) {
+bn: function(n, ord
+) {
   if (ord) return ((n == 1 || n == 5 || n == 7 || n == 8 || n == 9
           || n == 10)) ? 'one'
       : ((n == 2
@@ -6094,9 +7182,14 @@ bn: function(n, ord) {
   return (n >= 0 && n <= 1) ? 'one' : 'other';
 },
 
-bo: _cp[0],
+bo: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-br: function(n, ord) {
+br: function(n, ord
+) {
   var s = String(n).split('.'), t0 = Number(s[0]) == n,
       n10 = t0 && s[0].slice(-1), n100 = t0 && s[0].slice(-2),
       n1000000 = t0 && s[0].slice(-6);
@@ -6110,9 +7203,14 @@ br: function(n, ord) {
       : 'other';
 },
 
-brx: _cp[1],
+brx: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-bs: function(n, ord) {
+bs: function(n, ord
+) {
   var s = String(n).split('.'), i = s[0], f = s[1] || '', v0 = !s[1],
       i10 = i.slice(-1), i100 = i.slice(-2), f10 = f.slice(-1), f100 = f.slice(-2);
   if (ord) return 'other';
@@ -6124,7 +7222,8 @@ bs: function(n, ord) {
       : 'other';
 },
 
-ca: function(n, ord) {
+ca: function(n, ord
+) {
   var s = String(n).split('.'), v0 = !s[1];
   if (ord) return ((n == 1
           || n == 3)) ? 'one'
@@ -6134,15 +7233,32 @@ ca: function(n, ord) {
   return (n == 1 && v0) ? 'one' : 'other';
 },
 
-ce: _cp[1],
+ce: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-cgg: _cp[1],
+cgg: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-chr: _cp[1],
+chr: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-ckb: _cp[1],
+ckb: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-cs: function(n, ord) {
+cs: function(n, ord
+) {
   var s = String(n).split('.'), i = s[0], v0 = !s[1];
   if (ord) return 'other';
   return (n == 1 && v0) ? 'one'
@@ -6151,7 +7267,8 @@ cs: function(n, ord) {
       : 'other';
 },
 
-cy: function(n, ord) {
+cy: function(n, ord
+) {
   if (ord) return ((n == 0 || n == 7 || n == 8
           || n == 9)) ? 'zero'
       : (n == 1) ? 'one'
@@ -6169,16 +7286,23 @@ cy: function(n, ord) {
       : 'other';
 },
 
-da: function(n, ord) {
+da: function(n, ord
+) {
   var s = String(n).split('.'), i = s[0], t0 = Number(s[0]) == n;
   if (ord) return 'other';
   return (n == 1 || !t0 && (i == 0
           || i == 1)) ? 'one' : 'other';
 },
 
-de: _cp[3],
+de: function(n, ord
+) {
+  var s = String(n).split('.'), v0 = !s[1];
+  if (ord) return 'other';
+  return (n == 1 && v0) ? 'one' : 'other';
+},
 
-dsb: function(n, ord) {
+dsb: function(n, ord
+) {
   var s = String(n).split('.'), i = s[0], f = s[1] || '', v0 = !s[1],
       i100 = i.slice(-2), f100 = f.slice(-2);
   if (ord) return 'other';
@@ -6191,15 +7315,32 @@ dsb: function(n, ord) {
       : 'other';
 },
 
-dv: _cp[1],
+dv: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-dz: _cp[0],
+dz: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-ee: _cp[1],
+ee: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-el: _cp[1],
+el: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-en: function(n, ord) {
+en: function(n, ord
+) {
   var s = String(n).split('.'), v0 = !s[1], t0 = Number(s[0]) == n,
       n10 = t0 && s[0].slice(-1), n100 = t0 && s[0].slice(-2);
   if (ord) return (n10 == 1 && n100 != 11) ? 'one'
@@ -6209,27 +7350,52 @@ en: function(n, ord) {
   return (n == 1 && v0) ? 'one' : 'other';
 },
 
-eo: _cp[1],
+eo: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-es: _cp[1],
+es: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-et: _cp[3],
+et: function(n, ord
+) {
+  var s = String(n).split('.'), v0 = !s[1];
+  if (ord) return 'other';
+  return (n == 1 && v0) ? 'one' : 'other';
+},
 
-eu: _cp[1],
+eu: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-fa: function(n, ord) {
+fa: function(n, ord
+) {
   if (ord) return 'other';
   return (n >= 0 && n <= 1) ? 'one' : 'other';
 },
 
-ff: function(n, ord) {
+ff: function(n, ord
+) {
   if (ord) return 'other';
   return (n >= 0 && n < 2) ? 'one' : 'other';
 },
 
-fi: _cp[3],
+fi: function(n, ord
+) {
+  var s = String(n).split('.'), v0 = !s[1];
+  if (ord) return 'other';
+  return (n == 1 && v0) ? 'one' : 'other';
+},
 
-fil: function(n, ord) {
+fil: function(n, ord
+) {
   var s = String(n).split('.'), i = s[0], f = s[1] || '', v0 = !s[1],
       i10 = i.slice(-1), f10 = f.slice(-1);
   if (ord) return (n == 1) ? 'one' : 'other';
@@ -6238,18 +7404,33 @@ fil: function(n, ord) {
           || !v0 && f10 != 4 && f10 != 6 && f10 != 9) ? 'one' : 'other';
 },
 
-fo: _cp[1],
+fo: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-fr: function(n, ord) {
+fr: function(n, ord
+) {
   if (ord) return (n == 1) ? 'one' : 'other';
   return (n >= 0 && n < 2) ? 'one' : 'other';
 },
 
-fur: _cp[1],
+fur: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-fy: _cp[3],
+fy: function(n, ord
+) {
+  var s = String(n).split('.'), v0 = !s[1];
+  if (ord) return 'other';
+  return (n == 1 && v0) ? 'one' : 'other';
+},
 
-ga: function(n, ord) {
+ga: function(n, ord
+) {
   var s = String(n).split('.'), t0 = Number(s[0]) == n;
   if (ord) return (n == 1) ? 'one' : 'other';
   return (n == 1) ? 'one'
@@ -6259,9 +7440,16 @@ ga: function(n, ord) {
       : 'other';
 },
 
-gd: function(n, ord) {
+gd: function(n, ord
+) {
   var s = String(n).split('.'), t0 = Number(s[0]) == n;
-  if (ord) return 'other';
+  if (ord) return ((n == 1
+          || n == 11)) ? 'one'
+      : ((n == 2
+          || n == 12)) ? 'two'
+      : ((n == 3
+          || n == 13)) ? 'few'
+      : 'other';
   return ((n == 1
           || n == 11)) ? 'one'
       : ((n == 2
@@ -6271,11 +7459,21 @@ gd: function(n, ord) {
       : 'other';
 },
 
-gl: _cp[3],
+gl: function(n, ord
+) {
+  var s = String(n).split('.'), v0 = !s[1];
+  if (ord) return 'other';
+  return (n == 1 && v0) ? 'one' : 'other';
+},
 
-gsw: _cp[1],
+gsw: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-gu: function(n, ord) {
+gu: function(n, ord
+) {
   if (ord) return (n == 1) ? 'one'
       : ((n == 2
           || n == 3)) ? 'two'
@@ -6285,9 +7483,15 @@ gu: function(n, ord) {
   return (n >= 0 && n <= 1) ? 'one' : 'other';
 },
 
-guw: _cp[2],
+guw: function(n, ord
+) {
+  if (ord) return 'other';
+  return ((n == 0
+          || n == 1)) ? 'one' : 'other';
+},
 
-gv: function(n, ord) {
+gv: function(n, ord
+) {
   var s = String(n).split('.'), i = s[0], v0 = !s[1], i10 = i.slice(-1),
       i100 = i.slice(-2);
   if (ord) return 'other';
@@ -6299,11 +7503,20 @@ gv: function(n, ord) {
       : 'other';
 },
 
-ha: _cp[1],
+ha: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-haw: _cp[1],
+haw: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-he: function(n, ord) {
+he: function(n, ord
+) {
   var s = String(n).split('.'), i = s[0], v0 = !s[1], t0 = Number(s[0]) == n,
       n10 = t0 && s[0].slice(-1);
   if (ord) return 'other';
@@ -6314,7 +7527,8 @@ he: function(n, ord) {
       : 'other';
 },
 
-hi: function(n, ord) {
+hi: function(n, ord
+) {
   if (ord) return (n == 1) ? 'one'
       : ((n == 2
           || n == 3)) ? 'two'
@@ -6324,7 +7538,8 @@ hi: function(n, ord) {
   return (n >= 0 && n <= 1) ? 'one' : 'other';
 },
 
-hr: function(n, ord) {
+hr: function(n, ord
+) {
   var s = String(n).split('.'), i = s[0], f = s[1] || '', v0 = !s[1],
       i10 = i.slice(-1), i100 = i.slice(-2), f10 = f.slice(-1), f100 = f.slice(-2);
   if (ord) return 'other';
@@ -6336,7 +7551,8 @@ hr: function(n, ord) {
       : 'other';
 },
 
-hsb: function(n, ord) {
+hsb: function(n, ord
+) {
   var s = String(n).split('.'), i = s[0], f = s[1] || '', v0 = !s[1],
       i100 = i.slice(-2), f100 = f.slice(-2);
   if (ord) return 'other';
@@ -6349,26 +7565,59 @@ hsb: function(n, ord) {
       : 'other';
 },
 
-hu: function(n, ord) {
+hu: function(n, ord
+) {
   if (ord) return ((n == 1
           || n == 5)) ? 'one' : 'other';
   return (n == 1) ? 'one' : 'other';
 },
 
-hy: function(n, ord) {
+hy: function(n, ord
+) {
   if (ord) return (n == 1) ? 'one' : 'other';
   return (n >= 0 && n < 2) ? 'one' : 'other';
 },
 
-id: _cp[0],
+ia: function(n, ord
+) {
+  var s = String(n).split('.'), v0 = !s[1];
+  if (ord) return 'other';
+  return (n == 1 && v0) ? 'one' : 'other';
+},
 
-ig: _cp[0],
+id: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-ii: _cp[0],
+ig: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-"in": _cp[0],
+ii: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-is: function(n, ord) {
+"in": function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
+
+io: function(n, ord
+) {
+  var s = String(n).split('.'), v0 = !s[1];
+  if (ord) return 'other';
+  return (n == 1 && v0) ? 'one' : 'other';
+},
+
+is: function(n, ord
+) {
   var s = String(n).split('.'), i = s[0], t0 = Number(s[0]) == n,
       i10 = i.slice(-1), i100 = i.slice(-2);
   if (ord) return 'other';
@@ -6376,21 +7625,24 @@ is: function(n, ord) {
           || !t0) ? 'one' : 'other';
 },
 
-it: function(n, ord) {
+it: function(n, ord
+) {
   var s = String(n).split('.'), v0 = !s[1];
   if (ord) return ((n == 11 || n == 8 || n == 80
           || n == 800)) ? 'many' : 'other';
   return (n == 1 && v0) ? 'one' : 'other';
 },
 
-iu: function(n, ord) {
+iu: function(n, ord
+) {
   if (ord) return 'other';
   return (n == 1) ? 'one'
       : (n == 2) ? 'two'
       : 'other';
 },
 
-iw: function(n, ord) {
+iw: function(n, ord
+) {
   var s = String(n).split('.'), i = s[0], v0 = !s[1], t0 = Number(s[0]) == n,
       n10 = t0 && s[0].slice(-1);
   if (ord) return 'other';
@@ -6401,21 +7653,51 @@ iw: function(n, ord) {
       : 'other';
 },
 
-ja: _cp[0],
+ja: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-jbo: _cp[0],
+jbo: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-jgo: _cp[1],
+jgo: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-ji: _cp[3],
+ji: function(n, ord
+) {
+  var s = String(n).split('.'), v0 = !s[1];
+  if (ord) return 'other';
+  return (n == 1 && v0) ? 'one' : 'other';
+},
 
-jmc: _cp[1],
+jmc: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-jv: _cp[0],
+jv: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-jw: _cp[0],
+jw: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-ka: function(n, ord) {
+ka: function(n, ord
+) {
   var s = String(n).split('.'), i = s[0], i100 = i.slice(-2);
   if (ord) return (i == 1) ? 'one'
       : (i == 0 || ((i100 >= 2 && i100 <= 20) || i100 == 40 || i100 == 60
@@ -6424,20 +7706,38 @@ ka: function(n, ord) {
   return (n == 1) ? 'one' : 'other';
 },
 
-kab: function(n, ord) {
+kab: function(n, ord
+) {
   if (ord) return 'other';
   return (n >= 0 && n < 2) ? 'one' : 'other';
 },
 
-kaj: _cp[1],
+kaj: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-kcg: _cp[1],
+kcg: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-kde: _cp[0],
+kde: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-kea: _cp[0],
+kea: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-kk: function(n, ord) {
+kk: function(n, ord
+) {
   var s = String(n).split('.'), t0 = Number(s[0]) == n,
       n10 = t0 && s[0].slice(-1);
   if (ord) return (n10 == 6 || n10 == 9
@@ -6445,42 +7745,78 @@ kk: function(n, ord) {
   return (n == 1) ? 'one' : 'other';
 },
 
-kkj: _cp[1],
+kkj: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-kl: _cp[1],
+kl: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-km: _cp[0],
+km: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-kn: function(n, ord) {
+kn: function(n, ord
+) {
   if (ord) return 'other';
   return (n >= 0 && n <= 1) ? 'one' : 'other';
 },
 
-ko: _cp[0],
+ko: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-ks: _cp[1],
+ks: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-ksb: _cp[1],
+ksb: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-ksh: function(n, ord) {
+ksh: function(n, ord
+) {
   if (ord) return 'other';
   return (n == 0) ? 'zero'
       : (n == 1) ? 'one'
       : 'other';
 },
 
-ku: _cp[1],
+ku: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-kw: function(n, ord) {
+kw: function(n, ord
+) {
   if (ord) return 'other';
   return (n == 1) ? 'one'
       : (n == 2) ? 'two'
       : 'other';
 },
 
-ky: _cp[1],
+ky: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-lag: function(n, ord) {
+lag: function(n, ord
+) {
   var s = String(n).split('.'), i = s[0];
   if (ord) return 'other';
   return (n == 0) ? 'zero'
@@ -6489,20 +7825,39 @@ lag: function(n, ord) {
       : 'other';
 },
 
-lb: _cp[1],
+lb: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-lg: _cp[1],
+lg: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-lkt: _cp[0],
+lkt: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-ln: _cp[2],
+ln: function(n, ord
+) {
+  if (ord) return 'other';
+  return ((n == 0
+          || n == 1)) ? 'one' : 'other';
+},
 
-lo: function(n, ord) {
+lo: function(n, ord
+) {
   if (ord) return (n == 1) ? 'one' : 'other';
   return 'other';
 },
 
-lt: function(n, ord) {
+lt: function(n, ord
+) {
   var s = String(n).split('.'), f = s[1] || '', t0 = Number(s[0]) == n,
       n10 = t0 && s[0].slice(-1), n100 = t0 && s[0].slice(-2);
   if (ord) return 'other';
@@ -6514,7 +7869,8 @@ lt: function(n, ord) {
       : 'other';
 },
 
-lv: function(n, ord) {
+lv: function(n, ord
+) {
   var s = String(n).split('.'), f = s[1] || '', v = f.length,
       t0 = Number(s[0]) == n, n10 = t0 && s[0].slice(-1),
       n100 = t0 && s[0].slice(-2), f100 = f.slice(-2), f10 = f.slice(-1);
@@ -6526,29 +7882,52 @@ lv: function(n, ord) {
       : 'other';
 },
 
-mas: _cp[1],
+mas: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-mg: _cp[2],
+mg: function(n, ord
+) {
+  if (ord) return 'other';
+  return ((n == 0
+          || n == 1)) ? 'one' : 'other';
+},
 
-mgo: _cp[1],
+mgo: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-mk: function(n, ord) {
+mk: function(n, ord
+) {
   var s = String(n).split('.'), i = s[0], f = s[1] || '', v0 = !s[1],
-      i10 = i.slice(-1), i100 = i.slice(-2), f10 = f.slice(-1);
+      i10 = i.slice(-1), i100 = i.slice(-2), f10 = f.slice(-1), f100 = f.slice(-2);
   if (ord) return (i10 == 1 && i100 != 11) ? 'one'
       : (i10 == 2 && i100 != 12) ? 'two'
       : ((i10 == 7
           || i10 == 8) && i100 != 17 && i100 != 18) ? 'many'
       : 'other';
-  return (v0 && i10 == 1
-          || f10 == 1) ? 'one' : 'other';
+  return (v0 && i10 == 1 && i100 != 11
+          || f10 == 1 && f100 != 11) ? 'one' : 'other';
 },
 
-ml: _cp[1],
+ml: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-mn: _cp[1],
+mn: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-mo: function(n, ord) {
+mo: function(n, ord
+) {
   var s = String(n).split('.'), v0 = !s[1], t0 = Number(s[0]) == n,
       n100 = t0 && s[0].slice(-2);
   if (ord) return (n == 1) ? 'one' : 'other';
@@ -6558,7 +7937,8 @@ mo: function(n, ord) {
       : 'other';
 },
 
-mr: function(n, ord) {
+mr: function(n, ord
+) {
   if (ord) return (n == 1) ? 'one'
       : ((n == 2
           || n == 3)) ? 'two'
@@ -6567,12 +7947,14 @@ mr: function(n, ord) {
   return (n >= 0 && n <= 1) ? 'one' : 'other';
 },
 
-ms: function(n, ord) {
+ms: function(n, ord
+) {
   if (ord) return (n == 1) ? 'one' : 'other';
   return 'other';
 },
 
-mt: function(n, ord) {
+mt: function(n, ord
+) {
   var s = String(n).split('.'), t0 = Number(s[0]) == n,
       n100 = t0 && s[0].slice(-2);
   if (ord) return 'other';
@@ -6583,56 +7965,141 @@ mt: function(n, ord) {
       : 'other';
 },
 
-my: _cp[0],
+my: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-nah: _cp[1],
+nah: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-naq: function(n, ord) {
+naq: function(n, ord
+) {
   if (ord) return 'other';
   return (n == 1) ? 'one'
       : (n == 2) ? 'two'
       : 'other';
 },
 
-nb: _cp[1],
+nb: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-nd: _cp[1],
+nd: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-ne: function(n, ord) {
+ne: function(n, ord
+) {
   var s = String(n).split('.'), t0 = Number(s[0]) == n;
   if (ord) return ((t0 && n >= 1 && n <= 4)) ? 'one' : 'other';
   return (n == 1) ? 'one' : 'other';
 },
 
-nl: _cp[3],
+nl: function(n, ord
+) {
+  var s = String(n).split('.'), v0 = !s[1];
+  if (ord) return 'other';
+  return (n == 1 && v0) ? 'one' : 'other';
+},
 
-nn: _cp[1],
+nn: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-nnh: _cp[1],
+nnh: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-no: _cp[1],
+no: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-nqo: _cp[0],
+nqo: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-nr: _cp[1],
+nr: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-nso: _cp[2],
+nso: function(n, ord
+) {
+  if (ord) return 'other';
+  return ((n == 0
+          || n == 1)) ? 'one' : 'other';
+},
 
-ny: _cp[1],
+ny: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-nyn: _cp[1],
+nyn: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-om: _cp[1],
+om: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-or: _cp[1],
+or: function(n, ord
+) {
+  var s = String(n).split('.'), t0 = Number(s[0]) == n;
+  if (ord) return ((n == 1 || n == 5
+          || (t0 && n >= 7 && n <= 9))) ? 'one'
+      : ((n == 2
+          || n == 3)) ? 'two'
+      : (n == 4) ? 'few'
+      : (n == 6) ? 'many'
+      : 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-os: _cp[1],
+os: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-pa: _cp[2],
+pa: function(n, ord
+) {
+  if (ord) return 'other';
+  return ((n == 0
+          || n == 1)) ? 'one' : 'other';
+},
 
-pap: _cp[1],
+pap: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-pl: function(n, ord) {
+pl: function(n, ord
+) {
   var s = String(n).split('.'), i = s[0], v0 = !s[1], i10 = i.slice(-1),
       i100 = i.slice(-2);
   if (ord) return 'other';
@@ -6645,7 +8112,8 @@ pl: function(n, ord) {
       : 'other';
 },
 
-prg: function(n, ord) {
+prg: function(n, ord
+) {
   var s = String(n).split('.'), f = s[1] || '', v = f.length,
       t0 = Number(s[0]) == n, n10 = t0 && s[0].slice(-1),
       n100 = t0 && s[0].slice(-2), f100 = f.slice(-2), f10 = f.slice(-1);
@@ -6657,19 +8125,35 @@ prg: function(n, ord) {
       : 'other';
 },
 
-ps: _cp[1],
-
-pt: function(n, ord) {
-  var s = String(n).split('.'), t0 = Number(s[0]) == n;
+ps: function(n, ord
+) {
   if (ord) return 'other';
-  return ((t0 && n >= 0 && n <= 2) && n != 2) ? 'one' : 'other';
+  return (n == 1) ? 'one' : 'other';
 },
 
-"pt-PT": _cp[3],
+pt: function(n, ord
+) {
+  var s = String(n).split('.'), i = s[0];
+  if (ord) return 'other';
+  return ((i == 0
+          || i == 1)) ? 'one' : 'other';
+},
 
-rm: _cp[1],
+"pt-PT": function(n, ord
+) {
+  var s = String(n).split('.'), v0 = !s[1];
+  if (ord) return 'other';
+  return (n == 1 && v0) ? 'one' : 'other';
+},
 
-ro: function(n, ord) {
+rm: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
+
+ro: function(n, ord
+) {
   var s = String(n).split('.'), v0 = !s[1], t0 = Number(s[0]) == n,
       n100 = t0 && s[0].slice(-2);
   if (ord) return (n == 1) ? 'one' : 'other';
@@ -6679,11 +8163,20 @@ ro: function(n, ord) {
       : 'other';
 },
 
-rof: _cp[1],
+rof: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-root: _cp[0],
+root: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-ru: function(n, ord) {
+ru: function(n, ord
+) {
   var s = String(n).split('.'), i = s[0], v0 = !s[1], i10 = i.slice(-1),
       i100 = i.slice(-2);
   if (ord) return 'other';
@@ -6695,28 +8188,80 @@ ru: function(n, ord) {
       : 'other';
 },
 
-rwk: _cp[1],
+rwk: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-sah: _cp[0],
+sah: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-saq: _cp[1],
+saq: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-sdh: _cp[1],
+sc: function(n, ord
+) {
+  var s = String(n).split('.'), v0 = !s[1];
+  if (ord) return ((n == 11 || n == 8 || n == 80
+          || n == 800)) ? 'many' : 'other';
+  return (n == 1 && v0) ? 'one' : 'other';
+},
 
-se: function(n, ord) {
+scn: function(n, ord
+) {
+  var s = String(n).split('.'), v0 = !s[1];
+  if (ord) return ((n == 11 || n == 8 || n == 80
+          || n == 800)) ? 'many' : 'other';
+  return (n == 1 && v0) ? 'one' : 'other';
+},
+
+sd: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
+
+sdh: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
+
+se: function(n, ord
+) {
   if (ord) return 'other';
   return (n == 1) ? 'one'
       : (n == 2) ? 'two'
       : 'other';
 },
 
-seh: _cp[1],
+seh: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-ses: _cp[0],
+ses: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-sg: _cp[0],
+sg: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-sh: function(n, ord) {
+sh: function(n, ord
+) {
   var s = String(n).split('.'), i = s[0], f = s[1] || '', v0 = !s[1],
       i10 = i.slice(-1), i100 = i.slice(-2), f10 = f.slice(-1), f100 = f.slice(-2);
   if (ord) return 'other';
@@ -6728,7 +8273,8 @@ sh: function(n, ord) {
       : 'other';
 },
 
-shi: function(n, ord) {
+shi: function(n, ord
+) {
   var s = String(n).split('.'), t0 = Number(s[0]) == n;
   if (ord) return 'other';
   return (n >= 0 && n <= 1) ? 'one'
@@ -6736,14 +8282,16 @@ shi: function(n, ord) {
       : 'other';
 },
 
-si: function(n, ord) {
+si: function(n, ord
+) {
   var s = String(n).split('.'), i = s[0], f = s[1] || '';
   if (ord) return 'other';
   return ((n == 0 || n == 1)
           || i == 0 && f == 1) ? 'one' : 'other';
 },
 
-sk: function(n, ord) {
+sk: function(n, ord
+) {
   var s = String(n).split('.'), i = s[0], v0 = !s[1];
   if (ord) return 'other';
   return (n == 1 && v0) ? 'one'
@@ -6752,7 +8300,8 @@ sk: function(n, ord) {
       : 'other';
 },
 
-sl: function(n, ord) {
+sl: function(n, ord
+) {
   var s = String(n).split('.'), i = s[0], v0 = !s[1], i100 = i.slice(-2);
   if (ord) return 'other';
   return (v0 && i100 == 1) ? 'one'
@@ -6762,46 +8311,60 @@ sl: function(n, ord) {
       : 'other';
 },
 
-sma: function(n, ord) {
+sma: function(n, ord
+) {
   if (ord) return 'other';
   return (n == 1) ? 'one'
       : (n == 2) ? 'two'
       : 'other';
 },
 
-smi: function(n, ord) {
+smi: function(n, ord
+) {
   if (ord) return 'other';
   return (n == 1) ? 'one'
       : (n == 2) ? 'two'
       : 'other';
 },
 
-smj: function(n, ord) {
+smj: function(n, ord
+) {
   if (ord) return 'other';
   return (n == 1) ? 'one'
       : (n == 2) ? 'two'
       : 'other';
 },
 
-smn: function(n, ord) {
+smn: function(n, ord
+) {
   if (ord) return 'other';
   return (n == 1) ? 'one'
       : (n == 2) ? 'two'
       : 'other';
 },
 
-sms: function(n, ord) {
+sms: function(n, ord
+) {
   if (ord) return 'other';
   return (n == 1) ? 'one'
       : (n == 2) ? 'two'
       : 'other';
 },
 
-sn: _cp[1],
+sn: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-so: _cp[1],
+so: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-sq: function(n, ord) {
+sq: function(n, ord
+) {
   var s = String(n).split('.'), t0 = Number(s[0]) == n,
       n10 = t0 && s[0].slice(-1), n100 = t0 && s[0].slice(-2);
   if (ord) return (n == 1) ? 'one'
@@ -6810,7 +8373,8 @@ sq: function(n, ord) {
   return (n == 1) ? 'one' : 'other';
 },
 
-sr: function(n, ord) {
+sr: function(n, ord
+) {
   var s = String(n).split('.'), i = s[0], f = s[1] || '', v0 = !s[1],
       i10 = i.slice(-1), i100 = i.slice(-2), f10 = f.slice(-1), f100 = f.slice(-2);
   if (ord) return 'other';
@@ -6822,13 +8386,26 @@ sr: function(n, ord) {
       : 'other';
 },
 
-ss: _cp[1],
+ss: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-ssy: _cp[1],
+ssy: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-st: _cp[1],
+st: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-sv: function(n, ord) {
+sv: function(n, ord
+) {
   var s = String(n).split('.'), v0 = !s[1], t0 = Number(s[0]) == n,
       n10 = t0 && s[0].slice(-1), n100 = t0 && s[0].slice(-2);
   if (ord) return ((n10 == 1
@@ -6836,25 +8413,67 @@ sv: function(n, ord) {
   return (n == 1 && v0) ? 'one' : 'other';
 },
 
-sw: _cp[3],
+sw: function(n, ord
+) {
+  var s = String(n).split('.'), v0 = !s[1];
+  if (ord) return 'other';
+  return (n == 1 && v0) ? 'one' : 'other';
+},
 
-syr: _cp[1],
+syr: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-ta: _cp[1],
+ta: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-te: _cp[1],
+te: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-teo: _cp[1],
+teo: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-th: _cp[0],
+th: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-ti: _cp[2],
+ti: function(n, ord
+) {
+  if (ord) return 'other';
+  return ((n == 0
+          || n == 1)) ? 'one' : 'other';
+},
 
-tig: _cp[1],
+tig: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-tk: _cp[1],
+tk: function(n, ord
+) {
+  var s = String(n).split('.'), t0 = Number(s[0]) == n,
+      n10 = t0 && s[0].slice(-1);
+  if (ord) return ((n10 == 6 || n10 == 9)
+          || n == 10) ? 'few' : 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-tl: function(n, ord) {
+tl: function(n, ord
+) {
   var s = String(n).split('.'), i = s[0], f = s[1] || '', v0 = !s[1],
       i10 = i.slice(-1), f10 = f.slice(-1);
   if (ord) return (n == 1) ? 'one' : 'other';
@@ -6863,24 +8482,46 @@ tl: function(n, ord) {
           || !v0 && f10 != 4 && f10 != 6 && f10 != 9) ? 'one' : 'other';
 },
 
-tn: _cp[1],
+tn: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-to: _cp[0],
+to: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-tr: _cp[1],
+tr: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-ts: _cp[1],
+ts: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-tzm: function(n, ord) {
+tzm: function(n, ord
+) {
   var s = String(n).split('.'), t0 = Number(s[0]) == n;
   if (ord) return 'other';
   return ((n == 0 || n == 1)
           || (t0 && n >= 11 && n <= 99)) ? 'one' : 'other';
 },
 
-ug: _cp[1],
+ug: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-uk: function(n, ord) {
+uk: function(n, ord
+) {
   var s = String(n).split('.'), i = s[0], v0 = !s[1], t0 = Number(s[0]) == n,
       n10 = t0 && s[0].slice(-1), n100 = t0 && s[0].slice(-2), i10 = i.slice(-1),
       i100 = i.slice(-2);
@@ -6893,38 +8534,101 @@ uk: function(n, ord) {
       : 'other';
 },
 
-ur: _cp[3],
+ur: function(n, ord
+) {
+  var s = String(n).split('.'), v0 = !s[1];
+  if (ord) return 'other';
+  return (n == 1 && v0) ? 'one' : 'other';
+},
 
-uz: _cp[1],
+uz: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-ve: _cp[1],
+ve: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-vi: function(n, ord) {
+vi: function(n, ord
+) {
   if (ord) return (n == 1) ? 'one' : 'other';
   return 'other';
 },
 
-vo: _cp[1],
+vo: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-vun: _cp[1],
+vun: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-wa: _cp[2],
+wa: function(n, ord
+) {
+  if (ord) return 'other';
+  return ((n == 0
+          || n == 1)) ? 'one' : 'other';
+},
 
-wae: _cp[1],
+wae: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-wo: _cp[0],
+wo: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-xh: _cp[1],
+xh: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-xog: _cp[1],
+xog: function(n, ord
+) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+},
 
-yi: _cp[3],
+yi: function(n, ord
+) {
+  var s = String(n).split('.'), v0 = !s[1];
+  if (ord) return 'other';
+  return (n == 1 && v0) ? 'one' : 'other';
+},
 
-yo: _cp[0],
+yo: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-zh: _cp[0],
+yue: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
 
-zu: function(n, ord) {
+zh: function(n, ord
+) {
+  if (ord) return 'other';
+  return 'other';
+},
+
+zu: function(n, ord
+) {
   if (ord) return 'other';
   return (n >= 0 && n <= 1) ? 'one' : 'other';
 }
@@ -6932,295 +8636,1156 @@ zu: function(n, ord) {
 
 
 /***/ }),
-/* 23 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var require;var require;(function(f){if(true){module.exports=f()}else { var g; }})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return require(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-function _toArray(arr) { return Array.isArray(arr) ? arr : Array.from(arr); }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-/**
- * make-plural.js -- https://github.com/eemeli/make-plural.js/
- * Copyright (c) 2014-2016 by Eemeli Aro <eemeli@gmail.com>
- *
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * The software is provided "as is" and the author disclaims all warranties
- * with regard to this software including all implied warranties of
- * merchantability and fitness. In no event shall the author be liable for
- * any special, direct, indirect, or consequential damages or any damages
- * whatsoever resulting from loss of use, data or profits, whether in an
- * action of contract, negligence or other tortious action, arising out of
- * or in connection with the use or performance of this software.
- */
-
-var Parser = function () {
-    function Parser() {
-        _classCallCheck(this, Parser);
-    }
-
-    _createClass(Parser, [{
-        key: 'parse',
-        value: function parse(cond) {
-            var _this = this;
-
-            if (cond === 'i = 0 or n = 1') return 'n >= 0 && n <= 1';
-            if (cond === 'i = 0,1') return 'n >= 0 && n < 2';
-            if (cond === 'i = 1 and v = 0') {
-                this.v0 = 1;
-                return 'n == 1 && v0';
-            }
-            return cond.replace(/([tv]) (!?)= 0/g, function (m, sym, noteq) {
-                var sn = sym + '0';
-                _this[sn] = 1;
-                return noteq ? '!' + sn : sn;
-            }).replace(/\b[fintv]\b/g, function (m) {
-                _this[m] = 1;
-                return m;
-            }).replace(/([fin]) % (10+)/g, function (m, sym, num) {
-                var sn = sym + num;
-                _this[sn] = 1;
-                return sn;
-            }).replace(/n10+ = 0/g, 't0 && $&').replace(/(\w+ (!?)= )([0-9.]+,[0-9.,]+)/g, function (m, se, noteq, x) {
-                if (m === 'n = 0,1') return '(n == 0 || n == 1)';
-                if (noteq) return se + x.split(',').join(' && ' + se);
-                return '(' + se + x.split(',').join(' || ' + se) + ')';
-            }).replace(/(\w+) (!?)= ([0-9]+)\.\.([0-9]+)/g, function (m, sym, noteq, x0, x1) {
-                if (Number(x0) + 1 === Number(x1)) {
-                    if (noteq) return sym + ' != ' + x0 + ' && ' + sym + ' != ' + x1;
-                    return '(' + sym + ' == ' + x0 + ' || ' + sym + ' == ' + x1 + ')';
-                }
-                if (noteq) return '(' + sym + ' < ' + x0 + ' || ' + sym + ' > ' + x1 + ')';
-                if (sym === 'n') {
-                    _this.t0 = 1;return '(t0 && n >= ' + x0 + ' && n <= ' + x1 + ')';
-                }
-                return '(' + sym + ' >= ' + x0 + ' && ' + sym + ' <= ' + x1 + ')';
-            }).replace(/ and /g, ' && ').replace(/ or /g, ' || ').replace(/ = /g, ' == ');
-        }
-    }, {
-        key: 'vars',
-        value: function vars() {
-            var vars = [];
-            if (this.i) vars.push('i = s[0]');
-            if (this.f || this.v) vars.push("f = s[1] || ''");
-            if (this.t) vars.push("t = (s[1] || '').replace(/0+$/, '')");
-            if (this.v) vars.push('v = f.length');
-            if (this.v0) vars.push('v0 = !s[1]');
-            if (this.t0 || this.n10 || this.n100) vars.push('t0 = Number(s[0]) == n');
-            for (var k in this) {
-                if (/^.10+$/.test(k)) {
-                    var k0 = k[0] === 'n' ? 't0 && s[0]' : k[0];
-                    vars.push(k + ' = ' + k0 + '.slice(-' + k.substr(2).length + ')');
-                }
-            }
-            if (!vars.length) return '';
-            return 'var ' + ["s = String(n).split('.')"].concat(vars).join(', ');
-        }
-    }]);
-
-    return Parser;
-}();
-
-var Tests = function () {
-    function Tests(obj) {
-        _classCallCheck(this, Tests);
-
-        this.obj = obj;
-        this.ordinal = {};
-        this.cardinal = {};
-    }
-
-    _createClass(Tests, [{
-        key: 'add',
-        value: function add(type, cat, examples) {
-            this[type][cat] = examples.join(' ').replace(/^[ ,]+|[ ,…]+$/g, '').replace(/(0\.[0-9])~(1\.[1-9])/g, '$1 1.0 $2').split(/[ ,~…]+/);
-        }
-    }, {
-        key: 'testCond',
-        value: function testCond(n, type, expResult, fn) {
-            try {
-                var r = (fn || this.obj.fn)(n, type === 'ordinal');
-            } catch (e) {
-                r = e.toString();
-            }
-            if (r !== expResult) {
-                throw new Error('Locale ' + JSON.stringify(this.obj.lc) + type + ' rule self-test failed for v = ' + JSON.stringify(n) + ' (was ' + JSON.stringify(r) + ', expected ' + JSON.stringify(expResult) + ')');
-            }
-            return true;
-        }
-    }, {
-        key: 'testCat',
-        value: function testCat(type, cat, fn) {
-            var _this2 = this;
-
-            this[type][cat].forEach(function (n) {
-                _this2.testCond(n, type, cat, fn);
-                if (!/\.0+$/.test(n)) _this2.testCond(Number(n), type, cat, fn);
-            });
-            return true;
-        }
-    }, {
-        key: 'testAll',
-        value: function testAll() {
-            for (var cat in this.cardinal) {
-                this.testCat('cardinal', cat);
-            }for (var _cat in this.ordinal) {
-                this.testCat('ordinal', _cat);
-            }return true;
-        }
-    }]);
-
-    return Tests;
-}();
-
-var MakePlural = function () {
-    function MakePlural(lc) {
-        var _ref = arguments.length <= 1 || arguments[1] === undefined ? MakePlural : arguments[1];
-
-        var cardinals = _ref.cardinals;
-        var ordinals = _ref.ordinals;
-
-        _classCallCheck(this, MakePlural);
-
-        if (!cardinals && !ordinals) throw new Error('At least one type of plural is required');
-        this.lc = lc;
-        this.categories = { cardinal: [], ordinal: [] };
-        this.parser = new Parser();
-        this.tests = new Tests(this);
-        this.fn = this.buildFunction(cardinals, ordinals);
-        this.fn._obj = this;
-        this.fn.categories = this.categories;
-        this.fn.test = function () {
-            return this.tests.testAll() && this.fn;
-        }.bind(this);
-        this.fn.toString = this.fnToString.bind(this);
-        return this.fn;
-    }
-
-    _createClass(MakePlural, [{
-        key: 'compile',
-        value: function compile(type, req) {
-            var cases = [];
-            var rules = MakePlural.rules[type][this.lc];
-            if (!rules) {
-                if (req) throw new Error('Locale "' + this.lc + '" ' + type + ' rules not found');
-                this.categories[type] = ['other'];
-                return "'other'";
-            }
-            for (var r in rules) {
-                var _rules$r$trim$split = rules[r].trim().split(/\s*@\w*/);
-
-                var _rules$r$trim$split2 = _toArray(_rules$r$trim$split);
-
-                var cond = _rules$r$trim$split2[0];
-                var examples = _rules$r$trim$split2.slice(1);
-                var cat = r.replace('pluralRule-count-', '');
-                if (cond) cases.push([this.parser.parse(cond), cat]);
-                this.tests.add(type, cat, examples);
-            }
-            this.categories[type] = cases.map(function (c) {
-                return c[1];
-            }).concat('other');
-            if (cases.length === 1) {
-                return '(' + cases[0][0] + ') ? \'' + cases[0][1] + '\' : \'other\'';
-            } else {
-                return [].concat(_toConsumableArray(cases.map(function (c) {
-                    return '(' + c[0] + ') ? \'' + c[1] + '\'';
-                })), ["'other'"]).join('\n      : ');
-            }
-        }
-    }, {
-        key: 'buildFunction',
-        value: function buildFunction(cardinals, ordinals) {
-            var _this3 = this;
-
-            var compile = function compile(c) {
-                return c ? (c[1] ? 'return ' : 'if (ord) return ') + _this3.compile.apply(_this3, _toConsumableArray(c)) : '';
-            },
-                fold = { vars: function vars(str) {
-                    return ('  ' + str + ';').replace(/(.{1,78})(,|$) ?/g, '$1$2\n      ');
-                },
-                cond: function cond(str) {
-                    return ('  ' + str + ';').replace(/(.{1,78}) (\|\| |$) ?/gm, '$1\n          $2');
-                } },
-                cond = [ordinals && ['ordinal', !cardinals], cardinals && ['cardinal', true]].map(compile).map(fold.cond),
-                body = [fold.vars(this.parser.vars())].concat(_toConsumableArray(cond)).filter(function (line) {
-                return !/^[\s;]*$/.test(line);
-            }).map(function (line) {
-                return line.replace(/\s+$/gm, '');
-            }).join('\n'),
-                args = ordinals && cardinals ? 'n, ord' : 'n';
-            return new Function(args, body);
-        }
-    }, {
-        key: 'fnToString',
-        value: function fnToString(name) {
-            return Function.prototype.toString.call(this.fn).replace(/^function( \w+)?/, name ? 'function ' + name : 'function').replace('\n/**/', '');
-        }
-    }], [{
-        key: 'load',
-        value: function load() {
-            for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-                args[_key] = arguments[_key];
-            }
-
-            args.forEach(function (cldr) {
-                var data = cldr && cldr.supplemental || null;
-                if (!data) throw new Error('Data does not appear to be CLDR data');
-                MakePlural.rules = {
-                    cardinal: data['plurals-type-cardinal'] || MakePlural.rules.cardinal,
-                    ordinal: data['plurals-type-ordinal'] || MakePlural.rules.ordinal
-                };
-            });
-            return MakePlural;
-        }
-    }]);
-
-    return MakePlural;
-}();
-
-exports.default = MakePlural;
-
-
-MakePlural.cardinals = true;
-MakePlural.ordinals = false;
-MakePlural.rules = { cardinal: {}, ordinal: {} };
-module.exports = exports['default'];
-
-},{}]},{},[1])(1)
-});
-
-/***/ }),
-/* 24 */
-/***/ (function(module) {
-
-module.exports = JSON.parse("{\"supplemental\":{\"version\":{\"_number\":\"$Revision: 12002 $\",\"_unicodeVersion\":\"8.0.0\",\"_cldrVersion\":\"29\"},\"plurals-type-cardinal\":{\"af\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ak\":{\"pluralRule-count-one\":\"n = 0..1 @integer 0, 1 @decimal 0.0, 1.0, 0.00, 1.00, 0.000, 1.000, 0.0000, 1.0000\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.1~0.9, 1.1~1.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"am\":{\"pluralRule-count-one\":\"i = 0 or n = 1 @integer 0, 1 @decimal 0.0~1.0, 0.00~0.04\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 1.1~2.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ar\":{\"pluralRule-count-zero\":\"n = 0 @integer 0 @decimal 0.0, 0.00, 0.000, 0.0000\",\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-two\":\"n = 2 @integer 2 @decimal 2.0, 2.00, 2.000, 2.0000\",\"pluralRule-count-few\":\"n % 100 = 3..10 @integer 3~10, 103~110, 1003, … @decimal 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 103.0, 1003.0, …\",\"pluralRule-count-many\":\"n % 100 = 11..99 @integer 11~26, 111, 1011, … @decimal 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 111.0, 1011.0, …\",\"pluralRule-count-other\":\" @integer 100~102, 200~202, 300~302, 400~402, 500~502, 600, 1000, 10000, 100000, 1000000, … @decimal 0.1~0.9, 1.1~1.7, 10.1, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"as\":{\"pluralRule-count-one\":\"i = 0 or n = 1 @integer 0, 1 @decimal 0.0~1.0, 0.00~0.04\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 1.1~2.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"asa\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ast\":{\"pluralRule-count-one\":\"i = 1 and v = 0 @integer 1\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"az\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"be\":{\"pluralRule-count-one\":\"n % 10 = 1 and n % 100 != 11 @integer 1, 21, 31, 41, 51, 61, 71, 81, 101, 1001, … @decimal 1.0, 21.0, 31.0, 41.0, 51.0, 61.0, 71.0, 81.0, 101.0, 1001.0, …\",\"pluralRule-count-few\":\"n % 10 = 2..4 and n % 100 != 12..14 @integer 2~4, 22~24, 32~34, 42~44, 52~54, 62, 102, 1002, … @decimal 2.0, 3.0, 4.0, 22.0, 23.0, 24.0, 32.0, 33.0, 102.0, 1002.0, …\",\"pluralRule-count-many\":\"n % 10 = 0 or n % 10 = 5..9 or n % 100 = 11..14 @integer 0, 5~19, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\",\"pluralRule-count-other\":\"   @decimal 0.1~0.9, 1.1~1.7, 10.1, 100.1, 1000.1, …\"},\"bem\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"bez\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"bg\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"bh\":{\"pluralRule-count-one\":\"n = 0..1 @integer 0, 1 @decimal 0.0, 1.0, 0.00, 1.00, 0.000, 1.000, 0.0000, 1.0000\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.1~0.9, 1.1~1.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"bm\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"bn\":{\"pluralRule-count-one\":\"i = 0 or n = 1 @integer 0, 1 @decimal 0.0~1.0, 0.00~0.04\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 1.1~2.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"bo\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"br\":{\"pluralRule-count-one\":\"n % 10 = 1 and n % 100 != 11,71,91 @integer 1, 21, 31, 41, 51, 61, 81, 101, 1001, … @decimal 1.0, 21.0, 31.0, 41.0, 51.0, 61.0, 81.0, 101.0, 1001.0, …\",\"pluralRule-count-two\":\"n % 10 = 2 and n % 100 != 12,72,92 @integer 2, 22, 32, 42, 52, 62, 82, 102, 1002, … @decimal 2.0, 22.0, 32.0, 42.0, 52.0, 62.0, 82.0, 102.0, 1002.0, …\",\"pluralRule-count-few\":\"n % 10 = 3..4,9 and n % 100 != 10..19,70..79,90..99 @integer 3, 4, 9, 23, 24, 29, 33, 34, 39, 43, 44, 49, 103, 1003, … @decimal 3.0, 4.0, 9.0, 23.0, 24.0, 29.0, 33.0, 34.0, 103.0, 1003.0, …\",\"pluralRule-count-many\":\"n != 0 and n % 1000000 = 0 @integer 1000000, … @decimal 1000000.0, 1000000.00, 1000000.000, …\",\"pluralRule-count-other\":\" @integer 0, 5~8, 10~20, 100, 1000, 10000, 100000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, …\"},\"brx\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"bs\":{\"pluralRule-count-one\":\"v = 0 and i % 10 = 1 and i % 100 != 11 or f % 10 = 1 and f % 100 != 11 @integer 1, 21, 31, 41, 51, 61, 71, 81, 101, 1001, … @decimal 0.1, 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1, 10.1, 100.1, 1000.1, …\",\"pluralRule-count-few\":\"v = 0 and i % 10 = 2..4 and i % 100 != 12..14 or f % 10 = 2..4 and f % 100 != 12..14 @integer 2~4, 22~24, 32~34, 42~44, 52~54, 62, 102, 1002, … @decimal 0.2~0.4, 1.2~1.4, 2.2~2.4, 3.2~3.4, 4.2~4.4, 5.2, 10.2, 100.2, 1000.2, …\",\"pluralRule-count-other\":\" @integer 0, 5~19, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0, 0.5~1.0, 1.5~2.0, 2.5~2.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ca\":{\"pluralRule-count-one\":\"i = 1 and v = 0 @integer 1\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ce\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"cgg\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"chr\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ckb\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"cs\":{\"pluralRule-count-one\":\"i = 1 and v = 0 @integer 1\",\"pluralRule-count-few\":\"i = 2..4 and v = 0 @integer 2~4\",\"pluralRule-count-many\":\"v != 0   @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\",\"pluralRule-count-other\":\" @integer 0, 5~19, 100, 1000, 10000, 100000, 1000000, …\"},\"cy\":{\"pluralRule-count-zero\":\"n = 0 @integer 0 @decimal 0.0, 0.00, 0.000, 0.0000\",\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-two\":\"n = 2 @integer 2 @decimal 2.0, 2.00, 2.000, 2.0000\",\"pluralRule-count-few\":\"n = 3 @integer 3 @decimal 3.0, 3.00, 3.000, 3.0000\",\"pluralRule-count-many\":\"n = 6 @integer 6 @decimal 6.0, 6.00, 6.000, 6.0000\",\"pluralRule-count-other\":\" @integer 4, 5, 7~20, 100, 1000, 10000, 100000, 1000000, … @decimal 0.1~0.9, 1.1~1.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"da\":{\"pluralRule-count-one\":\"n = 1 or t != 0 and i = 0,1 @integer 1 @decimal 0.1~1.6\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0, 2.0~3.4, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"de\":{\"pluralRule-count-one\":\"i = 1 and v = 0 @integer 1\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"dsb\":{\"pluralRule-count-one\":\"v = 0 and i % 100 = 1 or f % 100 = 1 @integer 1, 101, 201, 301, 401, 501, 601, 701, 1001, … @decimal 0.1, 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1, 10.1, 100.1, 1000.1, …\",\"pluralRule-count-two\":\"v = 0 and i % 100 = 2 or f % 100 = 2 @integer 2, 102, 202, 302, 402, 502, 602, 702, 1002, … @decimal 0.2, 1.2, 2.2, 3.2, 4.2, 5.2, 6.2, 7.2, 10.2, 100.2, 1000.2, …\",\"pluralRule-count-few\":\"v = 0 and i % 100 = 3..4 or f % 100 = 3..4 @integer 3, 4, 103, 104, 203, 204, 303, 304, 403, 404, 503, 504, 603, 604, 703, 704, 1003, … @decimal 0.3, 0.4, 1.3, 1.4, 2.3, 2.4, 3.3, 3.4, 4.3, 4.4, 5.3, 5.4, 6.3, 6.4, 7.3, 7.4, 10.3, 100.3, 1000.3, …\",\"pluralRule-count-other\":\" @integer 0, 5~19, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0, 0.5~1.0, 1.5~2.0, 2.5~2.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"dv\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"dz\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ee\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"el\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"en\":{\"pluralRule-count-one\":\"i = 1 and v = 0 @integer 1\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"eo\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"es\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"et\":{\"pluralRule-count-one\":\"i = 1 and v = 0 @integer 1\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"eu\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"fa\":{\"pluralRule-count-one\":\"i = 0 or n = 1 @integer 0, 1 @decimal 0.0~1.0, 0.00~0.04\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 1.1~2.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ff\":{\"pluralRule-count-one\":\"i = 0,1 @integer 0, 1 @decimal 0.0~1.5\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 2.0~3.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"fi\":{\"pluralRule-count-one\":\"i = 1 and v = 0 @integer 1\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"fil\":{\"pluralRule-count-one\":\"v = 0 and i = 1,2,3 or v = 0 and i % 10 != 4,6,9 or v != 0 and f % 10 != 4,6,9 @integer 0~3, 5, 7, 8, 10~13, 15, 17, 18, 20, 21, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.3, 0.5, 0.7, 0.8, 1.0~1.3, 1.5, 1.7, 1.8, 2.0, 2.1, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\",\"pluralRule-count-other\":\" @integer 4, 6, 9, 14, 16, 19, 24, 26, 104, 1004, … @decimal 0.4, 0.6, 0.9, 1.4, 1.6, 1.9, 2.4, 2.6, 10.4, 100.4, 1000.4, …\"},\"fo\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"fr\":{\"pluralRule-count-one\":\"i = 0,1 @integer 0, 1 @decimal 0.0~1.5\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 2.0~3.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"fur\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"fy\":{\"pluralRule-count-one\":\"i = 1 and v = 0 @integer 1\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ga\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-two\":\"n = 2 @integer 2 @decimal 2.0, 2.00, 2.000, 2.0000\",\"pluralRule-count-few\":\"n = 3..6 @integer 3~6 @decimal 3.0, 4.0, 5.0, 6.0, 3.00, 4.00, 5.00, 6.00, 3.000, 4.000, 5.000, 6.000, 3.0000, 4.0000, 5.0000, 6.0000\",\"pluralRule-count-many\":\"n = 7..10 @integer 7~10 @decimal 7.0, 8.0, 9.0, 10.0, 7.00, 8.00, 9.00, 10.00, 7.000, 8.000, 9.000, 10.000, 7.0000, 8.0000, 9.0000, 10.0000\",\"pluralRule-count-other\":\" @integer 0, 11~25, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.1, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"gd\":{\"pluralRule-count-one\":\"n = 1,11 @integer 1, 11 @decimal 1.0, 11.0, 1.00, 11.00, 1.000, 11.000, 1.0000\",\"pluralRule-count-two\":\"n = 2,12 @integer 2, 12 @decimal 2.0, 12.0, 2.00, 12.00, 2.000, 12.000, 2.0000\",\"pluralRule-count-few\":\"n = 3..10,13..19 @integer 3~10, 13~19 @decimal 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 3.00\",\"pluralRule-count-other\":\" @integer 0, 20~34, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.1, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"gl\":{\"pluralRule-count-one\":\"i = 1 and v = 0 @integer 1\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"gsw\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"gu\":{\"pluralRule-count-one\":\"i = 0 or n = 1 @integer 0, 1 @decimal 0.0~1.0, 0.00~0.04\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 1.1~2.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"guw\":{\"pluralRule-count-one\":\"n = 0..1 @integer 0, 1 @decimal 0.0, 1.0, 0.00, 1.00, 0.000, 1.000, 0.0000, 1.0000\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.1~0.9, 1.1~1.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"gv\":{\"pluralRule-count-one\":\"v = 0 and i % 10 = 1 @integer 1, 11, 21, 31, 41, 51, 61, 71, 101, 1001, …\",\"pluralRule-count-two\":\"v = 0 and i % 10 = 2 @integer 2, 12, 22, 32, 42, 52, 62, 72, 102, 1002, …\",\"pluralRule-count-few\":\"v = 0 and i % 100 = 0,20,40,60,80 @integer 0, 20, 40, 60, 80, 100, 120, 140, 1000, 10000, 100000, 1000000, …\",\"pluralRule-count-many\":\"v != 0   @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\",\"pluralRule-count-other\":\" @integer 3~10, 13~19, 23, 103, 1003, …\"},\"ha\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"haw\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"he\":{\"pluralRule-count-one\":\"i = 1 and v = 0 @integer 1\",\"pluralRule-count-two\":\"i = 2 and v = 0 @integer 2\",\"pluralRule-count-many\":\"v = 0 and n != 0..10 and n % 10 = 0 @integer 20, 30, 40, 50, 60, 70, 80, 90, 100, 1000, 10000, 100000, 1000000, …\",\"pluralRule-count-other\":\" @integer 0, 3~17, 101, 1001, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"hi\":{\"pluralRule-count-one\":\"i = 0 or n = 1 @integer 0, 1 @decimal 0.0~1.0, 0.00~0.04\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 1.1~2.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"hr\":{\"pluralRule-count-one\":\"v = 0 and i % 10 = 1 and i % 100 != 11 or f % 10 = 1 and f % 100 != 11 @integer 1, 21, 31, 41, 51, 61, 71, 81, 101, 1001, … @decimal 0.1, 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1, 10.1, 100.1, 1000.1, …\",\"pluralRule-count-few\":\"v = 0 and i % 10 = 2..4 and i % 100 != 12..14 or f % 10 = 2..4 and f % 100 != 12..14 @integer 2~4, 22~24, 32~34, 42~44, 52~54, 62, 102, 1002, … @decimal 0.2~0.4, 1.2~1.4, 2.2~2.4, 3.2~3.4, 4.2~4.4, 5.2, 10.2, 100.2, 1000.2, …\",\"pluralRule-count-other\":\" @integer 0, 5~19, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0, 0.5~1.0, 1.5~2.0, 2.5~2.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"hsb\":{\"pluralRule-count-one\":\"v = 0 and i % 100 = 1 or f % 100 = 1 @integer 1, 101, 201, 301, 401, 501, 601, 701, 1001, … @decimal 0.1, 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1, 10.1, 100.1, 1000.1, …\",\"pluralRule-count-two\":\"v = 0 and i % 100 = 2 or f % 100 = 2 @integer 2, 102, 202, 302, 402, 502, 602, 702, 1002, … @decimal 0.2, 1.2, 2.2, 3.2, 4.2, 5.2, 6.2, 7.2, 10.2, 100.2, 1000.2, …\",\"pluralRule-count-few\":\"v = 0 and i % 100 = 3..4 or f % 100 = 3..4 @integer 3, 4, 103, 104, 203, 204, 303, 304, 403, 404, 503, 504, 603, 604, 703, 704, 1003, … @decimal 0.3, 0.4, 1.3, 1.4, 2.3, 2.4, 3.3, 3.4, 4.3, 4.4, 5.3, 5.4, 6.3, 6.4, 7.3, 7.4, 10.3, 100.3, 1000.3, …\",\"pluralRule-count-other\":\" @integer 0, 5~19, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0, 0.5~1.0, 1.5~2.0, 2.5~2.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"hu\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"hy\":{\"pluralRule-count-one\":\"i = 0,1 @integer 0, 1 @decimal 0.0~1.5\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 2.0~3.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"id\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ig\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ii\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"in\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"is\":{\"pluralRule-count-one\":\"t = 0 and i % 10 = 1 and i % 100 != 11 or t != 0 @integer 1, 21, 31, 41, 51, 61, 71, 81, 101, 1001, … @decimal 0.1~1.6, 10.1, 100.1, 1000.1, …\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"it\":{\"pluralRule-count-one\":\"i = 1 and v = 0 @integer 1\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"iu\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-two\":\"n = 2 @integer 2 @decimal 2.0, 2.00, 2.000, 2.0000\",\"pluralRule-count-other\":\" @integer 0, 3~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"iw\":{\"pluralRule-count-one\":\"i = 1 and v = 0 @integer 1\",\"pluralRule-count-two\":\"i = 2 and v = 0 @integer 2\",\"pluralRule-count-many\":\"v = 0 and n != 0..10 and n % 10 = 0 @integer 20, 30, 40, 50, 60, 70, 80, 90, 100, 1000, 10000, 100000, 1000000, …\",\"pluralRule-count-other\":\" @integer 0, 3~17, 101, 1001, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ja\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"jbo\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"jgo\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ji\":{\"pluralRule-count-one\":\"i = 1 and v = 0 @integer 1\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"jmc\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"jv\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"jw\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ka\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"kab\":{\"pluralRule-count-one\":\"i = 0,1 @integer 0, 1 @decimal 0.0~1.5\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 2.0~3.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"kaj\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"kcg\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"kde\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"kea\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"kk\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"kkj\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"kl\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"km\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"kn\":{\"pluralRule-count-one\":\"i = 0 or n = 1 @integer 0, 1 @decimal 0.0~1.0, 0.00~0.04\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 1.1~2.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ko\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ks\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ksb\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ksh\":{\"pluralRule-count-zero\":\"n = 0 @integer 0 @decimal 0.0, 0.00, 0.000, 0.0000\",\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.1~0.9, 1.1~1.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ku\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"kw\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-two\":\"n = 2 @integer 2 @decimal 2.0, 2.00, 2.000, 2.0000\",\"pluralRule-count-other\":\" @integer 0, 3~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ky\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"lag\":{\"pluralRule-count-zero\":\"n = 0 @integer 0 @decimal 0.0, 0.00, 0.000, 0.0000\",\"pluralRule-count-one\":\"i = 0,1 and n != 0 @integer 1 @decimal 0.1~1.6\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 2.0~3.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"lb\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"lg\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"lkt\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ln\":{\"pluralRule-count-one\":\"n = 0..1 @integer 0, 1 @decimal 0.0, 1.0, 0.00, 1.00, 0.000, 1.000, 0.0000, 1.0000\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.1~0.9, 1.1~1.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"lo\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"lt\":{\"pluralRule-count-one\":\"n % 10 = 1 and n % 100 != 11..19 @integer 1, 21, 31, 41, 51, 61, 71, 81, 101, 1001, … @decimal 1.0, 21.0, 31.0, 41.0, 51.0, 61.0, 71.0, 81.0, 101.0, 1001.0, …\",\"pluralRule-count-few\":\"n % 10 = 2..9 and n % 100 != 11..19 @integer 2~9, 22~29, 102, 1002, … @decimal 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 22.0, 102.0, 1002.0, …\",\"pluralRule-count-many\":\"f != 0   @decimal 0.1~0.9, 1.1~1.7, 10.1, 100.1, 1000.1, …\",\"pluralRule-count-other\":\" @integer 0, 10~20, 30, 40, 50, 60, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"lv\":{\"pluralRule-count-zero\":\"n % 10 = 0 or n % 100 = 11..19 or v = 2 and f % 100 = 11..19 @integer 0, 10~20, 30, 40, 50, 60, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\",\"pluralRule-count-one\":\"n % 10 = 1 and n % 100 != 11 or v = 2 and f % 10 = 1 and f % 100 != 11 or v != 2 and f % 10 = 1 @integer 1, 21, 31, 41, 51, 61, 71, 81, 101, 1001, … @decimal 0.1, 1.0, 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1, 10.1, 100.1, 1000.1, …\",\"pluralRule-count-other\":\" @integer 2~9, 22~29, 102, 1002, … @decimal 0.2~0.9, 1.2~1.9, 10.2, 100.2, 1000.2, …\"},\"mas\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"mg\":{\"pluralRule-count-one\":\"n = 0..1 @integer 0, 1 @decimal 0.0, 1.0, 0.00, 1.00, 0.000, 1.000, 0.0000, 1.0000\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.1~0.9, 1.1~1.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"mgo\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"mk\":{\"pluralRule-count-one\":\"v = 0 and i % 10 = 1 or f % 10 = 1 @integer 1, 11, 21, 31, 41, 51, 61, 71, 101, 1001, … @decimal 0.1, 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1, 10.1, 100.1, 1000.1, …\",\"pluralRule-count-other\":\" @integer 0, 2~10, 12~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0, 0.2~1.0, 1.2~1.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ml\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"mn\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"mo\":{\"pluralRule-count-one\":\"i = 1 and v = 0 @integer 1\",\"pluralRule-count-few\":\"v != 0 or n = 0 or n != 1 and n % 100 = 1..19 @integer 0, 2~16, 101, 1001, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\",\"pluralRule-count-other\":\" @integer 20~35, 100, 1000, 10000, 100000, 1000000, …\"},\"mr\":{\"pluralRule-count-one\":\"i = 0 or n = 1 @integer 0, 1 @decimal 0.0~1.0, 0.00~0.04\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 1.1~2.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ms\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"mt\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-few\":\"n = 0 or n % 100 = 2..10 @integer 0, 2~10, 102~107, 1002, … @decimal 0.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 10.0, 102.0, 1002.0, …\",\"pluralRule-count-many\":\"n % 100 = 11..19 @integer 11~19, 111~117, 1011, … @decimal 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 111.0, 1011.0, …\",\"pluralRule-count-other\":\" @integer 20~35, 100, 1000, 10000, 100000, 1000000, … @decimal 0.1~0.9, 1.1~1.7, 10.1, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"my\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"nah\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"naq\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-two\":\"n = 2 @integer 2 @decimal 2.0, 2.00, 2.000, 2.0000\",\"pluralRule-count-other\":\" @integer 0, 3~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"nb\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"nd\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ne\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"nl\":{\"pluralRule-count-one\":\"i = 1 and v = 0 @integer 1\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"nn\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"nnh\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"no\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"nqo\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"nr\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"nso\":{\"pluralRule-count-one\":\"n = 0..1 @integer 0, 1 @decimal 0.0, 1.0, 0.00, 1.00, 0.000, 1.000, 0.0000, 1.0000\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.1~0.9, 1.1~1.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ny\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"nyn\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"om\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"or\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"os\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"pa\":{\"pluralRule-count-one\":\"n = 0..1 @integer 0, 1 @decimal 0.0, 1.0, 0.00, 1.00, 0.000, 1.000, 0.0000, 1.0000\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.1~0.9, 1.1~1.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"pap\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"pl\":{\"pluralRule-count-one\":\"i = 1 and v = 0 @integer 1\",\"pluralRule-count-few\":\"v = 0 and i % 10 = 2..4 and i % 100 != 12..14 @integer 2~4, 22~24, 32~34, 42~44, 52~54, 62, 102, 1002, …\",\"pluralRule-count-many\":\"v = 0 and i != 1 and i % 10 = 0..1 or v = 0 and i % 10 = 5..9 or v = 0 and i % 100 = 12..14 @integer 0, 5~19, 100, 1000, 10000, 100000, 1000000, …\",\"pluralRule-count-other\":\"   @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"prg\":{\"pluralRule-count-zero\":\"n % 10 = 0 or n % 100 = 11..19 or v = 2 and f % 100 = 11..19 @integer 0, 10~20, 30, 40, 50, 60, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\",\"pluralRule-count-one\":\"n % 10 = 1 and n % 100 != 11 or v = 2 and f % 10 = 1 and f % 100 != 11 or v != 2 and f % 10 = 1 @integer 1, 21, 31, 41, 51, 61, 71, 81, 101, 1001, … @decimal 0.1, 1.0, 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1, 10.1, 100.1, 1000.1, …\",\"pluralRule-count-other\":\" @integer 2~9, 22~29, 102, 1002, … @decimal 0.2~0.9, 1.2~1.9, 10.2, 100.2, 1000.2, …\"},\"ps\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"pt\":{\"pluralRule-count-one\":\"n = 0..2 and n != 2 @integer 0, 1 @decimal 0.0, 1.0, 0.00, 1.00, 0.000, 1.000, 0.0000, 1.0000\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.1~0.9, 1.1~1.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"pt-PT\":{\"pluralRule-count-one\":\"n = 1 and v = 0 @integer 1\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"rm\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ro\":{\"pluralRule-count-one\":\"i = 1 and v = 0 @integer 1\",\"pluralRule-count-few\":\"v != 0 or n = 0 or n != 1 and n % 100 = 1..19 @integer 0, 2~16, 101, 1001, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\",\"pluralRule-count-other\":\" @integer 20~35, 100, 1000, 10000, 100000, 1000000, …\"},\"rof\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"root\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ru\":{\"pluralRule-count-one\":\"v = 0 and i % 10 = 1 and i % 100 != 11 @integer 1, 21, 31, 41, 51, 61, 71, 81, 101, 1001, …\",\"pluralRule-count-few\":\"v = 0 and i % 10 = 2..4 and i % 100 != 12..14 @integer 2~4, 22~24, 32~34, 42~44, 52~54, 62, 102, 1002, …\",\"pluralRule-count-many\":\"v = 0 and i % 10 = 0 or v = 0 and i % 10 = 5..9 or v = 0 and i % 100 = 11..14 @integer 0, 5~19, 100, 1000, 10000, 100000, 1000000, …\",\"pluralRule-count-other\":\"   @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"rwk\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"sah\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"saq\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"sdh\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"se\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-two\":\"n = 2 @integer 2 @decimal 2.0, 2.00, 2.000, 2.0000\",\"pluralRule-count-other\":\" @integer 0, 3~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"seh\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ses\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"sg\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"sh\":{\"pluralRule-count-one\":\"v = 0 and i % 10 = 1 and i % 100 != 11 or f % 10 = 1 and f % 100 != 11 @integer 1, 21, 31, 41, 51, 61, 71, 81, 101, 1001, … @decimal 0.1, 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1, 10.1, 100.1, 1000.1, …\",\"pluralRule-count-few\":\"v = 0 and i % 10 = 2..4 and i % 100 != 12..14 or f % 10 = 2..4 and f % 100 != 12..14 @integer 2~4, 22~24, 32~34, 42~44, 52~54, 62, 102, 1002, … @decimal 0.2~0.4, 1.2~1.4, 2.2~2.4, 3.2~3.4, 4.2~4.4, 5.2, 10.2, 100.2, 1000.2, …\",\"pluralRule-count-other\":\" @integer 0, 5~19, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0, 0.5~1.0, 1.5~2.0, 2.5~2.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"shi\":{\"pluralRule-count-one\":\"i = 0 or n = 1 @integer 0, 1 @decimal 0.0~1.0, 0.00~0.04\",\"pluralRule-count-few\":\"n = 2..10 @integer 2~10 @decimal 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00\",\"pluralRule-count-other\":\" @integer 11~26, 100, 1000, 10000, 100000, 1000000, … @decimal 1.1~1.9, 2.1~2.7, 10.1, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"si\":{\"pluralRule-count-one\":\"n = 0,1 or i = 0 and f = 1 @integer 0, 1 @decimal 0.0, 0.1, 1.0, 0.00, 0.01, 1.00, 0.000, 0.001, 1.000, 0.0000, 0.0001, 1.0000\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.2~0.9, 1.1~1.8, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"sk\":{\"pluralRule-count-one\":\"i = 1 and v = 0 @integer 1\",\"pluralRule-count-few\":\"i = 2..4 and v = 0 @integer 2~4\",\"pluralRule-count-many\":\"v != 0   @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\",\"pluralRule-count-other\":\" @integer 0, 5~19, 100, 1000, 10000, 100000, 1000000, …\"},\"sl\":{\"pluralRule-count-one\":\"v = 0 and i % 100 = 1 @integer 1, 101, 201, 301, 401, 501, 601, 701, 1001, …\",\"pluralRule-count-two\":\"v = 0 and i % 100 = 2 @integer 2, 102, 202, 302, 402, 502, 602, 702, 1002, …\",\"pluralRule-count-few\":\"v = 0 and i % 100 = 3..4 or v != 0 @integer 3, 4, 103, 104, 203, 204, 303, 304, 403, 404, 503, 504, 603, 604, 703, 704, 1003, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\",\"pluralRule-count-other\":\" @integer 0, 5~19, 100, 1000, 10000, 100000, 1000000, …\"},\"sma\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-two\":\"n = 2 @integer 2 @decimal 2.0, 2.00, 2.000, 2.0000\",\"pluralRule-count-other\":\" @integer 0, 3~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"smi\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-two\":\"n = 2 @integer 2 @decimal 2.0, 2.00, 2.000, 2.0000\",\"pluralRule-count-other\":\" @integer 0, 3~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"smj\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-two\":\"n = 2 @integer 2 @decimal 2.0, 2.00, 2.000, 2.0000\",\"pluralRule-count-other\":\" @integer 0, 3~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"smn\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-two\":\"n = 2 @integer 2 @decimal 2.0, 2.00, 2.000, 2.0000\",\"pluralRule-count-other\":\" @integer 0, 3~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"sms\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-two\":\"n = 2 @integer 2 @decimal 2.0, 2.00, 2.000, 2.0000\",\"pluralRule-count-other\":\" @integer 0, 3~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"sn\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"so\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"sq\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"sr\":{\"pluralRule-count-one\":\"v = 0 and i % 10 = 1 and i % 100 != 11 or f % 10 = 1 and f % 100 != 11 @integer 1, 21, 31, 41, 51, 61, 71, 81, 101, 1001, … @decimal 0.1, 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1, 10.1, 100.1, 1000.1, …\",\"pluralRule-count-few\":\"v = 0 and i % 10 = 2..4 and i % 100 != 12..14 or f % 10 = 2..4 and f % 100 != 12..14 @integer 2~4, 22~24, 32~34, 42~44, 52~54, 62, 102, 1002, … @decimal 0.2~0.4, 1.2~1.4, 2.2~2.4, 3.2~3.4, 4.2~4.4, 5.2, 10.2, 100.2, 1000.2, …\",\"pluralRule-count-other\":\" @integer 0, 5~19, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0, 0.5~1.0, 1.5~2.0, 2.5~2.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ss\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ssy\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"st\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"sv\":{\"pluralRule-count-one\":\"i = 1 and v = 0 @integer 1\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"sw\":{\"pluralRule-count-one\":\"i = 1 and v = 0 @integer 1\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"syr\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ta\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"te\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"teo\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"th\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ti\":{\"pluralRule-count-one\":\"n = 0..1 @integer 0, 1 @decimal 0.0, 1.0, 0.00, 1.00, 0.000, 1.000, 0.0000, 1.0000\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.1~0.9, 1.1~1.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"tig\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"tk\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"tl\":{\"pluralRule-count-one\":\"v = 0 and i = 1,2,3 or v = 0 and i % 10 != 4,6,9 or v != 0 and f % 10 != 4,6,9 @integer 0~3, 5, 7, 8, 10~13, 15, 17, 18, 20, 21, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.3, 0.5, 0.7, 0.8, 1.0~1.3, 1.5, 1.7, 1.8, 2.0, 2.1, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\",\"pluralRule-count-other\":\" @integer 4, 6, 9, 14, 16, 19, 24, 26, 104, 1004, … @decimal 0.4, 0.6, 0.9, 1.4, 1.6, 1.9, 2.4, 2.6, 10.4, 100.4, 1000.4, …\"},\"tn\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"to\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"tr\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ts\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"tzm\":{\"pluralRule-count-one\":\"n = 0..1 or n = 11..99 @integer 0, 1, 11~24 @decimal 0.0, 1.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0\",\"pluralRule-count-other\":\" @integer 2~10, 100~106, 1000, 10000, 100000, 1000000, … @decimal 0.1~0.9, 1.1~1.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ug\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"uk\":{\"pluralRule-count-one\":\"v = 0 and i % 10 = 1 and i % 100 != 11 @integer 1, 21, 31, 41, 51, 61, 71, 81, 101, 1001, …\",\"pluralRule-count-few\":\"v = 0 and i % 10 = 2..4 and i % 100 != 12..14 @integer 2~4, 22~24, 32~34, 42~44, 52~54, 62, 102, 1002, …\",\"pluralRule-count-many\":\"v = 0 and i % 10 = 0 or v = 0 and i % 10 = 5..9 or v = 0 and i % 100 = 11..14 @integer 0, 5~19, 100, 1000, 10000, 100000, 1000000, …\",\"pluralRule-count-other\":\"   @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ur\":{\"pluralRule-count-one\":\"i = 1 and v = 0 @integer 1\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"uz\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"ve\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"vi\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"vo\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"vun\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"wa\":{\"pluralRule-count-one\":\"n = 0..1 @integer 0, 1 @decimal 0.0, 1.0, 0.00, 1.00, 0.000, 1.000, 0.0000, 1.0000\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.1~0.9, 1.1~1.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"wae\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"wo\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"xh\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"xog\":{\"pluralRule-count-one\":\"n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"yi\":{\"pluralRule-count-one\":\"i = 1 and v = 0 @integer 1\",\"pluralRule-count-other\":\" @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"yo\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"zh\":{\"pluralRule-count-other\":\" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"},\"zu\":{\"pluralRule-count-one\":\"i = 0 or n = 1 @integer 0, 1 @decimal 0.0~1.0, 0.00~0.04\",\"pluralRule-count-other\":\" @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 1.1~2.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\"}}}}");
-
-/***/ }),
-/* 25 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-/// <reference path="../typings/tsd.d.ts" />
 
-var xregexp_1 = __webpack_require__(26);
-var value = '[-+]?(?:Infinity|[[0-9]*\\.?\\d*(?:[eE][-+]?\\d+)?)';
-var mathInterval = xregexp_1.XRegExp("(?<leftBrace>  [\\(\\]\\[] )                                (?<fromValue>  " + value + "    )?                               (?<delimeter>  ,           )?                               (?<toValue>    " + value + "    )?                               (?<rightBrace> [\\)\\]\\[] )", 'x');
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _utils = __webpack_require__(27);
+
+/** A set of utility functions that are called by the compiled Javascript
+ *  functions, these are included locally in the output of {@link
+ *  MessageFormat#compile compile()}.
+ *
+ * @class
+ * @private
+ * @param {MessageFormat} mf - A MessageFormat instance
+ */
+class Runtime {
+  /** Utility function for `#` in plural rules
+   *
+   *  Will throw an Error if `value` has a non-numeric value and `offset` is
+   *  non-zero or {@link MessageFormat#setStrictNumberSign} is set.
+   *
+   * @function Runtime#number
+   * @param {number} value - The value to operate on
+   * @param {string} name - The name of the argument, used for error reporting
+   * @param {number} [offset=0] - An optional offset, set by the surrounding context
+   * @returns {number|string} The result of applying the offset to the input value
+   */
+
+  /** @private */
+  constructor(mf) {
+    this.plural = function (value, offset, lcfunc, data, isOrdinal) {
+      if ({}.hasOwnProperty.call(data, value)) return data[value];
+      if (offset) value -= offset;
+      var key = lcfunc(value, isOrdinal);
+      return key in data ? data[key] : data.other;
+    };
+
+    this.select = function (value, data) {
+      return {}.hasOwnProperty.call(data, value) ? data[value] : data.other;
+    };
+
+    this.mf = mf;
+    this.setStrictNumber(mf.options.strictNumberSign);
+  }
+  /** Utility function for `{N, plural|selectordinal, ...}`
+   *
+   * @param {number} value - The key to use to find a pluralization rule
+   * @param {number} offset - An offset to apply to `value`
+   * @param {function} lcfunc - A locale function from `pluralFuncs`
+   * @param {Object.<string,string>} data - The object from which results are looked up
+   * @param {?boolean} isOrdinal - If true, use ordinal rather than cardinal rules
+   * @returns {string} The result of the pluralization
+   */
+
+
+  /** Set how strictly the {@link number} method parses its input.
+   *
+   *  According to the ICU MessageFormat spec, `#` can only be used to replace a
+   *  number input of a `plural` statement. By default, messageformat does not
+   *  throw a runtime error if you use non-numeric argument with a `plural` rule,
+   *  unless rule also includes a non-zero `offset`.
+   *
+   *  This is called by {@link MessageFormat#setStrictNumberSign} to follow the
+   *  stricter ICU MessageFormat spec.
+   *
+   * @private
+   * @param {boolean} [enable=false]
+   */
+  setStrictNumber(enable) {
+    this.number = enable ? Runtime.strictNumber : Runtime.defaultNumber;
+  }
+  /** @private */
+
+
+  toString(pluralFuncs, compiler) {
+    function _stringify(o, level) {
+      if (typeof o != 'object') {
+        const funcStr = o.toString().replace(/^(function )\w*/, '$1');
+        const funcIndent = /([ \t]*)\S.*$/.exec(funcStr);
+        return funcIndent ? funcStr.replace(new RegExp('^' + funcIndent[1], 'mg'), '') : funcStr;
+      }
+
+      const s = [];
+
+      for (let i in o) {
+        const v = _stringify(o[i], level + 1);
+
+        s.push(level === 0 ? `var ${i} = ${v};\n` : `${(0, _utils.propname)(i)}: ${v}`);
+      }
+
+      if (level === 0) return s.join('');
+      if (s.length === 0) return '{}';
+      let indent = '  ';
+
+      while (--level) indent += '  ';
+
+      const oc = s.join(',\n').replace(/^/gm, indent);
+      return `{\n${oc}\n}`;
+    }
+
+    const obj = {};
+    const lcKeys = Object.keys(compiler.locales);
+
+    for (let i = 0; i < lcKeys.length; ++i) {
+      const lc = lcKeys[i];
+      obj[(0, _utils.funcname)(lc)] = pluralFuncs[lc];
+    }
+
+    const rtKeys = Object.keys(compiler.runtime);
+
+    for (let i = 0; i < rtKeys.length; ++i) {
+      const fn = rtKeys[i];
+      obj[fn] = this[fn];
+    }
+
+    const fmtKeys = Object.keys(compiler.formatters);
+
+    if (fmtKeys.length > 0) {
+      obj.fmt = {};
+
+      for (let i = 0; i < fmtKeys.length; ++i) {
+        const fk = fmtKeys[i];
+        obj.fmt[fk] = this.mf.fmt[fk];
+      }
+    }
+
+    return _stringify(obj, 0);
+  }
+
+}
+
+exports.default = Runtime;
+
+Runtime.defaultNumber = function (value, name, offset) {
+  if (!offset) return value;
+  if (isNaN(value)) throw new Error("Can't apply offset:" + offset + ' to argument `' + name + '` with non-numerical value ' + JSON.stringify(value) + '.');
+  return value - offset;
+};
+
+Runtime.strictNumber = function (value, name, offset) {
+  if (isNaN(value)) throw new Error('Argument `' + name + '` has non-numerical value ' + JSON.stringify(value) + '.');
+  return value - (offset || 0);
+};
+
+/***/ }),
+/* 32 */
+/***/ (function(__webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "_in", function() { return _in; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "af", function() { return af; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ak", function() { return ak; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "am", function() { return am; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "an", function() { return an; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ar", function() { return ar; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ars", function() { return ars; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "as", function() { return as; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "asa", function() { return asa; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ast", function() { return ast; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "az", function() { return az; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "be", function() { return be; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "bem", function() { return bem; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "bez", function() { return bez; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "bg", function() { return bg; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "bho", function() { return bho; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "bm", function() { return bm; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "bn", function() { return bn; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "bo", function() { return bo; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "br", function() { return br; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "brx", function() { return brx; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "bs", function() { return bs; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ca", function() { return ca; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ce", function() { return ce; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ceb", function() { return ceb; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "cgg", function() { return cgg; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "chr", function() { return chr; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ckb", function() { return ckb; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "cs", function() { return cs; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "cy", function() { return cy; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "da", function() { return da; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "de", function() { return de; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "dsb", function() { return dsb; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "dv", function() { return dv; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "dz", function() { return dz; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ee", function() { return ee; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "el", function() { return el; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "en", function() { return en; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "eo", function() { return eo; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "es", function() { return es; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "et", function() { return et; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "eu", function() { return eu; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "fa", function() { return fa; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ff", function() { return ff; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "fi", function() { return fi; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "fil", function() { return fil; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "fo", function() { return fo; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "fr", function() { return fr; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "fur", function() { return fur; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "fy", function() { return fy; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ga", function() { return ga; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "gd", function() { return gd; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "gl", function() { return gl; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "gsw", function() { return gsw; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "gu", function() { return gu; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "guw", function() { return guw; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "gv", function() { return gv; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ha", function() { return ha; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "haw", function() { return haw; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "he", function() { return he; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "hi", function() { return hi; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "hr", function() { return hr; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "hsb", function() { return hsb; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "hu", function() { return hu; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "hy", function() { return hy; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ia", function() { return ia; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "id", function() { return id; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ig", function() { return ig; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ii", function() { return ii; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "io", function() { return io; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "is", function() { return is; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "it", function() { return it; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "iu", function() { return iu; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "iw", function() { return iw; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ja", function() { return ja; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "jbo", function() { return jbo; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "jgo", function() { return jgo; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ji", function() { return ji; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "jmc", function() { return jmc; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "jv", function() { return jv; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "jw", function() { return jw; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ka", function() { return ka; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "kab", function() { return kab; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "kaj", function() { return kaj; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "kcg", function() { return kcg; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "kde", function() { return kde; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "kea", function() { return kea; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "kk", function() { return kk; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "kkj", function() { return kkj; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "kl", function() { return kl; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "km", function() { return km; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "kn", function() { return kn; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ko", function() { return ko; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ks", function() { return ks; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ksb", function() { return ksb; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ksh", function() { return ksh; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ku", function() { return ku; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "kw", function() { return kw; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ky", function() { return ky; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "lag", function() { return lag; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "lb", function() { return lb; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "lg", function() { return lg; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "lkt", function() { return lkt; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ln", function() { return ln; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "lo", function() { return lo; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "lt", function() { return lt; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "lv", function() { return lv; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "mas", function() { return mas; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "mg", function() { return mg; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "mgo", function() { return mgo; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "mk", function() { return mk; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ml", function() { return ml; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "mn", function() { return mn; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "mo", function() { return mo; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "mr", function() { return mr; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ms", function() { return ms; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "mt", function() { return mt; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "my", function() { return my; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "nah", function() { return nah; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "naq", function() { return naq; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "nb", function() { return nb; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "nd", function() { return nd; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ne", function() { return ne; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "nl", function() { return nl; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "nn", function() { return nn; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "nnh", function() { return nnh; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "no", function() { return no; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "nqo", function() { return nqo; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "nr", function() { return nr; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "nso", function() { return nso; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ny", function() { return ny; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "nyn", function() { return nyn; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "om", function() { return om; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "or", function() { return or; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "os", function() { return os; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "osa", function() { return osa; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "pa", function() { return pa; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "pap", function() { return pap; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "pl", function() { return pl; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "prg", function() { return prg; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ps", function() { return ps; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "pt", function() { return pt; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "pt_PT", function() { return pt_PT; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "rm", function() { return rm; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ro", function() { return ro; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "rof", function() { return rof; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "root", function() { return root; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ru", function() { return ru; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "rwk", function() { return rwk; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sah", function() { return sah; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "saq", function() { return saq; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sc", function() { return sc; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "scn", function() { return scn; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sd", function() { return sd; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sdh", function() { return sdh; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "se", function() { return se; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "seh", function() { return seh; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ses", function() { return ses; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sg", function() { return sg; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sh", function() { return sh; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "shi", function() { return shi; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "si", function() { return si; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sk", function() { return sk; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sl", function() { return sl; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sma", function() { return sma; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "smi", function() { return smi; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "smj", function() { return smj; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "smn", function() { return smn; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sms", function() { return sms; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sn", function() { return sn; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "so", function() { return so; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sq", function() { return sq; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sr", function() { return sr; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ss", function() { return ss; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ssy", function() { return ssy; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "st", function() { return st; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "su", function() { return su; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sv", function() { return sv; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sw", function() { return sw; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "syr", function() { return syr; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ta", function() { return ta; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "te", function() { return te; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "teo", function() { return teo; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "th", function() { return th; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ti", function() { return ti; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "tig", function() { return tig; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "tk", function() { return tk; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "tl", function() { return tl; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "tn", function() { return tn; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "to", function() { return to; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "tr", function() { return tr; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ts", function() { return ts; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "tzm", function() { return tzm; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ug", function() { return ug; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "uk", function() { return uk; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ur", function() { return ur; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "uz", function() { return uz; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ve", function() { return ve; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "vi", function() { return vi; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "vo", function() { return vo; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "vun", function() { return vun; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "wa", function() { return wa; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "wae", function() { return wae; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "wo", function() { return wo; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "xh", function() { return xh; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "xog", function() { return xog; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "yi", function() { return yi; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "yo", function() { return yo; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "yue", function() { return yue; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "zh", function() { return zh; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "zu", function() { return zu; });
+function a(n, ord) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one' : 'other';
+}
+function b(n, ord) {
+  if (ord) return 'other';
+  return ((n == 0
+          || n == 1)) ? 'one' : 'other';
+}
+function c(n, ord) {
+  var s = String(n).split('.'), v0 = !s[1];
+  if (ord) return 'other';
+  return (n == 1 && v0) ? 'one' : 'other';
+}
+function d(n, ord) {
+  if (ord) return 'other';
+  return 'other';
+}
+function e(n, ord) {
+  if (ord) return 'other';
+  return (n == 1) ? 'one'
+      : (n == 2) ? 'two'
+      : 'other';
+}
+
+const _in = d;
+const af = a;
+const ak = b;
+function am(n, ord) {
+  if (ord) return 'other';
+  return (n >= 0 && n <= 1) ? 'one' : 'other';
+}
+const an = a;
+function ar(n, ord) {
+  var s = String(n).split('.'), t0 = Number(s[0]) == n, n100 = t0 && s[0].slice(-2);
+  if (ord) return 'other';
+  return (n == 0) ? 'zero'
+      : (n == 1) ? 'one'
+      : (n == 2) ? 'two'
+      : ((n100 >= 3 && n100 <= 10)) ? 'few'
+      : ((n100 >= 11 && n100 <= 99)) ? 'many'
+      : 'other';
+}
+function ars(n, ord) {
+  var s = String(n).split('.'), t0 = Number(s[0]) == n, n100 = t0 && s[0].slice(-2);
+  if (ord) return 'other';
+  return (n == 0) ? 'zero'
+      : (n == 1) ? 'one'
+      : (n == 2) ? 'two'
+      : ((n100 >= 3 && n100 <= 10)) ? 'few'
+      : ((n100 >= 11 && n100 <= 99)) ? 'many'
+      : 'other';
+}
+function as(n, ord) {
+  if (ord) return ((n == 1 || n == 5 || n == 7 || n == 8 || n == 9
+          || n == 10)) ? 'one'
+      : ((n == 2
+          || n == 3)) ? 'two'
+      : (n == 4) ? 'few'
+      : (n == 6) ? 'many'
+      : 'other';
+  return (n >= 0 && n <= 1) ? 'one' : 'other';
+}
+const asa = a;
+const ast = c;
+function az(n, ord) {
+  var s = String(n).split('.'), i = s[0], i10 = i.slice(-1), i100 = i.slice(-2), i1000 = i.slice(-3);
+  if (ord) return ((i10 == 1 || i10 == 2 || i10 == 5 || i10 == 7 || i10 == 8) || (i100 == 20 || i100 == 50
+          || i100 == 70
+          || i100 == 80)) ? 'one'
+      : ((i10 == 3 || i10 == 4) || (i1000 == 100 || i1000 == 200 || i1000 == 300 || i1000 == 400 || i1000 == 500
+          || i1000 == 600 || i1000 == 700 || i1000 == 800
+          || i1000 == 900)) ? 'few'
+      : (i == 0 || i10 == 6 || (i100 == 40 || i100 == 60
+          || i100 == 90)) ? 'many'
+      : 'other';
+  return (n == 1) ? 'one' : 'other';
+}
+function be(n, ord) {
+  var s = String(n).split('.'), t0 = Number(s[0]) == n, n10 = t0 && s[0].slice(-1), n100 = t0 && s[0].slice(-2);
+  if (ord) return ((n10 == 2
+          || n10 == 3) && n100 != 12 && n100 != 13) ? 'few' : 'other';
+  return (n10 == 1 && n100 != 11) ? 'one'
+      : ((n10 >= 2 && n10 <= 4) && (n100 < 12
+          || n100 > 14)) ? 'few'
+      : (t0 && n10 == 0 || (n10 >= 5 && n10 <= 9)
+          || (n100 >= 11 && n100 <= 14)) ? 'many'
+      : 'other';
+}
+const bem = a;
+const bez = a;
+const bg = a;
+const bho = b;
+const bm = d;
+function bn(n, ord) {
+  if (ord) return ((n == 1 || n == 5 || n == 7 || n == 8 || n == 9
+          || n == 10)) ? 'one'
+      : ((n == 2
+          || n == 3)) ? 'two'
+      : (n == 4) ? 'few'
+      : (n == 6) ? 'many'
+      : 'other';
+  return (n >= 0 && n <= 1) ? 'one' : 'other';
+}
+const bo = d;
+function br(n, ord) {
+  var s = String(n).split('.'), t0 = Number(s[0]) == n, n10 = t0 && s[0].slice(-1), n100 = t0 && s[0].slice(-2),
+      n1000000 = t0 && s[0].slice(-6);
+  if (ord) return 'other';
+  return (n10 == 1 && n100 != 11 && n100 != 71 && n100 != 91) ? 'one'
+      : (n10 == 2 && n100 != 12 && n100 != 72 && n100 != 92) ? 'two'
+      : (((n10 == 3 || n10 == 4) || n10 == 9) && (n100 < 10 || n100 > 19) && (n100 < 70 || n100 > 79) && (n100 < 90
+          || n100 > 99)) ? 'few'
+      : (n != 0 && t0 && n1000000 == 0) ? 'many'
+      : 'other';
+}
+const brx = a;
+function bs(n, ord) {
+  var s = String(n).split('.'), i = s[0], f = s[1] || '', v0 = !s[1], i10 = i.slice(-1), i100 = i.slice(-2),
+      f10 = f.slice(-1), f100 = f.slice(-2);
+  if (ord) return 'other';
+  return (v0 && i10 == 1 && i100 != 11
+          || f10 == 1 && f100 != 11) ? 'one'
+      : (v0 && (i10 >= 2 && i10 <= 4) && (i100 < 12 || i100 > 14) || (f10 >= 2 && f10 <= 4) && (f100 < 12
+          || f100 > 14)) ? 'few'
+      : 'other';
+}
+function ca(n, ord) {
+  var s = String(n).split('.'), v0 = !s[1];
+  if (ord) return ((n == 1
+          || n == 3)) ? 'one'
+      : (n == 2) ? 'two'
+      : (n == 4) ? 'few'
+      : 'other';
+  return (n == 1 && v0) ? 'one' : 'other';
+}
+const ce = a;
+function ceb(n, ord) {
+  var s = String(n).split('.'), i = s[0], f = s[1] || '', v0 = !s[1], i10 = i.slice(-1), f10 = f.slice(-1);
+  if (ord) return 'other';
+  return (v0 && (i == 1 || i == 2 || i == 3) || v0 && i10 != 4 && i10 != 6 && i10 != 9
+          || !v0 && f10 != 4 && f10 != 6 && f10 != 9) ? 'one' : 'other';
+}
+const cgg = a;
+const chr = a;
+const ckb = a;
+function cs(n, ord) {
+  var s = String(n).split('.'), i = s[0], v0 = !s[1];
+  if (ord) return 'other';
+  return (n == 1 && v0) ? 'one'
+      : ((i >= 2 && i <= 4) && v0) ? 'few'
+      : (!v0) ? 'many'
+      : 'other';
+}
+function cy(n, ord) {
+  if (ord) return ((n == 0 || n == 7 || n == 8
+          || n == 9)) ? 'zero'
+      : (n == 1) ? 'one'
+      : (n == 2) ? 'two'
+      : ((n == 3
+          || n == 4)) ? 'few'
+      : ((n == 5
+          || n == 6)) ? 'many'
+      : 'other';
+  return (n == 0) ? 'zero'
+      : (n == 1) ? 'one'
+      : (n == 2) ? 'two'
+      : (n == 3) ? 'few'
+      : (n == 6) ? 'many'
+      : 'other';
+}
+function da(n, ord) {
+  var s = String(n).split('.'), i = s[0], t0 = Number(s[0]) == n;
+  if (ord) return 'other';
+  return (n == 1 || !t0 && (i == 0
+          || i == 1)) ? 'one' : 'other';
+}
+const de = c;
+function dsb(n, ord) {
+  var s = String(n).split('.'), i = s[0], f = s[1] || '', v0 = !s[1], i100 = i.slice(-2), f100 = f.slice(-2);
+  if (ord) return 'other';
+  return (v0 && i100 == 1
+          || f100 == 1) ? 'one'
+      : (v0 && i100 == 2
+          || f100 == 2) ? 'two'
+      : (v0 && (i100 == 3 || i100 == 4) || (f100 == 3
+          || f100 == 4)) ? 'few'
+      : 'other';
+}
+const dv = a;
+const dz = d;
+const ee = a;
+const el = a;
+function en(n, ord) {
+  var s = String(n).split('.'), v0 = !s[1], t0 = Number(s[0]) == n, n10 = t0 && s[0].slice(-1),
+      n100 = t0 && s[0].slice(-2);
+  if (ord) return (n10 == 1 && n100 != 11) ? 'one'
+      : (n10 == 2 && n100 != 12) ? 'two'
+      : (n10 == 3 && n100 != 13) ? 'few'
+      : 'other';
+  return (n == 1 && v0) ? 'one' : 'other';
+}
+const eo = a;
+const es = a;
+const et = c;
+const eu = a;
+function fa(n, ord) {
+  if (ord) return 'other';
+  return (n >= 0 && n <= 1) ? 'one' : 'other';
+}
+function ff(n, ord) {
+  if (ord) return 'other';
+  return (n >= 0 && n < 2) ? 'one' : 'other';
+}
+const fi = c;
+function fil(n, ord) {
+  var s = String(n).split('.'), i = s[0], f = s[1] || '', v0 = !s[1], i10 = i.slice(-1), f10 = f.slice(-1);
+  if (ord) return (n == 1) ? 'one' : 'other';
+  return (v0 && (i == 1 || i == 2 || i == 3) || v0 && i10 != 4 && i10 != 6 && i10 != 9
+          || !v0 && f10 != 4 && f10 != 6 && f10 != 9) ? 'one' : 'other';
+}
+const fo = a;
+function fr(n, ord) {
+  if (ord) return (n == 1) ? 'one' : 'other';
+  return (n >= 0 && n < 2) ? 'one' : 'other';
+}
+const fur = a;
+const fy = c;
+function ga(n, ord) {
+  var s = String(n).split('.'), t0 = Number(s[0]) == n;
+  if (ord) return (n == 1) ? 'one' : 'other';
+  return (n == 1) ? 'one'
+      : (n == 2) ? 'two'
+      : ((t0 && n >= 3 && n <= 6)) ? 'few'
+      : ((t0 && n >= 7 && n <= 10)) ? 'many'
+      : 'other';
+}
+function gd(n, ord) {
+  var s = String(n).split('.'), t0 = Number(s[0]) == n;
+  if (ord) return ((n == 1
+          || n == 11)) ? 'one'
+      : ((n == 2
+          || n == 12)) ? 'two'
+      : ((n == 3
+          || n == 13)) ? 'few'
+      : 'other';
+  return ((n == 1
+          || n == 11)) ? 'one'
+      : ((n == 2
+          || n == 12)) ? 'two'
+      : (((t0 && n >= 3 && n <= 10)
+          || (t0 && n >= 13 && n <= 19))) ? 'few'
+      : 'other';
+}
+const gl = c;
+const gsw = a;
+function gu(n, ord) {
+  if (ord) return (n == 1) ? 'one'
+      : ((n == 2
+          || n == 3)) ? 'two'
+      : (n == 4) ? 'few'
+      : (n == 6) ? 'many'
+      : 'other';
+  return (n >= 0 && n <= 1) ? 'one' : 'other';
+}
+const guw = b;
+function gv(n, ord) {
+  var s = String(n).split('.'), i = s[0], v0 = !s[1], i10 = i.slice(-1), i100 = i.slice(-2);
+  if (ord) return 'other';
+  return (v0 && i10 == 1) ? 'one'
+      : (v0 && i10 == 2) ? 'two'
+      : (v0 && (i100 == 0 || i100 == 20 || i100 == 40 || i100 == 60
+          || i100 == 80)) ? 'few'
+      : (!v0) ? 'many'
+      : 'other';
+}
+const ha = a;
+const haw = a;
+function he(n, ord) {
+  var s = String(n).split('.'), i = s[0], v0 = !s[1], t0 = Number(s[0]) == n, n10 = t0 && s[0].slice(-1);
+  if (ord) return 'other';
+  return (n == 1 && v0) ? 'one'
+      : (i == 2 && v0) ? 'two'
+      : (v0 && (n < 0
+          || n > 10) && t0 && n10 == 0) ? 'many'
+      : 'other';
+}
+function hi(n, ord) {
+  if (ord) return (n == 1) ? 'one'
+      : ((n == 2
+          || n == 3)) ? 'two'
+      : (n == 4) ? 'few'
+      : (n == 6) ? 'many'
+      : 'other';
+  return (n >= 0 && n <= 1) ? 'one' : 'other';
+}
+function hr(n, ord) {
+  var s = String(n).split('.'), i = s[0], f = s[1] || '', v0 = !s[1], i10 = i.slice(-1), i100 = i.slice(-2),
+      f10 = f.slice(-1), f100 = f.slice(-2);
+  if (ord) return 'other';
+  return (v0 && i10 == 1 && i100 != 11
+          || f10 == 1 && f100 != 11) ? 'one'
+      : (v0 && (i10 >= 2 && i10 <= 4) && (i100 < 12 || i100 > 14) || (f10 >= 2 && f10 <= 4) && (f100 < 12
+          || f100 > 14)) ? 'few'
+      : 'other';
+}
+function hsb(n, ord) {
+  var s = String(n).split('.'), i = s[0], f = s[1] || '', v0 = !s[1], i100 = i.slice(-2), f100 = f.slice(-2);
+  if (ord) return 'other';
+  return (v0 && i100 == 1
+          || f100 == 1) ? 'one'
+      : (v0 && i100 == 2
+          || f100 == 2) ? 'two'
+      : (v0 && (i100 == 3 || i100 == 4) || (f100 == 3
+          || f100 == 4)) ? 'few'
+      : 'other';
+}
+function hu(n, ord) {
+  if (ord) return ((n == 1
+          || n == 5)) ? 'one' : 'other';
+  return (n == 1) ? 'one' : 'other';
+}
+function hy(n, ord) {
+  if (ord) return (n == 1) ? 'one' : 'other';
+  return (n >= 0 && n < 2) ? 'one' : 'other';
+}
+const ia = c;
+const id = d;
+const ig = d;
+const ii = d;
+const io = c;
+function is(n, ord) {
+  var s = String(n).split('.'), i = s[0], t0 = Number(s[0]) == n, i10 = i.slice(-1), i100 = i.slice(-2);
+  if (ord) return 'other';
+  return (t0 && i10 == 1 && i100 != 11
+          || !t0) ? 'one' : 'other';
+}
+function it(n, ord) {
+  var s = String(n).split('.'), v0 = !s[1];
+  if (ord) return ((n == 11 || n == 8 || n == 80
+          || n == 800)) ? 'many' : 'other';
+  return (n == 1 && v0) ? 'one' : 'other';
+}
+const iu = e;
+function iw(n, ord) {
+  var s = String(n).split('.'), i = s[0], v0 = !s[1], t0 = Number(s[0]) == n, n10 = t0 && s[0].slice(-1);
+  if (ord) return 'other';
+  return (n == 1 && v0) ? 'one'
+      : (i == 2 && v0) ? 'two'
+      : (v0 && (n < 0
+          || n > 10) && t0 && n10 == 0) ? 'many'
+      : 'other';
+}
+const ja = d;
+const jbo = d;
+const jgo = a;
+const ji = c;
+const jmc = a;
+const jv = d;
+const jw = d;
+function ka(n, ord) {
+  var s = String(n).split('.'), i = s[0], i100 = i.slice(-2);
+  if (ord) return (i == 1) ? 'one'
+      : (i == 0 || ((i100 >= 2 && i100 <= 20) || i100 == 40 || i100 == 60
+          || i100 == 80)) ? 'many'
+      : 'other';
+  return (n == 1) ? 'one' : 'other';
+}
+function kab(n, ord) {
+  if (ord) return 'other';
+  return (n >= 0 && n < 2) ? 'one' : 'other';
+}
+const kaj = a;
+const kcg = a;
+const kde = d;
+const kea = d;
+function kk(n, ord) {
+  var s = String(n).split('.'), t0 = Number(s[0]) == n, n10 = t0 && s[0].slice(-1);
+  if (ord) return (n10 == 6 || n10 == 9
+          || t0 && n10 == 0 && n != 0) ? 'many' : 'other';
+  return (n == 1) ? 'one' : 'other';
+}
+const kkj = a;
+const kl = a;
+const km = d;
+function kn(n, ord) {
+  if (ord) return 'other';
+  return (n >= 0 && n <= 1) ? 'one' : 'other';
+}
+const ko = d;
+const ks = a;
+const ksb = a;
+function ksh(n, ord) {
+  if (ord) return 'other';
+  return (n == 0) ? 'zero'
+      : (n == 1) ? 'one'
+      : 'other';
+}
+const ku = a;
+function kw(n, ord) {
+  var s = String(n).split('.'), t0 = Number(s[0]) == n, n100 = t0 && s[0].slice(-2), n1000 = t0 && s[0].slice(-3),
+      n100000 = t0 && s[0].slice(-5), n1000000 = t0 && s[0].slice(-6);
+  if (ord) return ((t0 && n >= 1 && n <= 4) || ((n100 >= 1 && n100 <= 4) || (n100 >= 21 && n100 <= 24)
+          || (n100 >= 41 && n100 <= 44) || (n100 >= 61 && n100 <= 64)
+          || (n100 >= 81 && n100 <= 84))) ? 'one'
+      : (n == 5
+          || n100 == 5) ? 'many'
+      : 'other';
+  return (n == 0) ? 'zero'
+      : (n == 1) ? 'one'
+      : ((n100 == 2 || n100 == 22 || n100 == 42 || n100 == 62 || n100 == 82)
+          || t0 && n1000 == 0 && ((n100000 >= 1000 && n100000 <= 20000) || n100000 == 40000 || n100000 == 60000
+          || n100000 == 80000)
+          || n != 0 && n1000000 == 100000) ? 'two'
+      : ((n100 == 3 || n100 == 23 || n100 == 43 || n100 == 63
+          || n100 == 83)) ? 'few'
+      : (n != 1 && (n100 == 1 || n100 == 21 || n100 == 41 || n100 == 61
+          || n100 == 81)) ? 'many'
+      : 'other';
+}
+const ky = a;
+function lag(n, ord) {
+  var s = String(n).split('.'), i = s[0];
+  if (ord) return 'other';
+  return (n == 0) ? 'zero'
+      : ((i == 0
+          || i == 1) && n != 0) ? 'one'
+      : 'other';
+}
+const lb = a;
+const lg = a;
+const lkt = d;
+const ln = b;
+function lo(n, ord) {
+  if (ord) return (n == 1) ? 'one' : 'other';
+  return 'other';
+}
+function lt(n, ord) {
+  var s = String(n).split('.'), f = s[1] || '', t0 = Number(s[0]) == n, n10 = t0 && s[0].slice(-1),
+      n100 = t0 && s[0].slice(-2);
+  if (ord) return 'other';
+  return (n10 == 1 && (n100 < 11
+          || n100 > 19)) ? 'one'
+      : ((n10 >= 2 && n10 <= 9) && (n100 < 11
+          || n100 > 19)) ? 'few'
+      : (f != 0) ? 'many'
+      : 'other';
+}
+function lv(n, ord) {
+  var s = String(n).split('.'), f = s[1] || '', v = f.length, t0 = Number(s[0]) == n, n10 = t0 && s[0].slice(-1),
+      n100 = t0 && s[0].slice(-2), f100 = f.slice(-2), f10 = f.slice(-1);
+  if (ord) return 'other';
+  return (t0 && n10 == 0 || (n100 >= 11 && n100 <= 19)
+          || v == 2 && (f100 >= 11 && f100 <= 19)) ? 'zero'
+      : (n10 == 1 && n100 != 11 || v == 2 && f10 == 1 && f100 != 11
+          || v != 2 && f10 == 1) ? 'one'
+      : 'other';
+}
+const mas = a;
+const mg = b;
+const mgo = a;
+function mk(n, ord) {
+  var s = String(n).split('.'), i = s[0], f = s[1] || '', v0 = !s[1], i10 = i.slice(-1), i100 = i.slice(-2),
+      f10 = f.slice(-1), f100 = f.slice(-2);
+  if (ord) return (i10 == 1 && i100 != 11) ? 'one'
+      : (i10 == 2 && i100 != 12) ? 'two'
+      : ((i10 == 7
+          || i10 == 8) && i100 != 17 && i100 != 18) ? 'many'
+      : 'other';
+  return (v0 && i10 == 1 && i100 != 11
+          || f10 == 1 && f100 != 11) ? 'one' : 'other';
+}
+const ml = a;
+const mn = a;
+function mo(n, ord) {
+  var s = String(n).split('.'), v0 = !s[1], t0 = Number(s[0]) == n, n100 = t0 && s[0].slice(-2);
+  if (ord) return (n == 1) ? 'one' : 'other';
+  return (n == 1 && v0) ? 'one'
+      : (!v0 || n == 0
+          || (n100 >= 2 && n100 <= 19)) ? 'few'
+      : 'other';
+}
+function mr(n, ord) {
+  if (ord) return (n == 1) ? 'one'
+      : ((n == 2
+          || n == 3)) ? 'two'
+      : (n == 4) ? 'few'
+      : 'other';
+  return (n == 1) ? 'one' : 'other';
+}
+function ms(n, ord) {
+  if (ord) return (n == 1) ? 'one' : 'other';
+  return 'other';
+}
+function mt(n, ord) {
+  var s = String(n).split('.'), t0 = Number(s[0]) == n, n100 = t0 && s[0].slice(-2);
+  if (ord) return 'other';
+  return (n == 1) ? 'one'
+      : (n == 0
+          || (n100 >= 2 && n100 <= 10)) ? 'few'
+      : ((n100 >= 11 && n100 <= 19)) ? 'many'
+      : 'other';
+}
+const my = d;
+const nah = a;
+const naq = e;
+const nb = a;
+const nd = a;
+function ne(n, ord) {
+  var s = String(n).split('.'), t0 = Number(s[0]) == n;
+  if (ord) return ((t0 && n >= 1 && n <= 4)) ? 'one' : 'other';
+  return (n == 1) ? 'one' : 'other';
+}
+const nl = c;
+const nn = a;
+const nnh = a;
+const no = a;
+const nqo = d;
+const nr = a;
+const nso = b;
+const ny = a;
+const nyn = a;
+const om = a;
+function or(n, ord) {
+  var s = String(n).split('.'), t0 = Number(s[0]) == n;
+  if (ord) return ((n == 1 || n == 5
+          || (t0 && n >= 7 && n <= 9))) ? 'one'
+      : ((n == 2
+          || n == 3)) ? 'two'
+      : (n == 4) ? 'few'
+      : (n == 6) ? 'many'
+      : 'other';
+  return (n == 1) ? 'one' : 'other';
+}
+const os = a;
+const osa = d;
+const pa = b;
+const pap = a;
+function pl(n, ord) {
+  var s = String(n).split('.'), i = s[0], v0 = !s[1], i10 = i.slice(-1), i100 = i.slice(-2);
+  if (ord) return 'other';
+  return (n == 1 && v0) ? 'one'
+      : (v0 && (i10 >= 2 && i10 <= 4) && (i100 < 12
+          || i100 > 14)) ? 'few'
+      : (v0 && i != 1 && (i10 == 0 || i10 == 1) || v0 && (i10 >= 5 && i10 <= 9)
+          || v0 && (i100 >= 12 && i100 <= 14)) ? 'many'
+      : 'other';
+}
+function prg(n, ord) {
+  var s = String(n).split('.'), f = s[1] || '', v = f.length, t0 = Number(s[0]) == n, n10 = t0 && s[0].slice(-1),
+      n100 = t0 && s[0].slice(-2), f100 = f.slice(-2), f10 = f.slice(-1);
+  if (ord) return 'other';
+  return (t0 && n10 == 0 || (n100 >= 11 && n100 <= 19)
+          || v == 2 && (f100 >= 11 && f100 <= 19)) ? 'zero'
+      : (n10 == 1 && n100 != 11 || v == 2 && f10 == 1 && f100 != 11
+          || v != 2 && f10 == 1) ? 'one'
+      : 'other';
+}
+const ps = a;
+function pt(n, ord) {
+  var s = String(n).split('.'), i = s[0];
+  if (ord) return 'other';
+  return ((i == 0
+          || i == 1)) ? 'one' : 'other';
+}
+const pt_PT = c;
+const rm = a;
+function ro(n, ord) {
+  var s = String(n).split('.'), v0 = !s[1], t0 = Number(s[0]) == n, n100 = t0 && s[0].slice(-2);
+  if (ord) return (n == 1) ? 'one' : 'other';
+  return (n == 1 && v0) ? 'one'
+      : (!v0 || n == 0
+          || (n100 >= 2 && n100 <= 19)) ? 'few'
+      : 'other';
+}
+const rof = a;
+const root = d;
+function ru(n, ord) {
+  var s = String(n).split('.'), i = s[0], v0 = !s[1], i10 = i.slice(-1), i100 = i.slice(-2);
+  if (ord) return 'other';
+  return (v0 && i10 == 1 && i100 != 11) ? 'one'
+      : (v0 && (i10 >= 2 && i10 <= 4) && (i100 < 12
+          || i100 > 14)) ? 'few'
+      : (v0 && i10 == 0 || v0 && (i10 >= 5 && i10 <= 9)
+          || v0 && (i100 >= 11 && i100 <= 14)) ? 'many'
+      : 'other';
+}
+const rwk = a;
+const sah = d;
+const saq = a;
+function sc(n, ord) {
+  var s = String(n).split('.'), v0 = !s[1];
+  if (ord) return ((n == 11 || n == 8 || n == 80
+          || n == 800)) ? 'many' : 'other';
+  return (n == 1 && v0) ? 'one' : 'other';
+}
+function scn(n, ord) {
+  var s = String(n).split('.'), v0 = !s[1];
+  if (ord) return ((n == 11 || n == 8 || n == 80
+          || n == 800)) ? 'many' : 'other';
+  return (n == 1 && v0) ? 'one' : 'other';
+}
+const sd = a;
+const sdh = a;
+const se = e;
+const seh = a;
+const ses = d;
+const sg = d;
+function sh(n, ord) {
+  var s = String(n).split('.'), i = s[0], f = s[1] || '', v0 = !s[1], i10 = i.slice(-1), i100 = i.slice(-2),
+      f10 = f.slice(-1), f100 = f.slice(-2);
+  if (ord) return 'other';
+  return (v0 && i10 == 1 && i100 != 11
+          || f10 == 1 && f100 != 11) ? 'one'
+      : (v0 && (i10 >= 2 && i10 <= 4) && (i100 < 12 || i100 > 14) || (f10 >= 2 && f10 <= 4) && (f100 < 12
+          || f100 > 14)) ? 'few'
+      : 'other';
+}
+function shi(n, ord) {
+  var s = String(n).split('.'), t0 = Number(s[0]) == n;
+  if (ord) return 'other';
+  return (n >= 0 && n <= 1) ? 'one'
+      : ((t0 && n >= 2 && n <= 10)) ? 'few'
+      : 'other';
+}
+function si(n, ord) {
+  var s = String(n).split('.'), i = s[0], f = s[1] || '';
+  if (ord) return 'other';
+  return ((n == 0 || n == 1)
+          || i == 0 && f == 1) ? 'one' : 'other';
+}
+function sk(n, ord) {
+  var s = String(n).split('.'), i = s[0], v0 = !s[1];
+  if (ord) return 'other';
+  return (n == 1 && v0) ? 'one'
+      : ((i >= 2 && i <= 4) && v0) ? 'few'
+      : (!v0) ? 'many'
+      : 'other';
+}
+function sl(n, ord) {
+  var s = String(n).split('.'), i = s[0], v0 = !s[1], i100 = i.slice(-2);
+  if (ord) return 'other';
+  return (v0 && i100 == 1) ? 'one'
+      : (v0 && i100 == 2) ? 'two'
+      : (v0 && (i100 == 3 || i100 == 4)
+          || !v0) ? 'few'
+      : 'other';
+}
+const sma = e;
+const smi = e;
+const smj = e;
+const smn = e;
+const sms = e;
+const sn = a;
+const so = a;
+function sq(n, ord) {
+  var s = String(n).split('.'), t0 = Number(s[0]) == n, n10 = t0 && s[0].slice(-1), n100 = t0 && s[0].slice(-2);
+  if (ord) return (n == 1) ? 'one'
+      : (n10 == 4 && n100 != 14) ? 'many'
+      : 'other';
+  return (n == 1) ? 'one' : 'other';
+}
+function sr(n, ord) {
+  var s = String(n).split('.'), i = s[0], f = s[1] || '', v0 = !s[1], i10 = i.slice(-1), i100 = i.slice(-2),
+      f10 = f.slice(-1), f100 = f.slice(-2);
+  if (ord) return 'other';
+  return (v0 && i10 == 1 && i100 != 11
+          || f10 == 1 && f100 != 11) ? 'one'
+      : (v0 && (i10 >= 2 && i10 <= 4) && (i100 < 12 || i100 > 14) || (f10 >= 2 && f10 <= 4) && (f100 < 12
+          || f100 > 14)) ? 'few'
+      : 'other';
+}
+const ss = a;
+const ssy = a;
+const st = a;
+const su = d;
+function sv(n, ord) {
+  var s = String(n).split('.'), v0 = !s[1], t0 = Number(s[0]) == n, n10 = t0 && s[0].slice(-1),
+      n100 = t0 && s[0].slice(-2);
+  if (ord) return ((n10 == 1
+          || n10 == 2) && n100 != 11 && n100 != 12) ? 'one' : 'other';
+  return (n == 1 && v0) ? 'one' : 'other';
+}
+const sw = c;
+const syr = a;
+const ta = a;
+const te = a;
+const teo = a;
+const th = d;
+const ti = b;
+const tig = a;
+function tk(n, ord) {
+  var s = String(n).split('.'), t0 = Number(s[0]) == n, n10 = t0 && s[0].slice(-1);
+  if (ord) return ((n10 == 6 || n10 == 9)
+          || n == 10) ? 'few' : 'other';
+  return (n == 1) ? 'one' : 'other';
+}
+function tl(n, ord) {
+  var s = String(n).split('.'), i = s[0], f = s[1] || '', v0 = !s[1], i10 = i.slice(-1), f10 = f.slice(-1);
+  if (ord) return (n == 1) ? 'one' : 'other';
+  return (v0 && (i == 1 || i == 2 || i == 3) || v0 && i10 != 4 && i10 != 6 && i10 != 9
+          || !v0 && f10 != 4 && f10 != 6 && f10 != 9) ? 'one' : 'other';
+}
+const tn = a;
+const to = d;
+const tr = a;
+const ts = a;
+function tzm(n, ord) {
+  var s = String(n).split('.'), t0 = Number(s[0]) == n;
+  if (ord) return 'other';
+  return ((n == 0 || n == 1)
+          || (t0 && n >= 11 && n <= 99)) ? 'one' : 'other';
+}
+const ug = a;
+function uk(n, ord) {
+  var s = String(n).split('.'), i = s[0], v0 = !s[1], t0 = Number(s[0]) == n, n10 = t0 && s[0].slice(-1),
+      n100 = t0 && s[0].slice(-2), i10 = i.slice(-1), i100 = i.slice(-2);
+  if (ord) return (n10 == 3 && n100 != 13) ? 'few' : 'other';
+  return (v0 && i10 == 1 && i100 != 11) ? 'one'
+      : (v0 && (i10 >= 2 && i10 <= 4) && (i100 < 12
+          || i100 > 14)) ? 'few'
+      : (v0 && i10 == 0 || v0 && (i10 >= 5 && i10 <= 9)
+          || v0 && (i100 >= 11 && i100 <= 14)) ? 'many'
+      : 'other';
+}
+const ur = c;
+const uz = a;
+const ve = a;
+function vi(n, ord) {
+  if (ord) return (n == 1) ? 'one' : 'other';
+  return 'other';
+}
+const vo = a;
+const vun = a;
+const wa = b;
+const wae = a;
+const wo = d;
+const xh = a;
+const xog = a;
+const yi = c;
+const yo = d;
+const yue = d;
+const zh = d;
+function zu(n, ord) {
+  if (ord) return 'other';
+  return (n >= 0 && n <= 1) ? 'one' : 'other';
+}
+
+
+/***/ }),
+/* 33 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var patternParts = {
+    value: '[-+]?(?:Infinity|[[0-9]*\\.?\\d*(?:[eE][-+]?\\d+)?)',
+    leftBrace: '[\\(\\]\\[]',
+    delimeter: ',',
+    rightBrace: '[\\)\\]\\[]',
+};
+var PATTERN = new RegExp("(" + patternParts.leftBrace + ")" +
+    ("(" + patternParts.value + ")?") +
+    ("(" + patternParts.delimeter + ")?") +
+    ("(" + patternParts.value + ")?") +
+    ("(" + patternParts.rightBrace + ")"));
+function execPattern(str) {
+    var match = PATTERN.exec(str);
+    if (!match) {
+        return null;
+    }
+    var _ = match[0], leftBrace = match[1], fromValue = match[2], delimeter = match[3], toValue = match[4], rightBrace = match[5];
+    return {
+        leftBrace: leftBrace,
+        fromValue: fromValue,
+        delimeter: delimeter,
+        toValue: toValue,
+        rightBrace: rightBrace,
+    };
+}
 function parse(str) {
-    var match = xregexp_1.XRegExp.exec(str, mathInterval);
+    var match = execPattern(str);
     if (!match) {
         return null;
     }
@@ -7236,15 +9801,14 @@ function parse(str) {
                 +match.toValue :
                 (match.delimeter ?
                     +Infinity :
-                    +match.fromValue),
+                    match.fromValue !== undefined ?
+                        +match.fromValue :
+                        NaN),
             included: match.rightBrace === ']'
         }
     };
 }
 function check(interval) {
-    if (!interval) {
-        return false;
-    }
     if (interval.from.value === interval.to.value) {
         return interval.from.included && interval.to.included;
     }
@@ -7252,2331 +9816,16 @@ function check(interval) {
 }
 function entry(str) {
     var interval = parse(str);
-    if (!check(interval)) {
+    if (!interval || !check(interval)) {
         return null;
     }
     return interval;
 }
 exports.default = entry;
-;
 
 
 /***/ }),
-/* 26 */
-/***/ (function(module, exports, __webpack_require__) {
-
-
-/***** xregexp.js *****/
-
-/*!
- * XRegExp v2.0.0
- * (c) 2007-2012 Steven Levithan <http://xregexp.com/>
- * MIT License
- */
-
-/**
- * XRegExp provides augmented, extensible JavaScript regular expressions. You get new syntax,
- * flags, and methods beyond what browsers support natively. XRegExp is also a regex utility belt
- * with tools to make your client-side grepping simpler and more powerful, while freeing you from
- * worrying about pesky cross-browser inconsistencies and the dubious `lastIndex` property. See
- * XRegExp's documentation (http://xregexp.com/) for more details.
- * @module xregexp
- * @requires N/A
- */
-var XRegExp;
-
-// Avoid running twice; that would reset tokens and could break references to native globals
-XRegExp = XRegExp || (function (undef) {
-    "use strict";
-
-/*--------------------------------------
- *  Private variables
- *------------------------------------*/
-
-    var self,
-        addToken,
-        add,
-
-// Optional features; can be installed and uninstalled
-        features = {
-            natives: false,
-            extensibility: false
-        },
-
-// Store native methods to use and restore ("native" is an ES3 reserved keyword)
-        nativ = {
-            exec: RegExp.prototype.exec,
-            test: RegExp.prototype.test,
-            match: String.prototype.match,
-            replace: String.prototype.replace,
-            split: String.prototype.split
-        },
-
-// Storage for fixed/extended native methods
-        fixed = {},
-
-// Storage for cached regexes
-        cache = {},
-
-// Storage for addon tokens
-        tokens = [],
-
-// Token scopes
-        defaultScope = "default",
-        classScope = "class",
-
-// Regexes that match native regex syntax
-        nativeTokens = {
-            // Any native multicharacter token in default scope (includes octals, excludes character classes)
-            "default": /^(?:\\(?:0(?:[0-3][0-7]{0,2}|[4-7][0-7]?)?|[1-9]\d*|x[\dA-Fa-f]{2}|u[\dA-Fa-f]{4}|c[A-Za-z]|[\s\S])|\(\?[:=!]|[?*+]\?|{\d+(?:,\d*)?}\??)/,
-            // Any native multicharacter token in character class scope (includes octals)
-            "class": /^(?:\\(?:[0-3][0-7]{0,2}|[4-7][0-7]?|x[\dA-Fa-f]{2}|u[\dA-Fa-f]{4}|c[A-Za-z]|[\s\S]))/
-        },
-
-// Any backreference in replacement strings
-        replacementToken = /\$(?:{([\w$]+)}|(\d\d?|[\s\S]))/g,
-
-// Any character with a later instance in the string
-        duplicateFlags = /([\s\S])(?=[\s\S]*\1)/g,
-
-// Any greedy/lazy quantifier
-        quantifier = /^(?:[?*+]|{\d+(?:,\d*)?})\??/,
-
-// Check for correct `exec` handling of nonparticipating capturing groups
-        compliantExecNpcg = nativ.exec.call(/()??/, "")[1] === undef,
-
-// Check for flag y support (Firefox 3+)
-        hasNativeY = RegExp.prototype.sticky !== undef,
-
-// Used to kill infinite recursion during XRegExp construction
-        isInsideConstructor = false,
-
-// Storage for known flags, including addon flags
-        registeredFlags = "gim" + (hasNativeY ? "y" : "");
-
-/*--------------------------------------
- *  Private helper functions
- *------------------------------------*/
-
-/**
- * Attaches XRegExp.prototype properties and named capture supporting data to a regex object.
- * @private
- * @param {RegExp} regex Regex to augment.
- * @param {Array} captureNames Array with capture names, or null.
- * @param {Boolean} [isNative] Whether the regex was created by `RegExp` rather than `XRegExp`.
- * @returns {RegExp} Augmented regex.
- */
-    function augment(regex, captureNames, isNative) {
-        var p;
-        // Can't auto-inherit these since the XRegExp constructor returns a nonprimitive value
-        for (p in self.prototype) {
-            if (self.prototype.hasOwnProperty(p)) {
-                regex[p] = self.prototype[p];
-            }
-        }
-        regex.xregexp = {captureNames: captureNames, isNative: !!isNative};
-        return regex;
-    }
-
-/**
- * Returns native `RegExp` flags used by a regex object.
- * @private
- * @param {RegExp} regex Regex to check.
- * @returns {String} Native flags in use.
- */
-    function getNativeFlags(regex) {
-        //return nativ.exec.call(/\/([a-z]*)$/i, String(regex))[1];
-        return (regex.global     ? "g" : "") +
-               (regex.ignoreCase ? "i" : "") +
-               (regex.multiline  ? "m" : "") +
-               (regex.extended   ? "x" : "") + // Proposed for ES6, included in AS3
-               (regex.sticky     ? "y" : ""); // Proposed for ES6, included in Firefox 3+
-    }
-
-/**
- * Copies a regex object while preserving special properties for named capture and augmenting with
- * `XRegExp.prototype` methods. The copy has a fresh `lastIndex` property (set to zero). Allows
- * adding and removing flags while copying the regex.
- * @private
- * @param {RegExp} regex Regex to copy.
- * @param {String} [addFlags] Flags to be added while copying the regex.
- * @param {String} [removeFlags] Flags to be removed while copying the regex.
- * @returns {RegExp} Copy of the provided regex, possibly with modified flags.
- */
-    function copy(regex, addFlags, removeFlags) {
-        if (!self.isRegExp(regex)) {
-            throw new TypeError("type RegExp expected");
-        }
-        var flags = nativ.replace.call(getNativeFlags(regex) + (addFlags || ""), duplicateFlags, "");
-        if (removeFlags) {
-            // Would need to escape `removeFlags` if this was public
-            flags = nativ.replace.call(flags, new RegExp("[" + removeFlags + "]+", "g"), "");
-        }
-        if (regex.xregexp && !regex.xregexp.isNative) {
-            // Compiling the current (rather than precompilation) source preserves the effects of nonnative source flags
-            regex = augment(self(regex.source, flags),
-                            regex.xregexp.captureNames ? regex.xregexp.captureNames.slice(0) : null);
-        } else {
-            // Augment with `XRegExp.prototype` methods, but use native `RegExp` (avoid searching for special tokens)
-            regex = augment(new RegExp(regex.source, flags), null, true);
-        }
-        return regex;
-    }
-
-/*
- * Returns the last index at which a given value can be found in an array, or `-1` if it's not
- * present. The array is searched backwards.
- * @private
- * @param {Array} array Array to search.
- * @param {*} value Value to locate in the array.
- * @returns {Number} Last zero-based index at which the item is found, or -1.
- */
-    function lastIndexOf(array, value) {
-        var i = array.length;
-        if (Array.prototype.lastIndexOf) {
-            return array.lastIndexOf(value); // Use the native method if available
-        }
-        while (i--) {
-            if (array[i] === value) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-/**
- * Determines whether an object is of the specified type.
- * @private
- * @param {*} value Object to check.
- * @param {String} type Type to check for, in lowercase.
- * @returns {Boolean} Whether the object matches the type.
- */
-    function isType(value, type) {
-        return Object.prototype.toString.call(value).toLowerCase() === "[object " + type + "]";
-    }
-
-/**
- * Prepares an options object from the given value.
- * @private
- * @param {String|Object} value Value to convert to an options object.
- * @returns {Object} Options object.
- */
-    function prepareOptions(value) {
-        value = value || {};
-        if (value === "all" || value.all) {
-            value = {natives: true, extensibility: true};
-        } else if (isType(value, "string")) {
-            value = self.forEach(value, /[^\s,]+/, function (m) {
-                this[m] = true;
-            }, {});
-        }
-        return value;
-    }
-
-/**
- * Runs built-in/custom tokens in reverse insertion order, until a match is found.
- * @private
- * @param {String} pattern Original pattern from which an XRegExp object is being built.
- * @param {Number} pos Position to search for tokens within `pattern`.
- * @param {Number} scope Current regex scope.
- * @param {Object} context Context object assigned to token handler functions.
- * @returns {Object} Object with properties `output` (the substitution string returned by the
- *   successful token handler) and `match` (the token's match array), or null.
- */
-    function runTokens(pattern, pos, scope, context) {
-        var i = tokens.length,
-            result = null,
-            match,
-            t;
-        // Protect against constructing XRegExps within token handler and trigger functions
-        isInsideConstructor = true;
-        // Must reset `isInsideConstructor`, even if a `trigger` or `handler` throws
-        try {
-            while (i--) { // Run in reverse order
-                t = tokens[i];
-                if ((t.scope === "all" || t.scope === scope) && (!t.trigger || t.trigger.call(context))) {
-                    t.pattern.lastIndex = pos;
-                    match = fixed.exec.call(t.pattern, pattern); // Fixed `exec` here allows use of named backreferences, etc.
-                    if (match && match.index === pos) {
-                        result = {
-                            output: t.handler.call(context, match, scope),
-                            match: match
-                        };
-                        break;
-                    }
-                }
-            }
-        } catch (err) {
-            throw err;
-        } finally {
-            isInsideConstructor = false;
-        }
-        return result;
-    }
-
-/**
- * Enables or disables XRegExp syntax and flag extensibility.
- * @private
- * @param {Boolean} on `true` to enable; `false` to disable.
- */
-    function setExtensibility(on) {
-        self.addToken = addToken[on ? "on" : "off"];
-        features.extensibility = on;
-    }
-
-/**
- * Enables or disables native method overrides.
- * @private
- * @param {Boolean} on `true` to enable; `false` to disable.
- */
-    function setNatives(on) {
-        RegExp.prototype.exec = (on ? fixed : nativ).exec;
-        RegExp.prototype.test = (on ? fixed : nativ).test;
-        String.prototype.match = (on ? fixed : nativ).match;
-        String.prototype.replace = (on ? fixed : nativ).replace;
-        String.prototype.split = (on ? fixed : nativ).split;
-        features.natives = on;
-    }
-
-/*--------------------------------------
- *  Constructor
- *------------------------------------*/
-
-/**
- * Creates an extended regular expression object for matching text with a pattern. Differs from a
- * native regular expression in that additional syntax and flags are supported. The returned object
- * is in fact a native `RegExp` and works with all native methods.
- * @class XRegExp
- * @constructor
- * @param {String|RegExp} pattern Regex pattern string, or an existing `RegExp` object to copy.
- * @param {String} [flags] Any combination of flags:
- *   <li>`g` - global
- *   <li>`i` - ignore case
- *   <li>`m` - multiline anchors
- *   <li>`n` - explicit capture
- *   <li>`s` - dot matches all (aka singleline)
- *   <li>`x` - free-spacing and line comments (aka extended)
- *   <li>`y` - sticky (Firefox 3+ only)
- *   Flags cannot be provided when constructing one `RegExp` from another.
- * @returns {RegExp} Extended regular expression object.
- * @example
- *
- * // With named capture and flag x
- * date = XRegExp('(?<year>  [0-9]{4}) -?  # year  \n\
- *                 (?<month> [0-9]{2}) -?  # month \n\
- *                 (?<day>   [0-9]{2})     # day   ', 'x');
- *
- * // Passing a regex object to copy it. The copy maintains special properties for named capture,
- * // is augmented with `XRegExp.prototype` methods, and has a fresh `lastIndex` property (set to
- * // zero). Native regexes are not recompiled using XRegExp syntax.
- * XRegExp(/regex/);
- */
-    self = function (pattern, flags) {
-        if (self.isRegExp(pattern)) {
-            if (flags !== undef) {
-                throw new TypeError("can't supply flags when constructing one RegExp from another");
-            }
-            return copy(pattern);
-        }
-        // Tokens become part of the regex construction process, so protect against infinite recursion
-        // when an XRegExp is constructed within a token handler function
-        if (isInsideConstructor) {
-            throw new Error("can't call the XRegExp constructor within token definition functions");
-        }
-
-        var output = [],
-            scope = defaultScope,
-            tokenContext = {
-                hasNamedCapture: false,
-                captureNames: [],
-                hasFlag: function (flag) {
-                    return flags.indexOf(flag) > -1;
-                }
-            },
-            pos = 0,
-            tokenResult,
-            match,
-            chr;
-        pattern = pattern === undef ? "" : String(pattern);
-        flags = flags === undef ? "" : String(flags);
-
-        if (nativ.match.call(flags, duplicateFlags)) { // Don't use test/exec because they would update lastIndex
-            throw new SyntaxError("invalid duplicate regular expression flag");
-        }
-        // Strip/apply leading mode modifier with any combination of flags except g or y: (?imnsx)
-        pattern = nativ.replace.call(pattern, /^\(\?([\w$]+)\)/, function ($0, $1) {
-            if (nativ.test.call(/[gy]/, $1)) {
-                throw new SyntaxError("can't use flag g or y in mode modifier");
-            }
-            flags = nativ.replace.call(flags + $1, duplicateFlags, "");
-            return "";
-        });
-        self.forEach(flags, /[\s\S]/, function (m) {
-            if (registeredFlags.indexOf(m[0]) < 0) {
-                throw new SyntaxError("invalid regular expression flag " + m[0]);
-            }
-        });
-
-        while (pos < pattern.length) {
-            // Check for custom tokens at the current position
-            tokenResult = runTokens(pattern, pos, scope, tokenContext);
-            if (tokenResult) {
-                output.push(tokenResult.output);
-                pos += (tokenResult.match[0].length || 1);
-            } else {
-                // Check for native tokens (except character classes) at the current position
-                match = nativ.exec.call(nativeTokens[scope], pattern.slice(pos));
-                if (match) {
-                    output.push(match[0]);
-                    pos += match[0].length;
-                } else {
-                    chr = pattern.charAt(pos);
-                    if (chr === "[") {
-                        scope = classScope;
-                    } else if (chr === "]") {
-                        scope = defaultScope;
-                    }
-                    // Advance position by one character
-                    output.push(chr);
-                    ++pos;
-                }
-            }
-        }
-
-        return augment(new RegExp(output.join(""), nativ.replace.call(flags, /[^gimy]+/g, "")),
-                       tokenContext.hasNamedCapture ? tokenContext.captureNames : null);
-    };
-
-/*--------------------------------------
- *  Public methods/properties
- *------------------------------------*/
-
-// Installed and uninstalled states for `XRegExp.addToken`
-    addToken = {
-        on: function (regex, handler, options) {
-            options = options || {};
-            if (regex) {
-                tokens.push({
-                    pattern: copy(regex, "g" + (hasNativeY ? "y" : "")),
-                    handler: handler,
-                    scope: options.scope || defaultScope,
-                    trigger: options.trigger || null
-                });
-            }
-            // Providing `customFlags` with null `regex` and `handler` allows adding flags that do
-            // nothing, but don't throw an error
-            if (options.customFlags) {
-                registeredFlags = nativ.replace.call(registeredFlags + options.customFlags, duplicateFlags, "");
-            }
-        },
-        off: function () {
-            throw new Error("extensibility must be installed before using addToken");
-        }
-    };
-
-/**
- * Extends or changes XRegExp syntax and allows custom flags. This is used internally and can be
- * used to create XRegExp addons. `XRegExp.install('extensibility')` must be run before calling
- * this function, or an error is thrown. If more than one token can match the same string, the last
- * added wins.
- * @memberOf XRegExp
- * @param {RegExp} regex Regex object that matches the new token.
- * @param {Function} handler Function that returns a new pattern string (using native regex syntax)
- *   to replace the matched token within all future XRegExp regexes. Has access to persistent
- *   properties of the regex being built, through `this`. Invoked with two arguments:
- *   <li>The match array, with named backreference properties.
- *   <li>The regex scope where the match was found.
- * @param {Object} [options] Options object with optional properties:
- *   <li>`scope` {String} Scopes where the token applies: 'default', 'class', or 'all'.
- *   <li>`trigger` {Function} Function that returns `true` when the token should be applied; e.g.,
- *     if a flag is set. If `false` is returned, the matched string can be matched by other tokens.
- *     Has access to persistent properties of the regex being built, through `this` (including
- *     function `this.hasFlag`).
- *   <li>`customFlags` {String} Nonnative flags used by the token's handler or trigger functions.
- *     Prevents XRegExp from throwing an invalid flag error when the specified flags are used.
- * @example
- *
- * // Basic usage: Adds \a for ALERT character
- * XRegExp.addToken(
- *   /\\a/,
- *   function () {return '\\x07';},
- *   {scope: 'all'}
- * );
- * XRegExp('\\a[\\a-\\n]+').test('\x07\n\x07'); // -> true
- */
-    self.addToken = addToken.off;
-
-/**
- * Caches and returns the result of calling `XRegExp(pattern, flags)`. On any subsequent call with
- * the same pattern and flag combination, the cached copy is returned.
- * @memberOf XRegExp
- * @param {String} pattern Regex pattern string.
- * @param {String} [flags] Any combination of XRegExp flags.
- * @returns {RegExp} Cached XRegExp object.
- * @example
- *
- * while (match = XRegExp.cache('.', 'gs').exec(str)) {
- *   // The regex is compiled once only
- * }
- */
-    self.cache = function (pattern, flags) {
-        var key = pattern + "/" + (flags || "");
-        return cache[key] || (cache[key] = self(pattern, flags));
-    };
-
-/**
- * Escapes any regular expression metacharacters, for use when matching literal strings. The result
- * can safely be used at any point within a regex that uses any flags.
- * @memberOf XRegExp
- * @param {String} str String to escape.
- * @returns {String} String with regex metacharacters escaped.
- * @example
- *
- * XRegExp.escape('Escaped? <.>');
- * // -> 'Escaped\?\ <\.>'
- */
-    self.escape = function (str) {
-        return nativ.replace.call(str, /[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
-    };
-
-/**
- * Executes a regex search in a specified string. Returns a match array or `null`. If the provided
- * regex uses named capture, named backreference properties are included on the match array.
- * Optional `pos` and `sticky` arguments specify the search start position, and whether the match
- * must start at the specified position only. The `lastIndex` property of the provided regex is not
- * used, but is updated for compatibility. Also fixes browser bugs compared to the native
- * `RegExp.prototype.exec` and can be used reliably cross-browser.
- * @memberOf XRegExp
- * @param {String} str String to search.
- * @param {RegExp} regex Regex to search with.
- * @param {Number} [pos=0] Zero-based index at which to start the search.
- * @param {Boolean|String} [sticky=false] Whether the match must start at the specified position
- *   only. The string `'sticky'` is accepted as an alternative to `true`.
- * @returns {Array} Match array with named backreference properties, or null.
- * @example
- *
- * // Basic use, with named backreference
- * var match = XRegExp.exec('U+2620', XRegExp('U\\+(?<hex>[0-9A-F]{4})'));
- * match.hex; // -> '2620'
- *
- * // With pos and sticky, in a loop
- * var pos = 2, result = [], match;
- * while (match = XRegExp.exec('<1><2><3><4>5<6>', /<(\d)>/, pos, 'sticky')) {
- *   result.push(match[1]);
- *   pos = match.index + match[0].length;
- * }
- * // result -> ['2', '3', '4']
- */
-    self.exec = function (str, regex, pos, sticky) {
-        var r2 = copy(regex, "g" + (sticky && hasNativeY ? "y" : ""), (sticky === false ? "y" : "")),
-            match;
-        r2.lastIndex = pos = pos || 0;
-        match = fixed.exec.call(r2, str); // Fixed `exec` required for `lastIndex` fix, etc.
-        if (sticky && match && match.index !== pos) {
-            match = null;
-        }
-        if (regex.global) {
-            regex.lastIndex = match ? r2.lastIndex : 0;
-        }
-        return match;
-    };
-
-/**
- * Executes a provided function once per regex match.
- * @memberOf XRegExp
- * @param {String} str String to search.
- * @param {RegExp} regex Regex to search with.
- * @param {Function} callback Function to execute for each match. Invoked with four arguments:
- *   <li>The match array, with named backreference properties.
- *   <li>The zero-based match index.
- *   <li>The string being traversed.
- *   <li>The regex object being used to traverse the string.
- * @param {*} [context] Object to use as `this` when executing `callback`.
- * @returns {*} Provided `context` object.
- * @example
- *
- * // Extracts every other digit from a string
- * XRegExp.forEach('1a2345', /\d/, function (match, i) {
- *   if (i % 2) this.push(+match[0]);
- * }, []);
- * // -> [2, 4]
- */
-    self.forEach = function (str, regex, callback, context) {
-        var pos = 0,
-            i = -1,
-            match;
-        while ((match = self.exec(str, regex, pos))) {
-            callback.call(context, match, ++i, str, regex);
-            pos = match.index + (match[0].length || 1);
-        }
-        return context;
-    };
-
-/**
- * Copies a regex object and adds flag `g`. The copy maintains special properties for named
- * capture, is augmented with `XRegExp.prototype` methods, and has a fresh `lastIndex` property
- * (set to zero). Native regexes are not recompiled using XRegExp syntax.
- * @memberOf XRegExp
- * @param {RegExp} regex Regex to globalize.
- * @returns {RegExp} Copy of the provided regex with flag `g` added.
- * @example
- *
- * var globalCopy = XRegExp.globalize(/regex/);
- * globalCopy.global; // -> true
- */
-    self.globalize = function (regex) {
-        return copy(regex, "g");
-    };
-
-/**
- * Installs optional features according to the specified options.
- * @memberOf XRegExp
- * @param {Object|String} options Options object or string.
- * @example
- *
- * // With an options object
- * XRegExp.install({
- *   // Overrides native regex methods with fixed/extended versions that support named
- *   // backreferences and fix numerous cross-browser bugs
- *   natives: true,
- *
- *   // Enables extensibility of XRegExp syntax and flags
- *   extensibility: true
- * });
- *
- * // With an options string
- * XRegExp.install('natives extensibility');
- *
- * // Using a shortcut to install all optional features
- * XRegExp.install('all');
- */
-    self.install = function (options) {
-        options = prepareOptions(options);
-        if (!features.natives && options.natives) {
-            setNatives(true);
-        }
-        if (!features.extensibility && options.extensibility) {
-            setExtensibility(true);
-        }
-    };
-
-/**
- * Checks whether an individual optional feature is installed.
- * @memberOf XRegExp
- * @param {String} feature Name of the feature to check. One of:
- *   <li>`natives`
- *   <li>`extensibility`
- * @returns {Boolean} Whether the feature is installed.
- * @example
- *
- * XRegExp.isInstalled('natives');
- */
-    self.isInstalled = function (feature) {
-        return !!(features[feature]);
-    };
-
-/**
- * Returns `true` if an object is a regex; `false` if it isn't. This works correctly for regexes
- * created in another frame, when `instanceof` and `constructor` checks would fail.
- * @memberOf XRegExp
- * @param {*} value Object to check.
- * @returns {Boolean} Whether the object is a `RegExp` object.
- * @example
- *
- * XRegExp.isRegExp('string'); // -> false
- * XRegExp.isRegExp(/regex/i); // -> true
- * XRegExp.isRegExp(RegExp('^', 'm')); // -> true
- * XRegExp.isRegExp(XRegExp('(?s).')); // -> true
- */
-    self.isRegExp = function (value) {
-        return isType(value, "regexp");
-    };
-
-/**
- * Retrieves the matches from searching a string using a chain of regexes that successively search
- * within previous matches. The provided `chain` array can contain regexes and objects with `regex`
- * and `backref` properties. When a backreference is specified, the named or numbered backreference
- * is passed forward to the next regex or returned.
- * @memberOf XRegExp
- * @param {String} str String to search.
- * @param {Array} chain Regexes that each search for matches within preceding results.
- * @returns {Array} Matches by the last regex in the chain, or an empty array.
- * @example
- *
- * // Basic usage; matches numbers within <b> tags
- * XRegExp.matchChain('1 <b>2</b> 3 <b>4 a 56</b>', [
- *   XRegExp('(?is)<b>.*?</b>'),
- *   /\d+/
- * ]);
- * // -> ['2', '4', '56']
- *
- * // Passing forward and returning specific backreferences
- * html = '<a href="http://xregexp.com/api/">XRegExp</a>\
- *         <a href="http://www.google.com/">Google</a>';
- * XRegExp.matchChain(html, [
- *   {regex: /<a href="([^"]+)">/i, backref: 1},
- *   {regex: XRegExp('(?i)^https?://(?<domain>[^/?#]+)'), backref: 'domain'}
- * ]);
- * // -> ['xregexp.com', 'www.google.com']
- */
-    self.matchChain = function (str, chain) {
-        return (function recurseChain(values, level) {
-            var item = chain[level].regex ? chain[level] : {regex: chain[level]},
-                matches = [],
-                addMatch = function (match) {
-                    matches.push(item.backref ? (match[item.backref] || "") : match[0]);
-                },
-                i;
-            for (i = 0; i < values.length; ++i) {
-                self.forEach(values[i], item.regex, addMatch);
-            }
-            return ((level === chain.length - 1) || !matches.length) ?
-                    matches :
-                    recurseChain(matches, level + 1);
-        }([str], 0));
-    };
-
-/**
- * Returns a new string with one or all matches of a pattern replaced. The pattern can be a string
- * or regex, and the replacement can be a string or a function to be called for each match. To
- * perform a global search and replace, use the optional `scope` argument or include flag `g` if
- * using a regex. Replacement strings can use `${n}` for named and numbered backreferences.
- * Replacement functions can use named backreferences via `arguments[0].name`. Also fixes browser
- * bugs compared to the native `String.prototype.replace` and can be used reliably cross-browser.
- * @memberOf XRegExp
- * @param {String} str String to search.
- * @param {RegExp|String} search Search pattern to be replaced.
- * @param {String|Function} replacement Replacement string or a function invoked to create it.
- *   Replacement strings can include special replacement syntax:
- *     <li>$$ - Inserts a literal '$'.
- *     <li>$&, $0 - Inserts the matched substring.
- *     <li>$` - Inserts the string that precedes the matched substring (left context).
- *     <li>$' - Inserts the string that follows the matched substring (right context).
- *     <li>$n, $nn - Where n/nn are digits referencing an existent capturing group, inserts
- *       backreference n/nn.
- *     <li>${n} - Where n is a name or any number of digits that reference an existent capturing
- *       group, inserts backreference n.
- *   Replacement functions are invoked with three or more arguments:
- *     <li>The matched substring (corresponds to $& above). Named backreferences are accessible as
- *       properties of this first argument.
- *     <li>0..n arguments, one for each backreference (corresponding to $1, $2, etc. above).
- *     <li>The zero-based index of the match within the total search string.
- *     <li>The total string being searched.
- * @param {String} [scope='one'] Use 'one' to replace the first match only, or 'all'. If not
- *   explicitly specified and using a regex with flag `g`, `scope` is 'all'.
- * @returns {String} New string with one or all matches replaced.
- * @example
- *
- * // Regex search, using named backreferences in replacement string
- * var name = XRegExp('(?<first>\\w+) (?<last>\\w+)');
- * XRegExp.replace('John Smith', name, '${last}, ${first}');
- * // -> 'Smith, John'
- *
- * // Regex search, using named backreferences in replacement function
- * XRegExp.replace('John Smith', name, function (match) {
- *   return match.last + ', ' + match.first;
- * });
- * // -> 'Smith, John'
- *
- * // Global string search/replacement
- * XRegExp.replace('RegExp builds RegExps', 'RegExp', 'XRegExp', 'all');
- * // -> 'XRegExp builds XRegExps'
- */
-    self.replace = function (str, search, replacement, scope) {
-        var isRegex = self.isRegExp(search),
-            search2 = search,
-            result;
-        if (isRegex) {
-            if (scope === undef && search.global) {
-                scope = "all"; // Follow flag g when `scope` isn't explicit
-            }
-            // Note that since a copy is used, `search`'s `lastIndex` isn't updated *during* replacement iterations
-            search2 = copy(search, scope === "all" ? "g" : "", scope === "all" ? "" : "g");
-        } else if (scope === "all") {
-            search2 = new RegExp(self.escape(String(search)), "g");
-        }
-        result = fixed.replace.call(String(str), search2, replacement); // Fixed `replace` required for named backreferences, etc.
-        if (isRegex && search.global) {
-            search.lastIndex = 0; // Fixes IE, Safari bug (last tested IE 9, Safari 5.1)
-        }
-        return result;
-    };
-
-/**
- * Splits a string into an array of strings using a regex or string separator. Matches of the
- * separator are not included in the result array. However, if `separator` is a regex that contains
- * capturing groups, backreferences are spliced into the result each time `separator` is matched.
- * Fixes browser bugs compared to the native `String.prototype.split` and can be used reliably
- * cross-browser.
- * @memberOf XRegExp
- * @param {String} str String to split.
- * @param {RegExp|String} separator Regex or string to use for separating the string.
- * @param {Number} [limit] Maximum number of items to include in the result array.
- * @returns {Array} Array of substrings.
- * @example
- *
- * // Basic use
- * XRegExp.split('a b c', ' ');
- * // -> ['a', 'b', 'c']
- *
- * // With limit
- * XRegExp.split('a b c', ' ', 2);
- * // -> ['a', 'b']
- *
- * // Backreferences in result array
- * XRegExp.split('..word1..', /([a-z]+)(\d+)/i);
- * // -> ['..', 'word', '1', '..']
- */
-    self.split = function (str, separator, limit) {
-        return fixed.split.call(str, separator, limit);
-    };
-
-/**
- * Executes a regex search in a specified string. Returns `true` or `false`. Optional `pos` and
- * `sticky` arguments specify the search start position, and whether the match must start at the
- * specified position only. The `lastIndex` property of the provided regex is not used, but is
- * updated for compatibility. Also fixes browser bugs compared to the native
- * `RegExp.prototype.test` and can be used reliably cross-browser.
- * @memberOf XRegExp
- * @param {String} str String to search.
- * @param {RegExp} regex Regex to search with.
- * @param {Number} [pos=0] Zero-based index at which to start the search.
- * @param {Boolean|String} [sticky=false] Whether the match must start at the specified position
- *   only. The string `'sticky'` is accepted as an alternative to `true`.
- * @returns {Boolean} Whether the regex matched the provided value.
- * @example
- *
- * // Basic use
- * XRegExp.test('abc', /c/); // -> true
- *
- * // With pos and sticky
- * XRegExp.test('abc', /c/, 0, 'sticky'); // -> false
- */
-    self.test = function (str, regex, pos, sticky) {
-        // Do this the easy way :-)
-        return !!self.exec(str, regex, pos, sticky);
-    };
-
-/**
- * Uninstalls optional features according to the specified options.
- * @memberOf XRegExp
- * @param {Object|String} options Options object or string.
- * @example
- *
- * // With an options object
- * XRegExp.uninstall({
- *   // Restores native regex methods
- *   natives: true,
- *
- *   // Disables additional syntax and flag extensions
- *   extensibility: true
- * });
- *
- * // With an options string
- * XRegExp.uninstall('natives extensibility');
- *
- * // Using a shortcut to uninstall all optional features
- * XRegExp.uninstall('all');
- */
-    self.uninstall = function (options) {
-        options = prepareOptions(options);
-        if (features.natives && options.natives) {
-            setNatives(false);
-        }
-        if (features.extensibility && options.extensibility) {
-            setExtensibility(false);
-        }
-    };
-
-/**
- * Returns an XRegExp object that is the union of the given patterns. Patterns can be provided as
- * regex objects or strings. Metacharacters are escaped in patterns provided as strings.
- * Backreferences in provided regex objects are automatically renumbered to work correctly. Native
- * flags used by provided regexes are ignored in favor of the `flags` argument.
- * @memberOf XRegExp
- * @param {Array} patterns Regexes and strings to combine.
- * @param {String} [flags] Any combination of XRegExp flags.
- * @returns {RegExp} Union of the provided regexes and strings.
- * @example
- *
- * XRegExp.union(['a+b*c', /(dogs)\1/, /(cats)\1/], 'i');
- * // -> /a\+b\*c|(dogs)\1|(cats)\2/i
- *
- * XRegExp.union([XRegExp('(?<pet>dogs)\\k<pet>'), XRegExp('(?<pet>cats)\\k<pet>')]);
- * // -> XRegExp('(?<pet>dogs)\\k<pet>|(?<pet>cats)\\k<pet>')
- */
-    self.union = function (patterns, flags) {
-        var parts = /(\()(?!\?)|\\([1-9]\d*)|\\[\s\S]|\[(?:[^\\\]]|\\[\s\S])*]/g,
-            numCaptures = 0,
-            numPriorCaptures,
-            captureNames,
-            rewrite = function (match, paren, backref) {
-                var name = captureNames[numCaptures - numPriorCaptures];
-                if (paren) { // Capturing group
-                    ++numCaptures;
-                    if (name) { // If the current capture has a name
-                        return "(?<" + name + ">";
-                    }
-                } else if (backref) { // Backreference
-                    return "\\" + (+backref + numPriorCaptures);
-                }
-                return match;
-            },
-            output = [],
-            pattern,
-            i;
-        if (!(isType(patterns, "array") && patterns.length)) {
-            throw new TypeError("patterns must be a nonempty array");
-        }
-        for (i = 0; i < patterns.length; ++i) {
-            pattern = patterns[i];
-            if (self.isRegExp(pattern)) {
-                numPriorCaptures = numCaptures;
-                captureNames = (pattern.xregexp && pattern.xregexp.captureNames) || [];
-                // Rewrite backreferences. Passing to XRegExp dies on octals and ensures patterns
-                // are independently valid; helps keep this simple. Named captures are put back
-                output.push(self(pattern.source).source.replace(parts, rewrite));
-            } else {
-                output.push(self.escape(pattern));
-            }
-        }
-        return self(output.join("|"), flags);
-    };
-
-/**
- * The XRegExp version number.
- * @static
- * @memberOf XRegExp
- * @type String
- */
-    self.version = "2.0.0";
-
-/*--------------------------------------
- *  Fixed/extended native methods
- *------------------------------------*/
-
-/**
- * Adds named capture support (with backreferences returned as `result.name`), and fixes browser
- * bugs in the native `RegExp.prototype.exec`. Calling `XRegExp.install('natives')` uses this to
- * override the native method. Use via `XRegExp.exec` without overriding natives.
- * @private
- * @param {String} str String to search.
- * @returns {Array} Match array with named backreference properties, or null.
- */
-    fixed.exec = function (str) {
-        var match, name, r2, origLastIndex, i;
-        if (!this.global) {
-            origLastIndex = this.lastIndex;
-        }
-        match = nativ.exec.apply(this, arguments);
-        if (match) {
-            // Fix browsers whose `exec` methods don't consistently return `undefined` for
-            // nonparticipating capturing groups
-            if (!compliantExecNpcg && match.length > 1 && lastIndexOf(match, "") > -1) {
-                r2 = new RegExp(this.source, nativ.replace.call(getNativeFlags(this), "g", ""));
-                // Using `str.slice(match.index)` rather than `match[0]` in case lookahead allowed
-                // matching due to characters outside the match
-                nativ.replace.call(String(str).slice(match.index), r2, function () {
-                    var i;
-                    for (i = 1; i < arguments.length - 2; ++i) {
-                        if (arguments[i] === undef) {
-                            match[i] = undef;
-                        }
-                    }
-                });
-            }
-            // Attach named capture properties
-            if (this.xregexp && this.xregexp.captureNames) {
-                for (i = 1; i < match.length; ++i) {
-                    name = this.xregexp.captureNames[i - 1];
-                    if (name) {
-                        match[name] = match[i];
-                    }
-                }
-            }
-            // Fix browsers that increment `lastIndex` after zero-length matches
-            if (this.global && !match[0].length && (this.lastIndex > match.index)) {
-                this.lastIndex = match.index;
-            }
-        }
-        if (!this.global) {
-            this.lastIndex = origLastIndex; // Fixes IE, Opera bug (last tested IE 9, Opera 11.6)
-        }
-        return match;
-    };
-
-/**
- * Fixes browser bugs in the native `RegExp.prototype.test`. Calling `XRegExp.install('natives')`
- * uses this to override the native method.
- * @private
- * @param {String} str String to search.
- * @returns {Boolean} Whether the regex matched the provided value.
- */
-    fixed.test = function (str) {
-        // Do this the easy way :-)
-        return !!fixed.exec.call(this, str);
-    };
-
-/**
- * Adds named capture support (with backreferences returned as `result.name`), and fixes browser
- * bugs in the native `String.prototype.match`. Calling `XRegExp.install('natives')` uses this to
- * override the native method.
- * @private
- * @param {RegExp} regex Regex to search with.
- * @returns {Array} If `regex` uses flag g, an array of match strings or null. Without flag g, the
- *   result of calling `regex.exec(this)`.
- */
-    fixed.match = function (regex) {
-        if (!self.isRegExp(regex)) {
-            regex = new RegExp(regex); // Use native `RegExp`
-        } else if (regex.global) {
-            var result = nativ.match.apply(this, arguments);
-            regex.lastIndex = 0; // Fixes IE bug
-            return result;
-        }
-        return fixed.exec.call(regex, this);
-    };
-
-/**
- * Adds support for `${n}` tokens for named and numbered backreferences in replacement text, and
- * provides named backreferences to replacement functions as `arguments[0].name`. Also fixes
- * browser bugs in replacement text syntax when performing a replacement using a nonregex search
- * value, and the value of a replacement regex's `lastIndex` property during replacement iterations
- * and upon completion. Note that this doesn't support SpiderMonkey's proprietary third (`flags`)
- * argument. Calling `XRegExp.install('natives')` uses this to override the native method. Use via
- * `XRegExp.replace` without overriding natives.
- * @private
- * @param {RegExp|String} search Search pattern to be replaced.
- * @param {String|Function} replacement Replacement string or a function invoked to create it.
- * @returns {String} New string with one or all matches replaced.
- */
-    fixed.replace = function (search, replacement) {
-        var isRegex = self.isRegExp(search), captureNames, result, str, origLastIndex;
-        if (isRegex) {
-            if (search.xregexp) {
-                captureNames = search.xregexp.captureNames;
-            }
-            if (!search.global) {
-                origLastIndex = search.lastIndex;
-            }
-        } else {
-            search += "";
-        }
-        if (isType(replacement, "function")) {
-            result = nativ.replace.call(String(this), search, function () {
-                var args = arguments, i;
-                if (captureNames) {
-                    // Change the `arguments[0]` string primitive to a `String` object that can store properties
-                    args[0] = new String(args[0]);
-                    // Store named backreferences on the first argument
-                    for (i = 0; i < captureNames.length; ++i) {
-                        if (captureNames[i]) {
-                            args[0][captureNames[i]] = args[i + 1];
-                        }
-                    }
-                }
-                // Update `lastIndex` before calling `replacement`.
-                // Fixes IE, Chrome, Firefox, Safari bug (last tested IE 9, Chrome 17, Firefox 11, Safari 5.1)
-                if (isRegex && search.global) {
-                    search.lastIndex = args[args.length - 2] + args[0].length;
-                }
-                return replacement.apply(null, args);
-            });
-        } else {
-            str = String(this); // Ensure `args[args.length - 1]` will be a string when given nonstring `this`
-            result = nativ.replace.call(str, search, function () {
-                var args = arguments; // Keep this function's `arguments` available through closure
-                return nativ.replace.call(String(replacement), replacementToken, function ($0, $1, $2) {
-                    var n;
-                    // Named or numbered backreference with curly brackets
-                    if ($1) {
-                        /* XRegExp behavior for `${n}`:
-                         * 1. Backreference to numbered capture, where `n` is 1+ digits. `0`, `00`, etc. is the entire match.
-                         * 2. Backreference to named capture `n`, if it exists and is not a number overridden by numbered capture.
-                         * 3. Otherwise, it's an error.
-                         */
-                        n = +$1; // Type-convert; drop leading zeros
-                        if (n <= args.length - 3) {
-                            return args[n] || "";
-                        }
-                        n = captureNames ? lastIndexOf(captureNames, $1) : -1;
-                        if (n < 0) {
-                            throw new SyntaxError("backreference to undefined group " + $0);
-                        }
-                        return args[n + 1] || "";
-                    }
-                    // Else, special variable or numbered backreference (without curly brackets)
-                    if ($2 === "$") return "$";
-                    if ($2 === "&" || +$2 === 0) return args[0]; // $&, $0 (not followed by 1-9), $00
-                    if ($2 === "`") return args[args.length - 1].slice(0, args[args.length - 2]);
-                    if ($2 === "'") return args[args.length - 1].slice(args[args.length - 2] + args[0].length);
-                    // Else, numbered backreference (without curly brackets)
-                    $2 = +$2; // Type-convert; drop leading zero
-                    /* XRegExp behavior:
-                     * - Backreferences without curly brackets end after 1 or 2 digits. Use `${..}` for more digits.
-                     * - `$1` is an error if there are no capturing groups.
-                     * - `$10` is an error if there are less than 10 capturing groups. Use `${1}0` instead.
-                     * - `$01` is equivalent to `$1` if a capturing group exists, otherwise it's an error.
-                     * - `$0` (not followed by 1-9), `$00`, and `$&` are the entire match.
-                     * Native behavior, for comparison:
-                     * - Backreferences end after 1 or 2 digits. Cannot use backreference to capturing group 100+.
-                     * - `$1` is a literal `$1` if there are no capturing groups.
-                     * - `$10` is `$1` followed by a literal `0` if there are less than 10 capturing groups.
-                     * - `$01` is equivalent to `$1` if a capturing group exists, otherwise it's a literal `$01`.
-                     * - `$0` is a literal `$0`. `$&` is the entire match.
-                     */
-                    if (!isNaN($2)) {
-                        if ($2 > args.length - 3) {
-                            throw new SyntaxError("backreference to undefined group " + $0);
-                        }
-                        return args[$2] || "";
-                    }
-                    throw new SyntaxError("invalid token " + $0);
-                });
-            });
-        }
-        if (isRegex) {
-            if (search.global) {
-                search.lastIndex = 0; // Fixes IE, Safari bug (last tested IE 9, Safari 5.1)
-            } else {
-                search.lastIndex = origLastIndex; // Fixes IE, Opera bug (last tested IE 9, Opera 11.6)
-            }
-        }
-        return result;
-    };
-
-/**
- * Fixes browser bugs in the native `String.prototype.split`. Calling `XRegExp.install('natives')`
- * uses this to override the native method. Use via `XRegExp.split` without overriding natives.
- * @private
- * @param {RegExp|String} separator Regex or string to use for separating the string.
- * @param {Number} [limit] Maximum number of items to include in the result array.
- * @returns {Array} Array of substrings.
- */
-    fixed.split = function (separator, limit) {
-        if (!self.isRegExp(separator)) {
-            return nativ.split.apply(this, arguments); // use faster native method
-        }
-        var str = String(this),
-            origLastIndex = separator.lastIndex,
-            output = [],
-            lastLastIndex = 0,
-            lastLength;
-        /* Values for `limit`, per the spec:
-         * If undefined: pow(2,32) - 1
-         * If 0, Infinity, or NaN: 0
-         * If positive number: limit = floor(limit); if (limit >= pow(2,32)) limit -= pow(2,32);
-         * If negative number: pow(2,32) - floor(abs(limit))
-         * If other: Type-convert, then use the above rules
-         */
-        limit = (limit === undef ? -1 : limit) >>> 0;
-        self.forEach(str, separator, function (match) {
-            if ((match.index + match[0].length) > lastLastIndex) { // != `if (match[0].length)`
-                output.push(str.slice(lastLastIndex, match.index));
-                if (match.length > 1 && match.index < str.length) {
-                    Array.prototype.push.apply(output, match.slice(1));
-                }
-                lastLength = match[0].length;
-                lastLastIndex = match.index + lastLength;
-            }
-        });
-        if (lastLastIndex === str.length) {
-            if (!nativ.test.call(separator, "") || lastLength) {
-                output.push("");
-            }
-        } else {
-            output.push(str.slice(lastLastIndex));
-        }
-        separator.lastIndex = origLastIndex;
-        return output.length > limit ? output.slice(0, limit) : output;
-    };
-
-/*--------------------------------------
- *  Built-in tokens
- *------------------------------------*/
-
-// Shortcut
-    add = addToken.on;
-
-/* Letter identity escapes that natively match literal characters: \p, \P, etc.
- * Should be SyntaxErrors but are allowed in web reality. XRegExp makes them errors for cross-
- * browser consistency and to reserve their syntax, but lets them be superseded by XRegExp addons.
- */
-    add(/\\([ABCE-RTUVXYZaeg-mopqyz]|c(?![A-Za-z])|u(?![\dA-Fa-f]{4})|x(?![\dA-Fa-f]{2}))/,
-        function (match, scope) {
-            // \B is allowed in default scope only
-            if (match[1] === "B" && scope === defaultScope) {
-                return match[0];
-            }
-            throw new SyntaxError("invalid escape " + match[0]);
-        },
-        {scope: "all"});
-
-/* Empty character class: [] or [^]
- * Fixes a critical cross-browser syntax inconsistency. Unless this is standardized (per the spec),
- * regex syntax can't be accurately parsed because character class endings can't be determined.
- */
-    add(/\[(\^?)]/,
-        function (match) {
-            // For cross-browser compatibility with ES3, convert [] to \b\B and [^] to [\s\S].
-            // (?!) should work like \b\B, but is unreliable in Firefox
-            return match[1] ? "[\\s\\S]" : "\\b\\B";
-        });
-
-/* Comment pattern: (?# )
- * Inline comments are an alternative to the line comments allowed in free-spacing mode (flag x).
- */
-    add(/(?:\(\?#[^)]*\))+/,
-        function (match) {
-            // Keep tokens separated unless the following token is a quantifier
-            return nativ.test.call(quantifier, match.input.slice(match.index + match[0].length)) ? "" : "(?:)";
-        });
-
-/* Named backreference: \k<name>
- * Backreference names can use the characters A-Z, a-z, 0-9, _, and $ only.
- */
-    add(/\\k<([\w$]+)>/,
-        function (match) {
-            var index = isNaN(match[1]) ? (lastIndexOf(this.captureNames, match[1]) + 1) : +match[1],
-                endIndex = match.index + match[0].length;
-            if (!index || index > this.captureNames.length) {
-                throw new SyntaxError("backreference to undefined group " + match[0]);
-            }
-            // Keep backreferences separate from subsequent literal numbers
-            return "\\" + index + (
-                endIndex === match.input.length || isNaN(match.input.charAt(endIndex)) ? "" : "(?:)"
-            );
-        });
-
-/* Whitespace and line comments, in free-spacing mode (aka extended mode, flag x) only.
- */
-    add(/(?:\s+|#.*)+/,
-        function (match) {
-            // Keep tokens separated unless the following token is a quantifier
-            return nativ.test.call(quantifier, match.input.slice(match.index + match[0].length)) ? "" : "(?:)";
-        },
-        {
-            trigger: function () {
-                return this.hasFlag("x");
-            },
-            customFlags: "x"
-        });
-
-/* Dot, in dotall mode (aka singleline mode, flag s) only.
- */
-    add(/\./,
-        function () {
-            return "[\\s\\S]";
-        },
-        {
-            trigger: function () {
-                return this.hasFlag("s");
-            },
-            customFlags: "s"
-        });
-
-/* Named capturing group; match the opening delimiter only: (?<name>
- * Capture names can use the characters A-Z, a-z, 0-9, _, and $ only. Names can't be integers.
- * Supports Python-style (?P<name> as an alternate syntax to avoid issues in recent Opera (which
- * natively supports the Python-style syntax). Otherwise, XRegExp might treat numbered
- * backreferences to Python-style named capture as octals.
- */
-    add(/\(\?P?<([\w$]+)>/,
-        function (match) {
-            if (!isNaN(match[1])) {
-                // Avoid incorrect lookups, since named backreferences are added to match arrays
-                throw new SyntaxError("can't use integer as capture name " + match[0]);
-            }
-            this.captureNames.push(match[1]);
-            this.hasNamedCapture = true;
-            return "(";
-        });
-
-/* Numbered backreference or octal, plus any following digits: \0, \11, etc.
- * Octals except \0 not followed by 0-9 and backreferences to unopened capture groups throw an
- * error. Other matches are returned unaltered. IE <= 8 doesn't support backreferences greater than
- * \99 in regex syntax.
- */
-    add(/\\(\d+)/,
-        function (match, scope) {
-            if (!(scope === defaultScope && /^[1-9]/.test(match[1]) && +match[1] <= this.captureNames.length) &&
-                    match[1] !== "0") {
-                throw new SyntaxError("can't use octal escape or backreference to undefined group " + match[0]);
-            }
-            return match[0];
-        },
-        {scope: "all"});
-
-/* Capturing group; match the opening parenthesis only.
- * Required for support of named capturing groups. Also adds explicit capture mode (flag n).
- */
-    add(/\((?!\?)/,
-        function () {
-            if (this.hasFlag("n")) {
-                return "(?:";
-            }
-            this.captureNames.push(null);
-            return "(";
-        },
-        {customFlags: "n"});
-
-/*--------------------------------------
- *  Expose XRegExp
- *------------------------------------*/
-
-// For CommonJS enviroments
-    if (true) {
-        exports.XRegExp = self;
-    }
-
-    return self;
-
-}());
-
-
-/***** unicode-base.js *****/
-
-/*!
- * XRegExp Unicode Base v1.0.0
- * (c) 2008-2012 Steven Levithan <http://xregexp.com/>
- * MIT License
- * Uses Unicode 6.1 <http://unicode.org/>
- */
-
-/**
- * Adds support for the `\p{L}` or `\p{Letter}` Unicode category. Addon packages for other Unicode
- * categories, scripts, blocks, and properties are available separately. All Unicode tokens can be
- * inverted using `\P{..}` or `\p{^..}`. Token names are case insensitive, and any spaces, hyphens,
- * and underscores are ignored.
- * @requires XRegExp
- */
-(function (XRegExp) {
-    "use strict";
-
-    var unicode = {};
-
-/*--------------------------------------
- *  Private helper functions
- *------------------------------------*/
-
-// Generates a standardized token name (lowercase, with hyphens, spaces, and underscores removed)
-    function slug(name) {
-        return name.replace(/[- _]+/g, "").toLowerCase();
-    }
-
-// Expands a list of Unicode code points and ranges to be usable in a regex character class
-    function expand(str) {
-        return str.replace(/\w{4}/g, "\\u$&");
-    }
-
-// Adds leading zeros if shorter than four characters
-    function pad4(str) {
-        while (str.length < 4) {
-            str = "0" + str;
-        }
-        return str;
-    }
-
-// Converts a hexadecimal number to decimal
-    function dec(hex) {
-        return parseInt(hex, 16);
-    }
-
-// Converts a decimal number to hexadecimal
-    function hex(dec) {
-        return parseInt(dec, 10).toString(16);
-    }
-
-// Inverts a list of Unicode code points and ranges
-    function invert(range) {
-        var output = [],
-            lastEnd = -1,
-            start;
-        XRegExp.forEach(range, /\\u(\w{4})(?:-\\u(\w{4}))?/, function (m) {
-            start = dec(m[1]);
-            if (start > (lastEnd + 1)) {
-                output.push("\\u" + pad4(hex(lastEnd + 1)));
-                if (start > (lastEnd + 2)) {
-                    output.push("-\\u" + pad4(hex(start - 1)));
-                }
-            }
-            lastEnd = dec(m[2] || m[1]);
-        });
-        if (lastEnd < 0xFFFF) {
-            output.push("\\u" + pad4(hex(lastEnd + 1)));
-            if (lastEnd < 0xFFFE) {
-                output.push("-\\uFFFF");
-            }
-        }
-        return output.join("");
-    }
-
-// Generates an inverted token on first use
-    function cacheInversion(item) {
-        return unicode["^" + item] || (unicode["^" + item] = invert(unicode[item]));
-    }
-
-/*--------------------------------------
- *  Core functionality
- *------------------------------------*/
-
-    XRegExp.install("extensibility");
-
-/**
- * Adds to the list of Unicode properties that XRegExp regexes can match via \p{..} or \P{..}.
- * @memberOf XRegExp
- * @param {Object} pack Named sets of Unicode code points and ranges.
- * @param {Object} [aliases] Aliases for the primary token names.
- * @example
- *
- * XRegExp.addUnicodePackage({
- *   XDigit: '0030-00390041-00460061-0066' // 0-9A-Fa-f
- * }, {
- *   XDigit: 'Hexadecimal'
- * });
- */
-    XRegExp.addUnicodePackage = function (pack, aliases) {
-        var p;
-        if (!XRegExp.isInstalled("extensibility")) {
-            throw new Error("extensibility must be installed before adding Unicode packages");
-        }
-        if (pack) {
-            for (p in pack) {
-                if (pack.hasOwnProperty(p)) {
-                    unicode[slug(p)] = expand(pack[p]);
-                }
-            }
-        }
-        if (aliases) {
-            for (p in aliases) {
-                if (aliases.hasOwnProperty(p)) {
-                    unicode[slug(aliases[p])] = unicode[slug(p)];
-                }
-            }
-        }
-    };
-
-/* Adds data for the Unicode `Letter` category. Addon packages include other categories, scripts,
- * blocks, and properties.
- */
-    XRegExp.addUnicodePackage({
-        L: "0041-005A0061-007A00AA00B500BA00C0-00D600D8-00F600F8-02C102C6-02D102E0-02E402EC02EE0370-037403760377037A-037D03860388-038A038C038E-03A103A3-03F503F7-0481048A-05270531-055605590561-058705D0-05EA05F0-05F20620-064A066E066F0671-06D306D506E506E606EE06EF06FA-06FC06FF07100712-072F074D-07A507B107CA-07EA07F407F507FA0800-0815081A082408280840-085808A008A2-08AC0904-0939093D09500958-09610971-09770979-097F0985-098C098F09900993-09A809AA-09B009B209B6-09B909BD09CE09DC09DD09DF-09E109F009F10A05-0A0A0A0F0A100A13-0A280A2A-0A300A320A330A350A360A380A390A59-0A5C0A5E0A72-0A740A85-0A8D0A8F-0A910A93-0AA80AAA-0AB00AB20AB30AB5-0AB90ABD0AD00AE00AE10B05-0B0C0B0F0B100B13-0B280B2A-0B300B320B330B35-0B390B3D0B5C0B5D0B5F-0B610B710B830B85-0B8A0B8E-0B900B92-0B950B990B9A0B9C0B9E0B9F0BA30BA40BA8-0BAA0BAE-0BB90BD00C05-0C0C0C0E-0C100C12-0C280C2A-0C330C35-0C390C3D0C580C590C600C610C85-0C8C0C8E-0C900C92-0CA80CAA-0CB30CB5-0CB90CBD0CDE0CE00CE10CF10CF20D05-0D0C0D0E-0D100D12-0D3A0D3D0D4E0D600D610D7A-0D7F0D85-0D960D9A-0DB10DB3-0DBB0DBD0DC0-0DC60E01-0E300E320E330E40-0E460E810E820E840E870E880E8A0E8D0E94-0E970E99-0E9F0EA1-0EA30EA50EA70EAA0EAB0EAD-0EB00EB20EB30EBD0EC0-0EC40EC60EDC-0EDF0F000F40-0F470F49-0F6C0F88-0F8C1000-102A103F1050-1055105A-105D106110651066106E-10701075-1081108E10A0-10C510C710CD10D0-10FA10FC-1248124A-124D1250-12561258125A-125D1260-1288128A-128D1290-12B012B2-12B512B8-12BE12C012C2-12C512C8-12D612D8-13101312-13151318-135A1380-138F13A0-13F41401-166C166F-167F1681-169A16A0-16EA1700-170C170E-17111720-17311740-17511760-176C176E-17701780-17B317D717DC1820-18771880-18A818AA18B0-18F51900-191C1950-196D1970-19741980-19AB19C1-19C71A00-1A161A20-1A541AA71B05-1B331B45-1B4B1B83-1BA01BAE1BAF1BBA-1BE51C00-1C231C4D-1C4F1C5A-1C7D1CE9-1CEC1CEE-1CF11CF51CF61D00-1DBF1E00-1F151F18-1F1D1F20-1F451F48-1F4D1F50-1F571F591F5B1F5D1F5F-1F7D1F80-1FB41FB6-1FBC1FBE1FC2-1FC41FC6-1FCC1FD0-1FD31FD6-1FDB1FE0-1FEC1FF2-1FF41FF6-1FFC2071207F2090-209C21022107210A-211321152119-211D212421262128212A-212D212F-2139213C-213F2145-2149214E218321842C00-2C2E2C30-2C5E2C60-2CE42CEB-2CEE2CF22CF32D00-2D252D272D2D2D30-2D672D6F2D80-2D962DA0-2DA62DA8-2DAE2DB0-2DB62DB8-2DBE2DC0-2DC62DC8-2DCE2DD0-2DD62DD8-2DDE2E2F300530063031-3035303B303C3041-3096309D-309F30A1-30FA30FC-30FF3105-312D3131-318E31A0-31BA31F0-31FF3400-4DB54E00-9FCCA000-A48CA4D0-A4FDA500-A60CA610-A61FA62AA62BA640-A66EA67F-A697A6A0-A6E5A717-A71FA722-A788A78B-A78EA790-A793A7A0-A7AAA7F8-A801A803-A805A807-A80AA80C-A822A840-A873A882-A8B3A8F2-A8F7A8FBA90A-A925A930-A946A960-A97CA984-A9B2A9CFAA00-AA28AA40-AA42AA44-AA4BAA60-AA76AA7AAA80-AAAFAAB1AAB5AAB6AAB9-AABDAAC0AAC2AADB-AADDAAE0-AAEAAAF2-AAF4AB01-AB06AB09-AB0EAB11-AB16AB20-AB26AB28-AB2EABC0-ABE2AC00-D7A3D7B0-D7C6D7CB-D7FBF900-FA6DFA70-FAD9FB00-FB06FB13-FB17FB1DFB1F-FB28FB2A-FB36FB38-FB3CFB3EFB40FB41FB43FB44FB46-FBB1FBD3-FD3DFD50-FD8FFD92-FDC7FDF0-FDFBFE70-FE74FE76-FEFCFF21-FF3AFF41-FF5AFF66-FFBEFFC2-FFC7FFCA-FFCFFFD2-FFD7FFDA-FFDC"
-    }, {
-        L: "Letter"
-    });
-
-/* Adds Unicode property syntax to XRegExp: \p{..}, \P{..}, \p{^..}
- */
-    XRegExp.addToken(
-        /\\([pP]){(\^?)([^}]*)}/,
-        function (match, scope) {
-            var inv = (match[1] === "P" || match[2]) ? "^" : "",
-                item = slug(match[3]);
-            // The double negative \P{^..} is invalid
-            if (match[1] === "P" && match[2]) {
-                throw new SyntaxError("invalid double negation \\P{^");
-            }
-            if (!unicode.hasOwnProperty(item)) {
-                throw new SyntaxError("invalid or unknown Unicode property " + match[0]);
-            }
-            return scope === "class" ?
-                    (inv ? cacheInversion(item) : unicode[item]) :
-                    "[" + inv + unicode[item] + "]";
-        },
-        {scope: "all"}
-    );
-
-}(XRegExp));
-
-
-/***** unicode-categories.js *****/
-
-/*!
- * XRegExp Unicode Categories v1.2.0
- * (c) 2010-2012 Steven Levithan <http://xregexp.com/>
- * MIT License
- * Uses Unicode 6.1 <http://unicode.org/>
- */
-
-/**
- * Adds support for all Unicode categories (aka properties) E.g., `\p{Lu}` or
- * `\p{Uppercase Letter}`. Token names are case insensitive, and any spaces, hyphens, and
- * underscores are ignored.
- * @requires XRegExp, XRegExp Unicode Base
- */
-(function (XRegExp) {
-    "use strict";
-
-    if (!XRegExp.addUnicodePackage) {
-        throw new ReferenceError("Unicode Base must be loaded before Unicode Categories");
-    }
-
-    XRegExp.install("extensibility");
-
-    XRegExp.addUnicodePackage({
-        //L: "", // Included in the Unicode Base addon
-        Ll: "0061-007A00B500DF-00F600F8-00FF01010103010501070109010B010D010F01110113011501170119011B011D011F01210123012501270129012B012D012F01310133013501370138013A013C013E014001420144014601480149014B014D014F01510153015501570159015B015D015F01610163016501670169016B016D016F0171017301750177017A017C017E-0180018301850188018C018D019201950199-019B019E01A101A301A501A801AA01AB01AD01B001B401B601B901BA01BD-01BF01C601C901CC01CE01D001D201D401D601D801DA01DC01DD01DF01E101E301E501E701E901EB01ED01EF01F001F301F501F901FB01FD01FF02010203020502070209020B020D020F02110213021502170219021B021D021F02210223022502270229022B022D022F02310233-0239023C023F0240024202470249024B024D024F-02930295-02AF037103730377037B-037D039003AC-03CE03D003D103D5-03D703D903DB03DD03DF03E103E303E503E703E903EB03ED03EF-03F303F503F803FB03FC0430-045F04610463046504670469046B046D046F04710473047504770479047B047D047F0481048B048D048F04910493049504970499049B049D049F04A104A304A504A704A904AB04AD04AF04B104B304B504B704B904BB04BD04BF04C204C404C604C804CA04CC04CE04CF04D104D304D504D704D904DB04DD04DF04E104E304E504E704E904EB04ED04EF04F104F304F504F704F904FB04FD04FF05010503050505070509050B050D050F05110513051505170519051B051D051F05210523052505270561-05871D00-1D2B1D6B-1D771D79-1D9A1E011E031E051E071E091E0B1E0D1E0F1E111E131E151E171E191E1B1E1D1E1F1E211E231E251E271E291E2B1E2D1E2F1E311E331E351E371E391E3B1E3D1E3F1E411E431E451E471E491E4B1E4D1E4F1E511E531E551E571E591E5B1E5D1E5F1E611E631E651E671E691E6B1E6D1E6F1E711E731E751E771E791E7B1E7D1E7F1E811E831E851E871E891E8B1E8D1E8F1E911E931E95-1E9D1E9F1EA11EA31EA51EA71EA91EAB1EAD1EAF1EB11EB31EB51EB71EB91EBB1EBD1EBF1EC11EC31EC51EC71EC91ECB1ECD1ECF1ED11ED31ED51ED71ED91EDB1EDD1EDF1EE11EE31EE51EE71EE91EEB1EED1EEF1EF11EF31EF51EF71EF91EFB1EFD1EFF-1F071F10-1F151F20-1F271F30-1F371F40-1F451F50-1F571F60-1F671F70-1F7D1F80-1F871F90-1F971FA0-1FA71FB0-1FB41FB61FB71FBE1FC2-1FC41FC61FC71FD0-1FD31FD61FD71FE0-1FE71FF2-1FF41FF61FF7210A210E210F2113212F21342139213C213D2146-2149214E21842C30-2C5E2C612C652C662C682C6A2C6C2C712C732C742C76-2C7B2C812C832C852C872C892C8B2C8D2C8F2C912C932C952C972C992C9B2C9D2C9F2CA12CA32CA52CA72CA92CAB2CAD2CAF2CB12CB32CB52CB72CB92CBB2CBD2CBF2CC12CC32CC52CC72CC92CCB2CCD2CCF2CD12CD32CD52CD72CD92CDB2CDD2CDF2CE12CE32CE42CEC2CEE2CF32D00-2D252D272D2DA641A643A645A647A649A64BA64DA64FA651A653A655A657A659A65BA65DA65FA661A663A665A667A669A66BA66DA681A683A685A687A689A68BA68DA68FA691A693A695A697A723A725A727A729A72BA72DA72F-A731A733A735A737A739A73BA73DA73FA741A743A745A747A749A74BA74DA74FA751A753A755A757A759A75BA75DA75FA761A763A765A767A769A76BA76DA76FA771-A778A77AA77CA77FA781A783A785A787A78CA78EA791A793A7A1A7A3A7A5A7A7A7A9A7FAFB00-FB06FB13-FB17FF41-FF5A",
-        Lu: "0041-005A00C0-00D600D8-00DE01000102010401060108010A010C010E01100112011401160118011A011C011E01200122012401260128012A012C012E01300132013401360139013B013D013F0141014301450147014A014C014E01500152015401560158015A015C015E01600162016401660168016A016C016E017001720174017601780179017B017D018101820184018601870189-018B018E-0191019301940196-0198019C019D019F01A001A201A401A601A701A901AC01AE01AF01B1-01B301B501B701B801BC01C401C701CA01CD01CF01D101D301D501D701D901DB01DE01E001E201E401E601E801EA01EC01EE01F101F401F6-01F801FA01FC01FE02000202020402060208020A020C020E02100212021402160218021A021C021E02200222022402260228022A022C022E02300232023A023B023D023E02410243-02460248024A024C024E03700372037603860388-038A038C038E038F0391-03A103A3-03AB03CF03D2-03D403D803DA03DC03DE03E003E203E403E603E803EA03EC03EE03F403F703F903FA03FD-042F04600462046404660468046A046C046E04700472047404760478047A047C047E0480048A048C048E04900492049404960498049A049C049E04A004A204A404A604A804AA04AC04AE04B004B204B404B604B804BA04BC04BE04C004C104C304C504C704C904CB04CD04D004D204D404D604D804DA04DC04DE04E004E204E404E604E804EA04EC04EE04F004F204F404F604F804FA04FC04FE05000502050405060508050A050C050E05100512051405160518051A051C051E05200522052405260531-055610A0-10C510C710CD1E001E021E041E061E081E0A1E0C1E0E1E101E121E141E161E181E1A1E1C1E1E1E201E221E241E261E281E2A1E2C1E2E1E301E321E341E361E381E3A1E3C1E3E1E401E421E441E461E481E4A1E4C1E4E1E501E521E541E561E581E5A1E5C1E5E1E601E621E641E661E681E6A1E6C1E6E1E701E721E741E761E781E7A1E7C1E7E1E801E821E841E861E881E8A1E8C1E8E1E901E921E941E9E1EA01EA21EA41EA61EA81EAA1EAC1EAE1EB01EB21EB41EB61EB81EBA1EBC1EBE1EC01EC21EC41EC61EC81ECA1ECC1ECE1ED01ED21ED41ED61ED81EDA1EDC1EDE1EE01EE21EE41EE61EE81EEA1EEC1EEE1EF01EF21EF41EF61EF81EFA1EFC1EFE1F08-1F0F1F18-1F1D1F28-1F2F1F38-1F3F1F48-1F4D1F591F5B1F5D1F5F1F68-1F6F1FB8-1FBB1FC8-1FCB1FD8-1FDB1FE8-1FEC1FF8-1FFB21022107210B-210D2110-211221152119-211D212421262128212A-212D2130-2133213E213F214521832C00-2C2E2C602C62-2C642C672C692C6B2C6D-2C702C722C752C7E-2C802C822C842C862C882C8A2C8C2C8E2C902C922C942C962C982C9A2C9C2C9E2CA02CA22CA42CA62CA82CAA2CAC2CAE2CB02CB22CB42CB62CB82CBA2CBC2CBE2CC02CC22CC42CC62CC82CCA2CCC2CCE2CD02CD22CD42CD62CD82CDA2CDC2CDE2CE02CE22CEB2CED2CF2A640A642A644A646A648A64AA64CA64EA650A652A654A656A658A65AA65CA65EA660A662A664A666A668A66AA66CA680A682A684A686A688A68AA68CA68EA690A692A694A696A722A724A726A728A72AA72CA72EA732A734A736A738A73AA73CA73EA740A742A744A746A748A74AA74CA74EA750A752A754A756A758A75AA75CA75EA760A762A764A766A768A76AA76CA76EA779A77BA77DA77EA780A782A784A786A78BA78DA790A792A7A0A7A2A7A4A7A6A7A8A7AAFF21-FF3A",
-        Lt: "01C501C801CB01F21F88-1F8F1F98-1F9F1FA8-1FAF1FBC1FCC1FFC",
-        Lm: "02B0-02C102C6-02D102E0-02E402EC02EE0374037A0559064006E506E607F407F507FA081A0824082809710E460EC610FC17D718431AA71C78-1C7D1D2C-1D6A1D781D9B-1DBF2071207F2090-209C2C7C2C7D2D6F2E2F30053031-3035303B309D309E30FC-30FEA015A4F8-A4FDA60CA67FA717-A71FA770A788A7F8A7F9A9CFAA70AADDAAF3AAF4FF70FF9EFF9F",
-        Lo: "00AA00BA01BB01C0-01C3029405D0-05EA05F0-05F20620-063F0641-064A066E066F0671-06D306D506EE06EF06FA-06FC06FF07100712-072F074D-07A507B107CA-07EA0800-08150840-085808A008A2-08AC0904-0939093D09500958-09610972-09770979-097F0985-098C098F09900993-09A809AA-09B009B209B6-09B909BD09CE09DC09DD09DF-09E109F009F10A05-0A0A0A0F0A100A13-0A280A2A-0A300A320A330A350A360A380A390A59-0A5C0A5E0A72-0A740A85-0A8D0A8F-0A910A93-0AA80AAA-0AB00AB20AB30AB5-0AB90ABD0AD00AE00AE10B05-0B0C0B0F0B100B13-0B280B2A-0B300B320B330B35-0B390B3D0B5C0B5D0B5F-0B610B710B830B85-0B8A0B8E-0B900B92-0B950B990B9A0B9C0B9E0B9F0BA30BA40BA8-0BAA0BAE-0BB90BD00C05-0C0C0C0E-0C100C12-0C280C2A-0C330C35-0C390C3D0C580C590C600C610C85-0C8C0C8E-0C900C92-0CA80CAA-0CB30CB5-0CB90CBD0CDE0CE00CE10CF10CF20D05-0D0C0D0E-0D100D12-0D3A0D3D0D4E0D600D610D7A-0D7F0D85-0D960D9A-0DB10DB3-0DBB0DBD0DC0-0DC60E01-0E300E320E330E40-0E450E810E820E840E870E880E8A0E8D0E94-0E970E99-0E9F0EA1-0EA30EA50EA70EAA0EAB0EAD-0EB00EB20EB30EBD0EC0-0EC40EDC-0EDF0F000F40-0F470F49-0F6C0F88-0F8C1000-102A103F1050-1055105A-105D106110651066106E-10701075-1081108E10D0-10FA10FD-1248124A-124D1250-12561258125A-125D1260-1288128A-128D1290-12B012B2-12B512B8-12BE12C012C2-12C512C8-12D612D8-13101312-13151318-135A1380-138F13A0-13F41401-166C166F-167F1681-169A16A0-16EA1700-170C170E-17111720-17311740-17511760-176C176E-17701780-17B317DC1820-18421844-18771880-18A818AA18B0-18F51900-191C1950-196D1970-19741980-19AB19C1-19C71A00-1A161A20-1A541B05-1B331B45-1B4B1B83-1BA01BAE1BAF1BBA-1BE51C00-1C231C4D-1C4F1C5A-1C771CE9-1CEC1CEE-1CF11CF51CF62135-21382D30-2D672D80-2D962DA0-2DA62DA8-2DAE2DB0-2DB62DB8-2DBE2DC0-2DC62DC8-2DCE2DD0-2DD62DD8-2DDE3006303C3041-3096309F30A1-30FA30FF3105-312D3131-318E31A0-31BA31F0-31FF3400-4DB54E00-9FCCA000-A014A016-A48CA4D0-A4F7A500-A60BA610-A61FA62AA62BA66EA6A0-A6E5A7FB-A801A803-A805A807-A80AA80C-A822A840-A873A882-A8B3A8F2-A8F7A8FBA90A-A925A930-A946A960-A97CA984-A9B2AA00-AA28AA40-AA42AA44-AA4BAA60-AA6FAA71-AA76AA7AAA80-AAAFAAB1AAB5AAB6AAB9-AABDAAC0AAC2AADBAADCAAE0-AAEAAAF2AB01-AB06AB09-AB0EAB11-AB16AB20-AB26AB28-AB2EABC0-ABE2AC00-D7A3D7B0-D7C6D7CB-D7FBF900-FA6DFA70-FAD9FB1DFB1F-FB28FB2A-FB36FB38-FB3CFB3EFB40FB41FB43FB44FB46-FBB1FBD3-FD3DFD50-FD8FFD92-FDC7FDF0-FDFBFE70-FE74FE76-FEFCFF66-FF6FFF71-FF9DFFA0-FFBEFFC2-FFC7FFCA-FFCFFFD2-FFD7FFDA-FFDC",
-        M: "0300-036F0483-04890591-05BD05BF05C105C205C405C505C70610-061A064B-065F067006D6-06DC06DF-06E406E706E806EA-06ED07110730-074A07A6-07B007EB-07F30816-0819081B-08230825-08270829-082D0859-085B08E4-08FE0900-0903093A-093C093E-094F0951-0957096209630981-098309BC09BE-09C409C709C809CB-09CD09D709E209E30A01-0A030A3C0A3E-0A420A470A480A4B-0A4D0A510A700A710A750A81-0A830ABC0ABE-0AC50AC7-0AC90ACB-0ACD0AE20AE30B01-0B030B3C0B3E-0B440B470B480B4B-0B4D0B560B570B620B630B820BBE-0BC20BC6-0BC80BCA-0BCD0BD70C01-0C030C3E-0C440C46-0C480C4A-0C4D0C550C560C620C630C820C830CBC0CBE-0CC40CC6-0CC80CCA-0CCD0CD50CD60CE20CE30D020D030D3E-0D440D46-0D480D4A-0D4D0D570D620D630D820D830DCA0DCF-0DD40DD60DD8-0DDF0DF20DF30E310E34-0E3A0E47-0E4E0EB10EB4-0EB90EBB0EBC0EC8-0ECD0F180F190F350F370F390F3E0F3F0F71-0F840F860F870F8D-0F970F99-0FBC0FC6102B-103E1056-1059105E-10601062-10641067-106D1071-10741082-108D108F109A-109D135D-135F1712-17141732-1734175217531772177317B4-17D317DD180B-180D18A91920-192B1930-193B19B0-19C019C819C91A17-1A1B1A55-1A5E1A60-1A7C1A7F1B00-1B041B34-1B441B6B-1B731B80-1B821BA1-1BAD1BE6-1BF31C24-1C371CD0-1CD21CD4-1CE81CED1CF2-1CF41DC0-1DE61DFC-1DFF20D0-20F02CEF-2CF12D7F2DE0-2DFF302A-302F3099309AA66F-A672A674-A67DA69FA6F0A6F1A802A806A80BA823-A827A880A881A8B4-A8C4A8E0-A8F1A926-A92DA947-A953A980-A983A9B3-A9C0AA29-AA36AA43AA4CAA4DAA7BAAB0AAB2-AAB4AAB7AAB8AABEAABFAAC1AAEB-AAEFAAF5AAF6ABE3-ABEAABECABEDFB1EFE00-FE0FFE20-FE26",
-        Mn: "0300-036F0483-04870591-05BD05BF05C105C205C405C505C70610-061A064B-065F067006D6-06DC06DF-06E406E706E806EA-06ED07110730-074A07A6-07B007EB-07F30816-0819081B-08230825-08270829-082D0859-085B08E4-08FE0900-0902093A093C0941-0948094D0951-095709620963098109BC09C1-09C409CD09E209E30A010A020A3C0A410A420A470A480A4B-0A4D0A510A700A710A750A810A820ABC0AC1-0AC50AC70AC80ACD0AE20AE30B010B3C0B3F0B41-0B440B4D0B560B620B630B820BC00BCD0C3E-0C400C46-0C480C4A-0C4D0C550C560C620C630CBC0CBF0CC60CCC0CCD0CE20CE30D41-0D440D4D0D620D630DCA0DD2-0DD40DD60E310E34-0E3A0E47-0E4E0EB10EB4-0EB90EBB0EBC0EC8-0ECD0F180F190F350F370F390F71-0F7E0F80-0F840F860F870F8D-0F970F99-0FBC0FC6102D-10301032-10371039103A103D103E10581059105E-10601071-1074108210851086108D109D135D-135F1712-17141732-1734175217531772177317B417B517B7-17BD17C617C9-17D317DD180B-180D18A91920-19221927192819321939-193B1A171A181A561A58-1A5E1A601A621A65-1A6C1A73-1A7C1A7F1B00-1B031B341B36-1B3A1B3C1B421B6B-1B731B801B811BA2-1BA51BA81BA91BAB1BE61BE81BE91BED1BEF-1BF11C2C-1C331C361C371CD0-1CD21CD4-1CE01CE2-1CE81CED1CF41DC0-1DE61DFC-1DFF20D0-20DC20E120E5-20F02CEF-2CF12D7F2DE0-2DFF302A-302D3099309AA66FA674-A67DA69FA6F0A6F1A802A806A80BA825A826A8C4A8E0-A8F1A926-A92DA947-A951A980-A982A9B3A9B6-A9B9A9BCAA29-AA2EAA31AA32AA35AA36AA43AA4CAAB0AAB2-AAB4AAB7AAB8AABEAABFAAC1AAECAAEDAAF6ABE5ABE8ABEDFB1EFE00-FE0FFE20-FE26",
-        Mc: "0903093B093E-09400949-094C094E094F0982098309BE-09C009C709C809CB09CC09D70A030A3E-0A400A830ABE-0AC00AC90ACB0ACC0B020B030B3E0B400B470B480B4B0B4C0B570BBE0BBF0BC10BC20BC6-0BC80BCA-0BCC0BD70C01-0C030C41-0C440C820C830CBE0CC0-0CC40CC70CC80CCA0CCB0CD50CD60D020D030D3E-0D400D46-0D480D4A-0D4C0D570D820D830DCF-0DD10DD8-0DDF0DF20DF30F3E0F3F0F7F102B102C10311038103B103C105610571062-10641067-106D108310841087-108C108F109A-109C17B617BE-17C517C717C81923-19261929-192B193019311933-193819B0-19C019C819C91A19-1A1B1A551A571A611A631A641A6D-1A721B041B351B3B1B3D-1B411B431B441B821BA11BA61BA71BAA1BAC1BAD1BE71BEA-1BEC1BEE1BF21BF31C24-1C2B1C341C351CE11CF21CF3302E302FA823A824A827A880A881A8B4-A8C3A952A953A983A9B4A9B5A9BAA9BBA9BD-A9C0AA2FAA30AA33AA34AA4DAA7BAAEBAAEEAAEFAAF5ABE3ABE4ABE6ABE7ABE9ABEAABEC",
-        Me: "0488048920DD-20E020E2-20E4A670-A672",
-        N: "0030-003900B200B300B900BC-00BE0660-066906F0-06F907C0-07C90966-096F09E6-09EF09F4-09F90A66-0A6F0AE6-0AEF0B66-0B6F0B72-0B770BE6-0BF20C66-0C6F0C78-0C7E0CE6-0CEF0D66-0D750E50-0E590ED0-0ED90F20-0F331040-10491090-10991369-137C16EE-16F017E0-17E917F0-17F91810-18191946-194F19D0-19DA1A80-1A891A90-1A991B50-1B591BB0-1BB91C40-1C491C50-1C5920702074-20792080-20892150-21822185-21892460-249B24EA-24FF2776-27932CFD30073021-30293038-303A3192-31953220-32293248-324F3251-325F3280-328932B1-32BFA620-A629A6E6-A6EFA830-A835A8D0-A8D9A900-A909A9D0-A9D9AA50-AA59ABF0-ABF9FF10-FF19",
-        Nd: "0030-00390660-066906F0-06F907C0-07C90966-096F09E6-09EF0A66-0A6F0AE6-0AEF0B66-0B6F0BE6-0BEF0C66-0C6F0CE6-0CEF0D66-0D6F0E50-0E590ED0-0ED90F20-0F291040-10491090-109917E0-17E91810-18191946-194F19D0-19D91A80-1A891A90-1A991B50-1B591BB0-1BB91C40-1C491C50-1C59A620-A629A8D0-A8D9A900-A909A9D0-A9D9AA50-AA59ABF0-ABF9FF10-FF19",
-        Nl: "16EE-16F02160-21822185-218830073021-30293038-303AA6E6-A6EF",
-        No: "00B200B300B900BC-00BE09F4-09F90B72-0B770BF0-0BF20C78-0C7E0D70-0D750F2A-0F331369-137C17F0-17F919DA20702074-20792080-20892150-215F21892460-249B24EA-24FF2776-27932CFD3192-31953220-32293248-324F3251-325F3280-328932B1-32BFA830-A835",
-        P: "0021-00230025-002A002C-002F003A003B003F0040005B-005D005F007B007D00A100A700AB00B600B700BB00BF037E0387055A-055F0589058A05BE05C005C305C605F305F40609060A060C060D061B061E061F066A-066D06D40700-070D07F7-07F90830-083E085E0964096509700AF00DF40E4F0E5A0E5B0F04-0F120F140F3A-0F3D0F850FD0-0FD40FD90FDA104A-104F10FB1360-13681400166D166E169B169C16EB-16ED1735173617D4-17D617D8-17DA1800-180A194419451A1E1A1F1AA0-1AA61AA8-1AAD1B5A-1B601BFC-1BFF1C3B-1C3F1C7E1C7F1CC0-1CC71CD32010-20272030-20432045-20512053-205E207D207E208D208E2329232A2768-277527C527C627E6-27EF2983-299829D8-29DB29FC29FD2CF9-2CFC2CFE2CFF2D702E00-2E2E2E30-2E3B3001-30033008-30113014-301F3030303D30A030FBA4FEA4FFA60D-A60FA673A67EA6F2-A6F7A874-A877A8CEA8CFA8F8-A8FAA92EA92FA95FA9C1-A9CDA9DEA9DFAA5C-AA5FAADEAADFAAF0AAF1ABEBFD3EFD3FFE10-FE19FE30-FE52FE54-FE61FE63FE68FE6AFE6BFF01-FF03FF05-FF0AFF0C-FF0FFF1AFF1BFF1FFF20FF3B-FF3DFF3FFF5BFF5DFF5F-FF65",
-        Pd: "002D058A05BE140018062010-20152E172E1A2E3A2E3B301C303030A0FE31FE32FE58FE63FF0D",
-        Ps: "0028005B007B0F3A0F3C169B201A201E2045207D208D23292768276A276C276E27702772277427C527E627E827EA27EC27EE2983298529872989298B298D298F299129932995299729D829DA29FC2E222E242E262E283008300A300C300E3010301430163018301A301DFD3EFE17FE35FE37FE39FE3BFE3DFE3FFE41FE43FE47FE59FE5BFE5DFF08FF3BFF5BFF5FFF62",
-        Pe: "0029005D007D0F3B0F3D169C2046207E208E232A2769276B276D276F27712773277527C627E727E927EB27ED27EF298429862988298A298C298E2990299229942996299829D929DB29FD2E232E252E272E293009300B300D300F3011301530173019301B301E301FFD3FFE18FE36FE38FE3AFE3CFE3EFE40FE42FE44FE48FE5AFE5CFE5EFF09FF3DFF5DFF60FF63",
-        Pi: "00AB2018201B201C201F20392E022E042E092E0C2E1C2E20",
-        Pf: "00BB2019201D203A2E032E052E0A2E0D2E1D2E21",
-        Pc: "005F203F20402054FE33FE34FE4D-FE4FFF3F",
-        Po: "0021-00230025-0027002A002C002E002F003A003B003F0040005C00A100A700B600B700BF037E0387055A-055F058905C005C305C605F305F40609060A060C060D061B061E061F066A-066D06D40700-070D07F7-07F90830-083E085E0964096509700AF00DF40E4F0E5A0E5B0F04-0F120F140F850FD0-0FD40FD90FDA104A-104F10FB1360-1368166D166E16EB-16ED1735173617D4-17D617D8-17DA1800-18051807-180A194419451A1E1A1F1AA0-1AA61AA8-1AAD1B5A-1B601BFC-1BFF1C3B-1C3F1C7E1C7F1CC0-1CC71CD3201620172020-20272030-2038203B-203E2041-20432047-205120532055-205E2CF9-2CFC2CFE2CFF2D702E002E012E06-2E082E0B2E0E-2E162E182E192E1B2E1E2E1F2E2A-2E2E2E30-2E393001-3003303D30FBA4FEA4FFA60D-A60FA673A67EA6F2-A6F7A874-A877A8CEA8CFA8F8-A8FAA92EA92FA95FA9C1-A9CDA9DEA9DFAA5C-AA5FAADEAADFAAF0AAF1ABEBFE10-FE16FE19FE30FE45FE46FE49-FE4CFE50-FE52FE54-FE57FE5F-FE61FE68FE6AFE6BFF01-FF03FF05-FF07FF0AFF0CFF0EFF0FFF1AFF1BFF1FFF20FF3CFF61FF64FF65",
-        S: "0024002B003C-003E005E0060007C007E00A2-00A600A800A900AC00AE-00B100B400B800D700F702C2-02C502D2-02DF02E5-02EB02ED02EF-02FF03750384038503F60482058F0606-0608060B060E060F06DE06E906FD06FE07F609F209F309FA09FB0AF10B700BF3-0BFA0C7F0D790E3F0F01-0F030F130F15-0F170F1A-0F1F0F340F360F380FBE-0FC50FC7-0FCC0FCE0FCF0FD5-0FD8109E109F1390-139917DB194019DE-19FF1B61-1B6A1B74-1B7C1FBD1FBF-1FC11FCD-1FCF1FDD-1FDF1FED-1FEF1FFD1FFE20442052207A-207C208A-208C20A0-20B9210021012103-21062108210921142116-2118211E-2123212521272129212E213A213B2140-2144214A-214D214F2190-2328232B-23F32400-24262440-244A249C-24E92500-26FF2701-27672794-27C427C7-27E527F0-29822999-29D729DC-29FB29FE-2B4C2B50-2B592CE5-2CEA2E80-2E992E9B-2EF32F00-2FD52FF0-2FFB300430123013302030363037303E303F309B309C319031913196-319F31C0-31E33200-321E322A-324732503260-327F328A-32B032C0-32FE3300-33FF4DC0-4DFFA490-A4C6A700-A716A720A721A789A78AA828-A82BA836-A839AA77-AA79FB29FBB2-FBC1FDFCFDFDFE62FE64-FE66FE69FF04FF0BFF1C-FF1EFF3EFF40FF5CFF5EFFE0-FFE6FFE8-FFEEFFFCFFFD",
-        Sm: "002B003C-003E007C007E00AC00B100D700F703F60606-060820442052207A-207C208A-208C21182140-2144214B2190-2194219A219B21A021A321A621AE21CE21CF21D221D421F4-22FF2308-230B23202321237C239B-23B323DC-23E125B725C125F8-25FF266F27C0-27C427C7-27E527F0-27FF2900-29822999-29D729DC-29FB29FE-2AFF2B30-2B442B47-2B4CFB29FE62FE64-FE66FF0BFF1C-FF1EFF5CFF5EFFE2FFE9-FFEC",
-        Sc: "002400A2-00A5058F060B09F209F309FB0AF10BF90E3F17DB20A0-20B9A838FDFCFE69FF04FFE0FFE1FFE5FFE6",
-        Sk: "005E006000A800AF00B400B802C2-02C502D2-02DF02E5-02EB02ED02EF-02FF0375038403851FBD1FBF-1FC11FCD-1FCF1FDD-1FDF1FED-1FEF1FFD1FFE309B309CA700-A716A720A721A789A78AFBB2-FBC1FF3EFF40FFE3",
-        So: "00A600A900AE00B00482060E060F06DE06E906FD06FE07F609FA0B700BF3-0BF80BFA0C7F0D790F01-0F030F130F15-0F170F1A-0F1F0F340F360F380FBE-0FC50FC7-0FCC0FCE0FCF0FD5-0FD8109E109F1390-1399194019DE-19FF1B61-1B6A1B74-1B7C210021012103-210621082109211421162117211E-2123212521272129212E213A213B214A214C214D214F2195-2199219C-219F21A121A221A421A521A7-21AD21AF-21CD21D021D121D321D5-21F32300-2307230C-231F2322-2328232B-237B237D-239A23B4-23DB23E2-23F32400-24262440-244A249C-24E92500-25B625B8-25C025C2-25F72600-266E2670-26FF2701-27672794-27BF2800-28FF2B00-2B2F2B452B462B50-2B592CE5-2CEA2E80-2E992E9B-2EF32F00-2FD52FF0-2FFB300430123013302030363037303E303F319031913196-319F31C0-31E33200-321E322A-324732503260-327F328A-32B032C0-32FE3300-33FF4DC0-4DFFA490-A4C6A828-A82BA836A837A839AA77-AA79FDFDFFE4FFE8FFEDFFEEFFFCFFFD",
-        Z: "002000A01680180E2000-200A20282029202F205F3000",
-        Zs: "002000A01680180E2000-200A202F205F3000",
-        Zl: "2028",
-        Zp: "2029",
-        C: "0000-001F007F-009F00AD03780379037F-0383038B038D03A20528-05300557055805600588058B-058E059005C8-05CF05EB-05EF05F5-0605061C061D06DD070E070F074B074C07B2-07BF07FB-07FF082E082F083F085C085D085F-089F08A108AD-08E308FF097809800984098D098E0991099209A909B109B3-09B509BA09BB09C509C609C909CA09CF-09D609D8-09DB09DE09E409E509FC-0A000A040A0B-0A0E0A110A120A290A310A340A370A3A0A3B0A3D0A43-0A460A490A4A0A4E-0A500A52-0A580A5D0A5F-0A650A76-0A800A840A8E0A920AA90AB10AB40ABA0ABB0AC60ACA0ACE0ACF0AD1-0ADF0AE40AE50AF2-0B000B040B0D0B0E0B110B120B290B310B340B3A0B3B0B450B460B490B4A0B4E-0B550B58-0B5B0B5E0B640B650B78-0B810B840B8B-0B8D0B910B96-0B980B9B0B9D0BA0-0BA20BA5-0BA70BAB-0BAD0BBA-0BBD0BC3-0BC50BC90BCE0BCF0BD1-0BD60BD8-0BE50BFB-0C000C040C0D0C110C290C340C3A-0C3C0C450C490C4E-0C540C570C5A-0C5F0C640C650C70-0C770C800C810C840C8D0C910CA90CB40CBA0CBB0CC50CC90CCE-0CD40CD7-0CDD0CDF0CE40CE50CF00CF3-0D010D040D0D0D110D3B0D3C0D450D490D4F-0D560D58-0D5F0D640D650D76-0D780D800D810D840D97-0D990DB20DBC0DBE0DBF0DC7-0DC90DCB-0DCE0DD50DD70DE0-0DF10DF5-0E000E3B-0E3E0E5C-0E800E830E850E860E890E8B0E8C0E8E-0E930E980EA00EA40EA60EA80EA90EAC0EBA0EBE0EBF0EC50EC70ECE0ECF0EDA0EDB0EE0-0EFF0F480F6D-0F700F980FBD0FCD0FDB-0FFF10C610C8-10CC10CE10CF1249124E124F12571259125E125F1289128E128F12B112B612B712BF12C112C612C712D7131113161317135B135C137D-137F139A-139F13F5-13FF169D-169F16F1-16FF170D1715-171F1737-173F1754-175F176D17711774-177F17DE17DF17EA-17EF17FA-17FF180F181A-181F1878-187F18AB-18AF18F6-18FF191D-191F192C-192F193C-193F1941-1943196E196F1975-197F19AC-19AF19CA-19CF19DB-19DD1A1C1A1D1A5F1A7D1A7E1A8A-1A8F1A9A-1A9F1AAE-1AFF1B4C-1B4F1B7D-1B7F1BF4-1BFB1C38-1C3A1C4A-1C4C1C80-1CBF1CC8-1CCF1CF7-1CFF1DE7-1DFB1F161F171F1E1F1F1F461F471F4E1F4F1F581F5A1F5C1F5E1F7E1F7F1FB51FC51FD41FD51FDC1FF01FF11FF51FFF200B-200F202A-202E2060-206F20722073208F209D-209F20BA-20CF20F1-20FF218A-218F23F4-23FF2427-243F244B-245F27002B4D-2B4F2B5A-2BFF2C2F2C5F2CF4-2CF82D262D28-2D2C2D2E2D2F2D68-2D6E2D71-2D7E2D97-2D9F2DA72DAF2DB72DBF2DC72DCF2DD72DDF2E3C-2E7F2E9A2EF4-2EFF2FD6-2FEF2FFC-2FFF3040309730983100-3104312E-3130318F31BB-31BF31E4-31EF321F32FF4DB6-4DBF9FCD-9FFFA48D-A48FA4C7-A4CFA62C-A63FA698-A69EA6F8-A6FFA78FA794-A79FA7AB-A7F7A82C-A82FA83A-A83FA878-A87FA8C5-A8CDA8DA-A8DFA8FC-A8FFA954-A95EA97D-A97FA9CEA9DA-A9DDA9E0-A9FFAA37-AA3FAA4EAA4FAA5AAA5BAA7C-AA7FAAC3-AADAAAF7-AB00AB07AB08AB0FAB10AB17-AB1FAB27AB2F-ABBFABEEABEFABFA-ABFFD7A4-D7AFD7C7-D7CAD7FC-F8FFFA6EFA6FFADA-FAFFFB07-FB12FB18-FB1CFB37FB3DFB3FFB42FB45FBC2-FBD2FD40-FD4FFD90FD91FDC8-FDEFFDFEFDFFFE1A-FE1FFE27-FE2FFE53FE67FE6C-FE6FFE75FEFD-FF00FFBF-FFC1FFC8FFC9FFD0FFD1FFD8FFD9FFDD-FFDFFFE7FFEF-FFFBFFFEFFFF",
-        Cc: "0000-001F007F-009F",
-        Cf: "00AD0600-060406DD070F200B-200F202A-202E2060-2064206A-206FFEFFFFF9-FFFB",
-        Co: "E000-F8FF",
-        Cs: "D800-DFFF",
-        Cn: "03780379037F-0383038B038D03A20528-05300557055805600588058B-058E059005C8-05CF05EB-05EF05F5-05FF0605061C061D070E074B074C07B2-07BF07FB-07FF082E082F083F085C085D085F-089F08A108AD-08E308FF097809800984098D098E0991099209A909B109B3-09B509BA09BB09C509C609C909CA09CF-09D609D8-09DB09DE09E409E509FC-0A000A040A0B-0A0E0A110A120A290A310A340A370A3A0A3B0A3D0A43-0A460A490A4A0A4E-0A500A52-0A580A5D0A5F-0A650A76-0A800A840A8E0A920AA90AB10AB40ABA0ABB0AC60ACA0ACE0ACF0AD1-0ADF0AE40AE50AF2-0B000B040B0D0B0E0B110B120B290B310B340B3A0B3B0B450B460B490B4A0B4E-0B550B58-0B5B0B5E0B640B650B78-0B810B840B8B-0B8D0B910B96-0B980B9B0B9D0BA0-0BA20BA5-0BA70BAB-0BAD0BBA-0BBD0BC3-0BC50BC90BCE0BCF0BD1-0BD60BD8-0BE50BFB-0C000C040C0D0C110C290C340C3A-0C3C0C450C490C4E-0C540C570C5A-0C5F0C640C650C70-0C770C800C810C840C8D0C910CA90CB40CBA0CBB0CC50CC90CCE-0CD40CD7-0CDD0CDF0CE40CE50CF00CF3-0D010D040D0D0D110D3B0D3C0D450D490D4F-0D560D58-0D5F0D640D650D76-0D780D800D810D840D97-0D990DB20DBC0DBE0DBF0DC7-0DC90DCB-0DCE0DD50DD70DE0-0DF10DF5-0E000E3B-0E3E0E5C-0E800E830E850E860E890E8B0E8C0E8E-0E930E980EA00EA40EA60EA80EA90EAC0EBA0EBE0EBF0EC50EC70ECE0ECF0EDA0EDB0EE0-0EFF0F480F6D-0F700F980FBD0FCD0FDB-0FFF10C610C8-10CC10CE10CF1249124E124F12571259125E125F1289128E128F12B112B612B712BF12C112C612C712D7131113161317135B135C137D-137F139A-139F13F5-13FF169D-169F16F1-16FF170D1715-171F1737-173F1754-175F176D17711774-177F17DE17DF17EA-17EF17FA-17FF180F181A-181F1878-187F18AB-18AF18F6-18FF191D-191F192C-192F193C-193F1941-1943196E196F1975-197F19AC-19AF19CA-19CF19DB-19DD1A1C1A1D1A5F1A7D1A7E1A8A-1A8F1A9A-1A9F1AAE-1AFF1B4C-1B4F1B7D-1B7F1BF4-1BFB1C38-1C3A1C4A-1C4C1C80-1CBF1CC8-1CCF1CF7-1CFF1DE7-1DFB1F161F171F1E1F1F1F461F471F4E1F4F1F581F5A1F5C1F5E1F7E1F7F1FB51FC51FD41FD51FDC1FF01FF11FF51FFF2065-206920722073208F209D-209F20BA-20CF20F1-20FF218A-218F23F4-23FF2427-243F244B-245F27002B4D-2B4F2B5A-2BFF2C2F2C5F2CF4-2CF82D262D28-2D2C2D2E2D2F2D68-2D6E2D71-2D7E2D97-2D9F2DA72DAF2DB72DBF2DC72DCF2DD72DDF2E3C-2E7F2E9A2EF4-2EFF2FD6-2FEF2FFC-2FFF3040309730983100-3104312E-3130318F31BB-31BF31E4-31EF321F32FF4DB6-4DBF9FCD-9FFFA48D-A48FA4C7-A4CFA62C-A63FA698-A69EA6F8-A6FFA78FA794-A79FA7AB-A7F7A82C-A82FA83A-A83FA878-A87FA8C5-A8CDA8DA-A8DFA8FC-A8FFA954-A95EA97D-A97FA9CEA9DA-A9DDA9E0-A9FFAA37-AA3FAA4EAA4FAA5AAA5BAA7C-AA7FAAC3-AADAAAF7-AB00AB07AB08AB0FAB10AB17-AB1FAB27AB2F-ABBFABEEABEFABFA-ABFFD7A4-D7AFD7C7-D7CAD7FC-D7FFFA6EFA6FFADA-FAFFFB07-FB12FB18-FB1CFB37FB3DFB3FFB42FB45FBC2-FBD2FD40-FD4FFD90FD91FDC8-FDEFFDFEFDFFFE1A-FE1FFE27-FE2FFE53FE67FE6C-FE6FFE75FEFDFEFEFF00FFBF-FFC1FFC8FFC9FFD0FFD1FFD8FFD9FFDD-FFDFFFE7FFEF-FFF8FFFEFFFF"
-    }, {
-        //L: "Letter", // Included in the Unicode Base addon
-        Ll: "Lowercase_Letter",
-        Lu: "Uppercase_Letter",
-        Lt: "Titlecase_Letter",
-        Lm: "Modifier_Letter",
-        Lo: "Other_Letter",
-        M: "Mark",
-        Mn: "Nonspacing_Mark",
-        Mc: "Spacing_Mark",
-        Me: "Enclosing_Mark",
-        N: "Number",
-        Nd: "Decimal_Number",
-        Nl: "Letter_Number",
-        No: "Other_Number",
-        P: "Punctuation",
-        Pd: "Dash_Punctuation",
-        Ps: "Open_Punctuation",
-        Pe: "Close_Punctuation",
-        Pi: "Initial_Punctuation",
-        Pf: "Final_Punctuation",
-        Pc: "Connector_Punctuation",
-        Po: "Other_Punctuation",
-        S: "Symbol",
-        Sm: "Math_Symbol",
-        Sc: "Currency_Symbol",
-        Sk: "Modifier_Symbol",
-        So: "Other_Symbol",
-        Z: "Separator",
-        Zs: "Space_Separator",
-        Zl: "Line_Separator",
-        Zp: "Paragraph_Separator",
-        C: "Other",
-        Cc: "Control",
-        Cf: "Format",
-        Co: "Private_Use",
-        Cs: "Surrogate",
-        Cn: "Unassigned"
-    });
-
-}(XRegExp));
-
-
-/***** unicode-scripts.js *****/
-
-/*!
- * XRegExp Unicode Scripts v1.2.0
- * (c) 2010-2012 Steven Levithan <http://xregexp.com/>
- * MIT License
- * Uses Unicode 6.1 <http://unicode.org/>
- */
-
-/**
- * Adds support for all Unicode scripts in the Basic Multilingual Plane (U+0000-U+FFFF).
- * E.g., `\p{Latin}`. Token names are case insensitive, and any spaces, hyphens, and underscores
- * are ignored.
- * @requires XRegExp, XRegExp Unicode Base
- */
-(function (XRegExp) {
-    "use strict";
-
-    if (!XRegExp.addUnicodePackage) {
-        throw new ReferenceError("Unicode Base must be loaded before Unicode Scripts");
-    }
-
-    XRegExp.install("extensibility");
-
-    XRegExp.addUnicodePackage({
-        Arabic: "0600-06040606-060B060D-061A061E0620-063F0641-064A0656-065E066A-066F0671-06DC06DE-06FF0750-077F08A008A2-08AC08E4-08FEFB50-FBC1FBD3-FD3DFD50-FD8FFD92-FDC7FDF0-FDFCFE70-FE74FE76-FEFC",
-        Armenian: "0531-05560559-055F0561-0587058A058FFB13-FB17",
-        Balinese: "1B00-1B4B1B50-1B7C",
-        Bamum: "A6A0-A6F7",
-        Batak: "1BC0-1BF31BFC-1BFF",
-        Bengali: "0981-09830985-098C098F09900993-09A809AA-09B009B209B6-09B909BC-09C409C709C809CB-09CE09D709DC09DD09DF-09E309E6-09FB",
-        Bopomofo: "02EA02EB3105-312D31A0-31BA",
-        Braille: "2800-28FF",
-        Buginese: "1A00-1A1B1A1E1A1F",
-        Buhid: "1740-1753",
-        Canadian_Aboriginal: "1400-167F18B0-18F5",
-        Cham: "AA00-AA36AA40-AA4DAA50-AA59AA5C-AA5F",
-        Cherokee: "13A0-13F4",
-        Common: "0000-0040005B-0060007B-00A900AB-00B900BB-00BF00D700F702B9-02DF02E5-02E902EC-02FF0374037E038503870589060C061B061F06400660-066906DD096409650E3F0FD5-0FD810FB16EB-16ED173517361802180318051CD31CE11CE9-1CEC1CEE-1CF31CF51CF62000-200B200E-2064206A-20702074-207E2080-208E20A0-20B92100-21252127-2129212C-21312133-214D214F-215F21892190-23F32400-24262440-244A2460-26FF2701-27FF2900-2B4C2B50-2B592E00-2E3B2FF0-2FFB3000-300430063008-30203030-3037303C-303F309B309C30A030FB30FC3190-319F31C0-31E33220-325F327F-32CF3358-33FF4DC0-4DFFA700-A721A788-A78AA830-A839FD3EFD3FFDFDFE10-FE19FE30-FE52FE54-FE66FE68-FE6BFEFFFF01-FF20FF3B-FF40FF5B-FF65FF70FF9EFF9FFFE0-FFE6FFE8-FFEEFFF9-FFFD",
-        Coptic: "03E2-03EF2C80-2CF32CF9-2CFF",
-        Cyrillic: "0400-04840487-05271D2B1D782DE0-2DFFA640-A697A69F",
-        Devanagari: "0900-09500953-09630966-09770979-097FA8E0-A8FB",
-        Ethiopic: "1200-1248124A-124D1250-12561258125A-125D1260-1288128A-128D1290-12B012B2-12B512B8-12BE12C012C2-12C512C8-12D612D8-13101312-13151318-135A135D-137C1380-13992D80-2D962DA0-2DA62DA8-2DAE2DB0-2DB62DB8-2DBE2DC0-2DC62DC8-2DCE2DD0-2DD62DD8-2DDEAB01-AB06AB09-AB0EAB11-AB16AB20-AB26AB28-AB2E",
-        Georgian: "10A0-10C510C710CD10D0-10FA10FC-10FF2D00-2D252D272D2D",
-        Glagolitic: "2C00-2C2E2C30-2C5E",
-        Greek: "0370-03730375-0377037A-037D038403860388-038A038C038E-03A103A3-03E103F0-03FF1D26-1D2A1D5D-1D611D66-1D6A1DBF1F00-1F151F18-1F1D1F20-1F451F48-1F4D1F50-1F571F591F5B1F5D1F5F-1F7D1F80-1FB41FB6-1FC41FC6-1FD31FD6-1FDB1FDD-1FEF1FF2-1FF41FF6-1FFE2126",
-        Gujarati: "0A81-0A830A85-0A8D0A8F-0A910A93-0AA80AAA-0AB00AB20AB30AB5-0AB90ABC-0AC50AC7-0AC90ACB-0ACD0AD00AE0-0AE30AE6-0AF1",
-        Gurmukhi: "0A01-0A030A05-0A0A0A0F0A100A13-0A280A2A-0A300A320A330A350A360A380A390A3C0A3E-0A420A470A480A4B-0A4D0A510A59-0A5C0A5E0A66-0A75",
-        Han: "2E80-2E992E9B-2EF32F00-2FD5300530073021-30293038-303B3400-4DB54E00-9FCCF900-FA6DFA70-FAD9",
-        Hangul: "1100-11FF302E302F3131-318E3200-321E3260-327EA960-A97CAC00-D7A3D7B0-D7C6D7CB-D7FBFFA0-FFBEFFC2-FFC7FFCA-FFCFFFD2-FFD7FFDA-FFDC",
-        Hanunoo: "1720-1734",
-        Hebrew: "0591-05C705D0-05EA05F0-05F4FB1D-FB36FB38-FB3CFB3EFB40FB41FB43FB44FB46-FB4F",
-        Hiragana: "3041-3096309D-309F",
-        Inherited: "0300-036F04850486064B-0655065F0670095109521CD0-1CD21CD4-1CE01CE2-1CE81CED1CF41DC0-1DE61DFC-1DFF200C200D20D0-20F0302A-302D3099309AFE00-FE0FFE20-FE26",
-        Javanese: "A980-A9CDA9CF-A9D9A9DEA9DF",
-        Kannada: "0C820C830C85-0C8C0C8E-0C900C92-0CA80CAA-0CB30CB5-0CB90CBC-0CC40CC6-0CC80CCA-0CCD0CD50CD60CDE0CE0-0CE30CE6-0CEF0CF10CF2",
-        Katakana: "30A1-30FA30FD-30FF31F0-31FF32D0-32FE3300-3357FF66-FF6FFF71-FF9D",
-        Kayah_Li: "A900-A92F",
-        Khmer: "1780-17DD17E0-17E917F0-17F919E0-19FF",
-        Lao: "0E810E820E840E870E880E8A0E8D0E94-0E970E99-0E9F0EA1-0EA30EA50EA70EAA0EAB0EAD-0EB90EBB-0EBD0EC0-0EC40EC60EC8-0ECD0ED0-0ED90EDC-0EDF",
-        Latin: "0041-005A0061-007A00AA00BA00C0-00D600D8-00F600F8-02B802E0-02E41D00-1D251D2C-1D5C1D62-1D651D6B-1D771D79-1DBE1E00-1EFF2071207F2090-209C212A212B2132214E2160-21882C60-2C7FA722-A787A78B-A78EA790-A793A7A0-A7AAA7F8-A7FFFB00-FB06FF21-FF3AFF41-FF5A",
-        Lepcha: "1C00-1C371C3B-1C491C4D-1C4F",
-        Limbu: "1900-191C1920-192B1930-193B19401944-194F",
-        Lisu: "A4D0-A4FF",
-        Malayalam: "0D020D030D05-0D0C0D0E-0D100D12-0D3A0D3D-0D440D46-0D480D4A-0D4E0D570D60-0D630D66-0D750D79-0D7F",
-        Mandaic: "0840-085B085E",
-        Meetei_Mayek: "AAE0-AAF6ABC0-ABEDABF0-ABF9",
-        Mongolian: "1800180118041806-180E1810-18191820-18771880-18AA",
-        Myanmar: "1000-109FAA60-AA7B",
-        New_Tai_Lue: "1980-19AB19B0-19C919D0-19DA19DE19DF",
-        Nko: "07C0-07FA",
-        Ogham: "1680-169C",
-        Ol_Chiki: "1C50-1C7F",
-        Oriya: "0B01-0B030B05-0B0C0B0F0B100B13-0B280B2A-0B300B320B330B35-0B390B3C-0B440B470B480B4B-0B4D0B560B570B5C0B5D0B5F-0B630B66-0B77",
-        Phags_Pa: "A840-A877",
-        Rejang: "A930-A953A95F",
-        Runic: "16A0-16EA16EE-16F0",
-        Samaritan: "0800-082D0830-083E",
-        Saurashtra: "A880-A8C4A8CE-A8D9",
-        Sinhala: "0D820D830D85-0D960D9A-0DB10DB3-0DBB0DBD0DC0-0DC60DCA0DCF-0DD40DD60DD8-0DDF0DF2-0DF4",
-        Sundanese: "1B80-1BBF1CC0-1CC7",
-        Syloti_Nagri: "A800-A82B",
-        Syriac: "0700-070D070F-074A074D-074F",
-        Tagalog: "1700-170C170E-1714",
-        Tagbanwa: "1760-176C176E-177017721773",
-        Tai_Le: "1950-196D1970-1974",
-        Tai_Tham: "1A20-1A5E1A60-1A7C1A7F-1A891A90-1A991AA0-1AAD",
-        Tai_Viet: "AA80-AAC2AADB-AADF",
-        Tamil: "0B820B830B85-0B8A0B8E-0B900B92-0B950B990B9A0B9C0B9E0B9F0BA30BA40BA8-0BAA0BAE-0BB90BBE-0BC20BC6-0BC80BCA-0BCD0BD00BD70BE6-0BFA",
-        Telugu: "0C01-0C030C05-0C0C0C0E-0C100C12-0C280C2A-0C330C35-0C390C3D-0C440C46-0C480C4A-0C4D0C550C560C580C590C60-0C630C66-0C6F0C78-0C7F",
-        Thaana: "0780-07B1",
-        Thai: "0E01-0E3A0E40-0E5B",
-        Tibetan: "0F00-0F470F49-0F6C0F71-0F970F99-0FBC0FBE-0FCC0FCE-0FD40FD90FDA",
-        Tifinagh: "2D30-2D672D6F2D702D7F",
-        Vai: "A500-A62B",
-        Yi: "A000-A48CA490-A4C6"
-    });
-
-}(XRegExp));
-
-
-/***** unicode-blocks.js *****/
-
-/*!
- * XRegExp Unicode Blocks v1.2.0
- * (c) 2010-2012 Steven Levithan <http://xregexp.com/>
- * MIT License
- * Uses Unicode 6.1 <http://unicode.org/>
- */
-
-/**
- * Adds support for all Unicode blocks in the Basic Multilingual Plane (U+0000-U+FFFF). Unicode
- * blocks use the prefix "In". E.g., `\p{InBasicLatin}`. Token names are case insensitive, and any
- * spaces, hyphens, and underscores are ignored.
- * @requires XRegExp, XRegExp Unicode Base
- */
-(function (XRegExp) {
-    "use strict";
-
-    if (!XRegExp.addUnicodePackage) {
-        throw new ReferenceError("Unicode Base must be loaded before Unicode Blocks");
-    }
-
-    XRegExp.install("extensibility");
-
-    XRegExp.addUnicodePackage({
-        InBasic_Latin: "0000-007F",
-        InLatin_1_Supplement: "0080-00FF",
-        InLatin_Extended_A: "0100-017F",
-        InLatin_Extended_B: "0180-024F",
-        InIPA_Extensions: "0250-02AF",
-        InSpacing_Modifier_Letters: "02B0-02FF",
-        InCombining_Diacritical_Marks: "0300-036F",
-        InGreek_and_Coptic: "0370-03FF",
-        InCyrillic: "0400-04FF",
-        InCyrillic_Supplement: "0500-052F",
-        InArmenian: "0530-058F",
-        InHebrew: "0590-05FF",
-        InArabic: "0600-06FF",
-        InSyriac: "0700-074F",
-        InArabic_Supplement: "0750-077F",
-        InThaana: "0780-07BF",
-        InNKo: "07C0-07FF",
-        InSamaritan: "0800-083F",
-        InMandaic: "0840-085F",
-        InArabic_Extended_A: "08A0-08FF",
-        InDevanagari: "0900-097F",
-        InBengali: "0980-09FF",
-        InGurmukhi: "0A00-0A7F",
-        InGujarati: "0A80-0AFF",
-        InOriya: "0B00-0B7F",
-        InTamil: "0B80-0BFF",
-        InTelugu: "0C00-0C7F",
-        InKannada: "0C80-0CFF",
-        InMalayalam: "0D00-0D7F",
-        InSinhala: "0D80-0DFF",
-        InThai: "0E00-0E7F",
-        InLao: "0E80-0EFF",
-        InTibetan: "0F00-0FFF",
-        InMyanmar: "1000-109F",
-        InGeorgian: "10A0-10FF",
-        InHangul_Jamo: "1100-11FF",
-        InEthiopic: "1200-137F",
-        InEthiopic_Supplement: "1380-139F",
-        InCherokee: "13A0-13FF",
-        InUnified_Canadian_Aboriginal_Syllabics: "1400-167F",
-        InOgham: "1680-169F",
-        InRunic: "16A0-16FF",
-        InTagalog: "1700-171F",
-        InHanunoo: "1720-173F",
-        InBuhid: "1740-175F",
-        InTagbanwa: "1760-177F",
-        InKhmer: "1780-17FF",
-        InMongolian: "1800-18AF",
-        InUnified_Canadian_Aboriginal_Syllabics_Extended: "18B0-18FF",
-        InLimbu: "1900-194F",
-        InTai_Le: "1950-197F",
-        InNew_Tai_Lue: "1980-19DF",
-        InKhmer_Symbols: "19E0-19FF",
-        InBuginese: "1A00-1A1F",
-        InTai_Tham: "1A20-1AAF",
-        InBalinese: "1B00-1B7F",
-        InSundanese: "1B80-1BBF",
-        InBatak: "1BC0-1BFF",
-        InLepcha: "1C00-1C4F",
-        InOl_Chiki: "1C50-1C7F",
-        InSundanese_Supplement: "1CC0-1CCF",
-        InVedic_Extensions: "1CD0-1CFF",
-        InPhonetic_Extensions: "1D00-1D7F",
-        InPhonetic_Extensions_Supplement: "1D80-1DBF",
-        InCombining_Diacritical_Marks_Supplement: "1DC0-1DFF",
-        InLatin_Extended_Additional: "1E00-1EFF",
-        InGreek_Extended: "1F00-1FFF",
-        InGeneral_Punctuation: "2000-206F",
-        InSuperscripts_and_Subscripts: "2070-209F",
-        InCurrency_Symbols: "20A0-20CF",
-        InCombining_Diacritical_Marks_for_Symbols: "20D0-20FF",
-        InLetterlike_Symbols: "2100-214F",
-        InNumber_Forms: "2150-218F",
-        InArrows: "2190-21FF",
-        InMathematical_Operators: "2200-22FF",
-        InMiscellaneous_Technical: "2300-23FF",
-        InControl_Pictures: "2400-243F",
-        InOptical_Character_Recognition: "2440-245F",
-        InEnclosed_Alphanumerics: "2460-24FF",
-        InBox_Drawing: "2500-257F",
-        InBlock_Elements: "2580-259F",
-        InGeometric_Shapes: "25A0-25FF",
-        InMiscellaneous_Symbols: "2600-26FF",
-        InDingbats: "2700-27BF",
-        InMiscellaneous_Mathematical_Symbols_A: "27C0-27EF",
-        InSupplemental_Arrows_A: "27F0-27FF",
-        InBraille_Patterns: "2800-28FF",
-        InSupplemental_Arrows_B: "2900-297F",
-        InMiscellaneous_Mathematical_Symbols_B: "2980-29FF",
-        InSupplemental_Mathematical_Operators: "2A00-2AFF",
-        InMiscellaneous_Symbols_and_Arrows: "2B00-2BFF",
-        InGlagolitic: "2C00-2C5F",
-        InLatin_Extended_C: "2C60-2C7F",
-        InCoptic: "2C80-2CFF",
-        InGeorgian_Supplement: "2D00-2D2F",
-        InTifinagh: "2D30-2D7F",
-        InEthiopic_Extended: "2D80-2DDF",
-        InCyrillic_Extended_A: "2DE0-2DFF",
-        InSupplemental_Punctuation: "2E00-2E7F",
-        InCJK_Radicals_Supplement: "2E80-2EFF",
-        InKangxi_Radicals: "2F00-2FDF",
-        InIdeographic_Description_Characters: "2FF0-2FFF",
-        InCJK_Symbols_and_Punctuation: "3000-303F",
-        InHiragana: "3040-309F",
-        InKatakana: "30A0-30FF",
-        InBopomofo: "3100-312F",
-        InHangul_Compatibility_Jamo: "3130-318F",
-        InKanbun: "3190-319F",
-        InBopomofo_Extended: "31A0-31BF",
-        InCJK_Strokes: "31C0-31EF",
-        InKatakana_Phonetic_Extensions: "31F0-31FF",
-        InEnclosed_CJK_Letters_and_Months: "3200-32FF",
-        InCJK_Compatibility: "3300-33FF",
-        InCJK_Unified_Ideographs_Extension_A: "3400-4DBF",
-        InYijing_Hexagram_Symbols: "4DC0-4DFF",
-        InCJK_Unified_Ideographs: "4E00-9FFF",
-        InYi_Syllables: "A000-A48F",
-        InYi_Radicals: "A490-A4CF",
-        InLisu: "A4D0-A4FF",
-        InVai: "A500-A63F",
-        InCyrillic_Extended_B: "A640-A69F",
-        InBamum: "A6A0-A6FF",
-        InModifier_Tone_Letters: "A700-A71F",
-        InLatin_Extended_D: "A720-A7FF",
-        InSyloti_Nagri: "A800-A82F",
-        InCommon_Indic_Number_Forms: "A830-A83F",
-        InPhags_pa: "A840-A87F",
-        InSaurashtra: "A880-A8DF",
-        InDevanagari_Extended: "A8E0-A8FF",
-        InKayah_Li: "A900-A92F",
-        InRejang: "A930-A95F",
-        InHangul_Jamo_Extended_A: "A960-A97F",
-        InJavanese: "A980-A9DF",
-        InCham: "AA00-AA5F",
-        InMyanmar_Extended_A: "AA60-AA7F",
-        InTai_Viet: "AA80-AADF",
-        InMeetei_Mayek_Extensions: "AAE0-AAFF",
-        InEthiopic_Extended_A: "AB00-AB2F",
-        InMeetei_Mayek: "ABC0-ABFF",
-        InHangul_Syllables: "AC00-D7AF",
-        InHangul_Jamo_Extended_B: "D7B0-D7FF",
-        InHigh_Surrogates: "D800-DB7F",
-        InHigh_Private_Use_Surrogates: "DB80-DBFF",
-        InLow_Surrogates: "DC00-DFFF",
-        InPrivate_Use_Area: "E000-F8FF",
-        InCJK_Compatibility_Ideographs: "F900-FAFF",
-        InAlphabetic_Presentation_Forms: "FB00-FB4F",
-        InArabic_Presentation_Forms_A: "FB50-FDFF",
-        InVariation_Selectors: "FE00-FE0F",
-        InVertical_Forms: "FE10-FE1F",
-        InCombining_Half_Marks: "FE20-FE2F",
-        InCJK_Compatibility_Forms: "FE30-FE4F",
-        InSmall_Form_Variants: "FE50-FE6F",
-        InArabic_Presentation_Forms_B: "FE70-FEFF",
-        InHalfwidth_and_Fullwidth_Forms: "FF00-FFEF",
-        InSpecials: "FFF0-FFFF"
-    });
-
-}(XRegExp));
-
-
-/***** unicode-properties.js *****/
-
-/*!
- * XRegExp Unicode Properties v1.0.0
- * (c) 2012 Steven Levithan <http://xregexp.com/>
- * MIT License
- * Uses Unicode 6.1 <http://unicode.org/>
- */
-
-/**
- * Adds Unicode properties necessary to meet Level 1 Unicode support (detailed in UTS#18 RL1.2).
- * Includes code points from the Basic Multilingual Plane (U+0000-U+FFFF) only. Token names are
- * case insensitive, and any spaces, hyphens, and underscores are ignored.
- * @requires XRegExp, XRegExp Unicode Base
- */
-(function (XRegExp) {
-    "use strict";
-
-    if (!XRegExp.addUnicodePackage) {
-        throw new ReferenceError("Unicode Base must be loaded before Unicode Properties");
-    }
-
-    XRegExp.install("extensibility");
-
-    XRegExp.addUnicodePackage({
-        Alphabetic: "0041-005A0061-007A00AA00B500BA00C0-00D600D8-00F600F8-02C102C6-02D102E0-02E402EC02EE03450370-037403760377037A-037D03860388-038A038C038E-03A103A3-03F503F7-0481048A-05270531-055605590561-058705B0-05BD05BF05C105C205C405C505C705D0-05EA05F0-05F20610-061A0620-06570659-065F066E-06D306D5-06DC06E1-06E806ED-06EF06FA-06FC06FF0710-073F074D-07B107CA-07EA07F407F507FA0800-0817081A-082C0840-085808A008A2-08AC08E4-08E908F0-08FE0900-093B093D-094C094E-09500955-09630971-09770979-097F0981-09830985-098C098F09900993-09A809AA-09B009B209B6-09B909BD-09C409C709C809CB09CC09CE09D709DC09DD09DF-09E309F009F10A01-0A030A05-0A0A0A0F0A100A13-0A280A2A-0A300A320A330A350A360A380A390A3E-0A420A470A480A4B0A4C0A510A59-0A5C0A5E0A70-0A750A81-0A830A85-0A8D0A8F-0A910A93-0AA80AAA-0AB00AB20AB30AB5-0AB90ABD-0AC50AC7-0AC90ACB0ACC0AD00AE0-0AE30B01-0B030B05-0B0C0B0F0B100B13-0B280B2A-0B300B320B330B35-0B390B3D-0B440B470B480B4B0B4C0B560B570B5C0B5D0B5F-0B630B710B820B830B85-0B8A0B8E-0B900B92-0B950B990B9A0B9C0B9E0B9F0BA30BA40BA8-0BAA0BAE-0BB90BBE-0BC20BC6-0BC80BCA-0BCC0BD00BD70C01-0C030C05-0C0C0C0E-0C100C12-0C280C2A-0C330C35-0C390C3D-0C440C46-0C480C4A-0C4C0C550C560C580C590C60-0C630C820C830C85-0C8C0C8E-0C900C92-0CA80CAA-0CB30CB5-0CB90CBD-0CC40CC6-0CC80CCA-0CCC0CD50CD60CDE0CE0-0CE30CF10CF20D020D030D05-0D0C0D0E-0D100D12-0D3A0D3D-0D440D46-0D480D4A-0D4C0D4E0D570D60-0D630D7A-0D7F0D820D830D85-0D960D9A-0DB10DB3-0DBB0DBD0DC0-0DC60DCF-0DD40DD60DD8-0DDF0DF20DF30E01-0E3A0E40-0E460E4D0E810E820E840E870E880E8A0E8D0E94-0E970E99-0E9F0EA1-0EA30EA50EA70EAA0EAB0EAD-0EB90EBB-0EBD0EC0-0EC40EC60ECD0EDC-0EDF0F000F40-0F470F49-0F6C0F71-0F810F88-0F970F99-0FBC1000-10361038103B-103F1050-10621065-1068106E-1086108E109C109D10A0-10C510C710CD10D0-10FA10FC-1248124A-124D1250-12561258125A-125D1260-1288128A-128D1290-12B012B2-12B512B8-12BE12C012C2-12C512C8-12D612D8-13101312-13151318-135A135F1380-138F13A0-13F41401-166C166F-167F1681-169A16A0-16EA16EE-16F01700-170C170E-17131720-17331740-17531760-176C176E-1770177217731780-17B317B6-17C817D717DC1820-18771880-18AA18B0-18F51900-191C1920-192B1930-19381950-196D1970-19741980-19AB19B0-19C91A00-1A1B1A20-1A5E1A61-1A741AA71B00-1B331B35-1B431B45-1B4B1B80-1BA91BAC-1BAF1BBA-1BE51BE7-1BF11C00-1C351C4D-1C4F1C5A-1C7D1CE9-1CEC1CEE-1CF31CF51CF61D00-1DBF1E00-1F151F18-1F1D1F20-1F451F48-1F4D1F50-1F571F591F5B1F5D1F5F-1F7D1F80-1FB41FB6-1FBC1FBE1FC2-1FC41FC6-1FCC1FD0-1FD31FD6-1FDB1FE0-1FEC1FF2-1FF41FF6-1FFC2071207F2090-209C21022107210A-211321152119-211D212421262128212A-212D212F-2139213C-213F2145-2149214E2160-218824B6-24E92C00-2C2E2C30-2C5E2C60-2CE42CEB-2CEE2CF22CF32D00-2D252D272D2D2D30-2D672D6F2D80-2D962DA0-2DA62DA8-2DAE2DB0-2DB62DB8-2DBE2DC0-2DC62DC8-2DCE2DD0-2DD62DD8-2DDE2DE0-2DFF2E2F3005-30073021-30293031-30353038-303C3041-3096309D-309F30A1-30FA30FC-30FF3105-312D3131-318E31A0-31BA31F0-31FF3400-4DB54E00-9FCCA000-A48CA4D0-A4FDA500-A60CA610-A61FA62AA62BA640-A66EA674-A67BA67F-A697A69F-A6EFA717-A71FA722-A788A78B-A78EA790-A793A7A0-A7AAA7F8-A801A803-A805A807-A80AA80C-A827A840-A873A880-A8C3A8F2-A8F7A8FBA90A-A92AA930-A952A960-A97CA980-A9B2A9B4-A9BFA9CFAA00-AA36AA40-AA4DAA60-AA76AA7AAA80-AABEAAC0AAC2AADB-AADDAAE0-AAEFAAF2-AAF5AB01-AB06AB09-AB0EAB11-AB16AB20-AB26AB28-AB2EABC0-ABEAAC00-D7A3D7B0-D7C6D7CB-D7FBF900-FA6DFA70-FAD9FB00-FB06FB13-FB17FB1D-FB28FB2A-FB36FB38-FB3CFB3EFB40FB41FB43FB44FB46-FBB1FBD3-FD3DFD50-FD8FFD92-FDC7FDF0-FDFBFE70-FE74FE76-FEFCFF21-FF3AFF41-FF5AFF66-FFBEFFC2-FFC7FFCA-FFCFFFD2-FFD7FFDA-FFDC",
-        Uppercase: "0041-005A00C0-00D600D8-00DE01000102010401060108010A010C010E01100112011401160118011A011C011E01200122012401260128012A012C012E01300132013401360139013B013D013F0141014301450147014A014C014E01500152015401560158015A015C015E01600162016401660168016A016C016E017001720174017601780179017B017D018101820184018601870189-018B018E-0191019301940196-0198019C019D019F01A001A201A401A601A701A901AC01AE01AF01B1-01B301B501B701B801BC01C401C701CA01CD01CF01D101D301D501D701D901DB01DE01E001E201E401E601E801EA01EC01EE01F101F401F6-01F801FA01FC01FE02000202020402060208020A020C020E02100212021402160218021A021C021E02200222022402260228022A022C022E02300232023A023B023D023E02410243-02460248024A024C024E03700372037603860388-038A038C038E038F0391-03A103A3-03AB03CF03D2-03D403D803DA03DC03DE03E003E203E403E603E803EA03EC03EE03F403F703F903FA03FD-042F04600462046404660468046A046C046E04700472047404760478047A047C047E0480048A048C048E04900492049404960498049A049C049E04A004A204A404A604A804AA04AC04AE04B004B204B404B604B804BA04BC04BE04C004C104C304C504C704C904CB04CD04D004D204D404D604D804DA04DC04DE04E004E204E404E604E804EA04EC04EE04F004F204F404F604F804FA04FC04FE05000502050405060508050A050C050E05100512051405160518051A051C051E05200522052405260531-055610A0-10C510C710CD1E001E021E041E061E081E0A1E0C1E0E1E101E121E141E161E181E1A1E1C1E1E1E201E221E241E261E281E2A1E2C1E2E1E301E321E341E361E381E3A1E3C1E3E1E401E421E441E461E481E4A1E4C1E4E1E501E521E541E561E581E5A1E5C1E5E1E601E621E641E661E681E6A1E6C1E6E1E701E721E741E761E781E7A1E7C1E7E1E801E821E841E861E881E8A1E8C1E8E1E901E921E941E9E1EA01EA21EA41EA61EA81EAA1EAC1EAE1EB01EB21EB41EB61EB81EBA1EBC1EBE1EC01EC21EC41EC61EC81ECA1ECC1ECE1ED01ED21ED41ED61ED81EDA1EDC1EDE1EE01EE21EE41EE61EE81EEA1EEC1EEE1EF01EF21EF41EF61EF81EFA1EFC1EFE1F08-1F0F1F18-1F1D1F28-1F2F1F38-1F3F1F48-1F4D1F591F5B1F5D1F5F1F68-1F6F1FB8-1FBB1FC8-1FCB1FD8-1FDB1FE8-1FEC1FF8-1FFB21022107210B-210D2110-211221152119-211D212421262128212A-212D2130-2133213E213F21452160-216F218324B6-24CF2C00-2C2E2C602C62-2C642C672C692C6B2C6D-2C702C722C752C7E-2C802C822C842C862C882C8A2C8C2C8E2C902C922C942C962C982C9A2C9C2C9E2CA02CA22CA42CA62CA82CAA2CAC2CAE2CB02CB22CB42CB62CB82CBA2CBC2CBE2CC02CC22CC42CC62CC82CCA2CCC2CCE2CD02CD22CD42CD62CD82CDA2CDC2CDE2CE02CE22CEB2CED2CF2A640A642A644A646A648A64AA64CA64EA650A652A654A656A658A65AA65CA65EA660A662A664A666A668A66AA66CA680A682A684A686A688A68AA68CA68EA690A692A694A696A722A724A726A728A72AA72CA72EA732A734A736A738A73AA73CA73EA740A742A744A746A748A74AA74CA74EA750A752A754A756A758A75AA75CA75EA760A762A764A766A768A76AA76CA76EA779A77BA77DA77EA780A782A784A786A78BA78DA790A792A7A0A7A2A7A4A7A6A7A8A7AAFF21-FF3A",
-        Lowercase: "0061-007A00AA00B500BA00DF-00F600F8-00FF01010103010501070109010B010D010F01110113011501170119011B011D011F01210123012501270129012B012D012F01310133013501370138013A013C013E014001420144014601480149014B014D014F01510153015501570159015B015D015F01610163016501670169016B016D016F0171017301750177017A017C017E-0180018301850188018C018D019201950199-019B019E01A101A301A501A801AA01AB01AD01B001B401B601B901BA01BD-01BF01C601C901CC01CE01D001D201D401D601D801DA01DC01DD01DF01E101E301E501E701E901EB01ED01EF01F001F301F501F901FB01FD01FF02010203020502070209020B020D020F02110213021502170219021B021D021F02210223022502270229022B022D022F02310233-0239023C023F0240024202470249024B024D024F-02930295-02B802C002C102E0-02E40345037103730377037A-037D039003AC-03CE03D003D103D5-03D703D903DB03DD03DF03E103E303E503E703E903EB03ED03EF-03F303F503F803FB03FC0430-045F04610463046504670469046B046D046F04710473047504770479047B047D047F0481048B048D048F04910493049504970499049B049D049F04A104A304A504A704A904AB04AD04AF04B104B304B504B704B904BB04BD04BF04C204C404C604C804CA04CC04CE04CF04D104D304D504D704D904DB04DD04DF04E104E304E504E704E904EB04ED04EF04F104F304F504F704F904FB04FD04FF05010503050505070509050B050D050F05110513051505170519051B051D051F05210523052505270561-05871D00-1DBF1E011E031E051E071E091E0B1E0D1E0F1E111E131E151E171E191E1B1E1D1E1F1E211E231E251E271E291E2B1E2D1E2F1E311E331E351E371E391E3B1E3D1E3F1E411E431E451E471E491E4B1E4D1E4F1E511E531E551E571E591E5B1E5D1E5F1E611E631E651E671E691E6B1E6D1E6F1E711E731E751E771E791E7B1E7D1E7F1E811E831E851E871E891E8B1E8D1E8F1E911E931E95-1E9D1E9F1EA11EA31EA51EA71EA91EAB1EAD1EAF1EB11EB31EB51EB71EB91EBB1EBD1EBF1EC11EC31EC51EC71EC91ECB1ECD1ECF1ED11ED31ED51ED71ED91EDB1EDD1EDF1EE11EE31EE51EE71EE91EEB1EED1EEF1EF11EF31EF51EF71EF91EFB1EFD1EFF-1F071F10-1F151F20-1F271F30-1F371F40-1F451F50-1F571F60-1F671F70-1F7D1F80-1F871F90-1F971FA0-1FA71FB0-1FB41FB61FB71FBE1FC2-1FC41FC61FC71FD0-1FD31FD61FD71FE0-1FE71FF2-1FF41FF61FF72071207F2090-209C210A210E210F2113212F21342139213C213D2146-2149214E2170-217F218424D0-24E92C30-2C5E2C612C652C662C682C6A2C6C2C712C732C742C76-2C7D2C812C832C852C872C892C8B2C8D2C8F2C912C932C952C972C992C9B2C9D2C9F2CA12CA32CA52CA72CA92CAB2CAD2CAF2CB12CB32CB52CB72CB92CBB2CBD2CBF2CC12CC32CC52CC72CC92CCB2CCD2CCF2CD12CD32CD52CD72CD92CDB2CDD2CDF2CE12CE32CE42CEC2CEE2CF32D00-2D252D272D2DA641A643A645A647A649A64BA64DA64FA651A653A655A657A659A65BA65DA65FA661A663A665A667A669A66BA66DA681A683A685A687A689A68BA68DA68FA691A693A695A697A723A725A727A729A72BA72DA72F-A731A733A735A737A739A73BA73DA73FA741A743A745A747A749A74BA74DA74FA751A753A755A757A759A75BA75DA75FA761A763A765A767A769A76BA76DA76F-A778A77AA77CA77FA781A783A785A787A78CA78EA791A793A7A1A7A3A7A5A7A7A7A9A7F8-A7FAFB00-FB06FB13-FB17FF41-FF5A",
-        White_Space: "0009-000D0020008500A01680180E2000-200A20282029202F205F3000",
-        Noncharacter_Code_Point: "FDD0-FDEFFFFEFFFF",
-        Default_Ignorable_Code_Point: "00AD034F115F116017B417B5180B-180D200B-200F202A-202E2060-206F3164FE00-FE0FFEFFFFA0FFF0-FFF8",
-        // \p{Any} matches a code unit. To match any code point via surrogate pairs, use (?:[\0-\uD7FF\uDC00-\uFFFF]|[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDBFF])
-        Any: "0000-FFFF", // \p{^Any} compiles to [^\u0000-\uFFFF]; [\p{^Any}] to []
-        Ascii: "0000-007F",
-        // \p{Assigned} is equivalent to \p{^Cn}
-        //Assigned: XRegExp("[\\p{^Cn}]").source.replace(/[[\]]|\\u/g, "") // Negation inside a character class triggers inversion
-        Assigned: "0000-0377037A-037E0384-038A038C038E-03A103A3-05270531-05560559-055F0561-05870589058A058F0591-05C705D0-05EA05F0-05F40600-06040606-061B061E-070D070F-074A074D-07B107C0-07FA0800-082D0830-083E0840-085B085E08A008A2-08AC08E4-08FE0900-09770979-097F0981-09830985-098C098F09900993-09A809AA-09B009B209B6-09B909BC-09C409C709C809CB-09CE09D709DC09DD09DF-09E309E6-09FB0A01-0A030A05-0A0A0A0F0A100A13-0A280A2A-0A300A320A330A350A360A380A390A3C0A3E-0A420A470A480A4B-0A4D0A510A59-0A5C0A5E0A66-0A750A81-0A830A85-0A8D0A8F-0A910A93-0AA80AAA-0AB00AB20AB30AB5-0AB90ABC-0AC50AC7-0AC90ACB-0ACD0AD00AE0-0AE30AE6-0AF10B01-0B030B05-0B0C0B0F0B100B13-0B280B2A-0B300B320B330B35-0B390B3C-0B440B470B480B4B-0B4D0B560B570B5C0B5D0B5F-0B630B66-0B770B820B830B85-0B8A0B8E-0B900B92-0B950B990B9A0B9C0B9E0B9F0BA30BA40BA8-0BAA0BAE-0BB90BBE-0BC20BC6-0BC80BCA-0BCD0BD00BD70BE6-0BFA0C01-0C030C05-0C0C0C0E-0C100C12-0C280C2A-0C330C35-0C390C3D-0C440C46-0C480C4A-0C4D0C550C560C580C590C60-0C630C66-0C6F0C78-0C7F0C820C830C85-0C8C0C8E-0C900C92-0CA80CAA-0CB30CB5-0CB90CBC-0CC40CC6-0CC80CCA-0CCD0CD50CD60CDE0CE0-0CE30CE6-0CEF0CF10CF20D020D030D05-0D0C0D0E-0D100D12-0D3A0D3D-0D440D46-0D480D4A-0D4E0D570D60-0D630D66-0D750D79-0D7F0D820D830D85-0D960D9A-0DB10DB3-0DBB0DBD0DC0-0DC60DCA0DCF-0DD40DD60DD8-0DDF0DF2-0DF40E01-0E3A0E3F-0E5B0E810E820E840E870E880E8A0E8D0E94-0E970E99-0E9F0EA1-0EA30EA50EA70EAA0EAB0EAD-0EB90EBB-0EBD0EC0-0EC40EC60EC8-0ECD0ED0-0ED90EDC-0EDF0F00-0F470F49-0F6C0F71-0F970F99-0FBC0FBE-0FCC0FCE-0FDA1000-10C510C710CD10D0-1248124A-124D1250-12561258125A-125D1260-1288128A-128D1290-12B012B2-12B512B8-12BE12C012C2-12C512C8-12D612D8-13101312-13151318-135A135D-137C1380-139913A0-13F41400-169C16A0-16F01700-170C170E-17141720-17361740-17531760-176C176E-1770177217731780-17DD17E0-17E917F0-17F91800-180E1810-18191820-18771880-18AA18B0-18F51900-191C1920-192B1930-193B19401944-196D1970-19741980-19AB19B0-19C919D0-19DA19DE-1A1B1A1E-1A5E1A60-1A7C1A7F-1A891A90-1A991AA0-1AAD1B00-1B4B1B50-1B7C1B80-1BF31BFC-1C371C3B-1C491C4D-1C7F1CC0-1CC71CD0-1CF61D00-1DE61DFC-1F151F18-1F1D1F20-1F451F48-1F4D1F50-1F571F591F5B1F5D1F5F-1F7D1F80-1FB41FB6-1FC41FC6-1FD31FD6-1FDB1FDD-1FEF1FF2-1FF41FF6-1FFE2000-2064206A-20712074-208E2090-209C20A0-20B920D0-20F02100-21892190-23F32400-24262440-244A2460-26FF2701-2B4C2B50-2B592C00-2C2E2C30-2C5E2C60-2CF32CF9-2D252D272D2D2D30-2D672D6F2D702D7F-2D962DA0-2DA62DA8-2DAE2DB0-2DB62DB8-2DBE2DC0-2DC62DC8-2DCE2DD0-2DD62DD8-2DDE2DE0-2E3B2E80-2E992E9B-2EF32F00-2FD52FF0-2FFB3000-303F3041-30963099-30FF3105-312D3131-318E3190-31BA31C0-31E331F0-321E3220-32FE3300-4DB54DC0-9FCCA000-A48CA490-A4C6A4D0-A62BA640-A697A69F-A6F7A700-A78EA790-A793A7A0-A7AAA7F8-A82BA830-A839A840-A877A880-A8C4A8CE-A8D9A8E0-A8FBA900-A953A95F-A97CA980-A9CDA9CF-A9D9A9DEA9DFAA00-AA36AA40-AA4DAA50-AA59AA5C-AA7BAA80-AAC2AADB-AAF6AB01-AB06AB09-AB0EAB11-AB16AB20-AB26AB28-AB2EABC0-ABEDABF0-ABF9AC00-D7A3D7B0-D7C6D7CB-D7FBD800-FA6DFA70-FAD9FB00-FB06FB13-FB17FB1D-FB36FB38-FB3CFB3EFB40FB41FB43FB44FB46-FBC1FBD3-FD3FFD50-FD8FFD92-FDC7FDF0-FDFDFE00-FE19FE20-FE26FE30-FE52FE54-FE66FE68-FE6BFE70-FE74FE76-FEFCFEFFFF01-FFBEFFC2-FFC7FFCA-FFCFFFD2-FFD7FFDA-FFDCFFE0-FFE6FFE8-FFEEFFF9-FFFD"
-    });
-
-}(XRegExp));
-
-
-/***** matchrecursive.js *****/
-
-/*!
- * XRegExp.matchRecursive v0.2.0
- * (c) 2009-2012 Steven Levithan <http://xregexp.com/>
- * MIT License
- */
-
-(function (XRegExp) {
-    "use strict";
-
-/**
- * Returns a match detail object composed of the provided values.
- * @private
- */
-    function row(value, name, start, end) {
-        return {value:value, name:name, start:start, end:end};
-    }
-
-/**
- * Returns an array of match strings between outermost left and right delimiters, or an array of
- * objects with detailed match parts and position data. An error is thrown if delimiters are
- * unbalanced within the data.
- * @memberOf XRegExp
- * @param {String} str String to search.
- * @param {String} left Left delimiter as an XRegExp pattern.
- * @param {String} right Right delimiter as an XRegExp pattern.
- * @param {String} [flags] Flags for the left and right delimiters. Use any of: `gimnsxy`.
- * @param {Object} [options] Lets you specify `valueNames` and `escapeChar` options.
- * @returns {Array} Array of matches, or an empty array.
- * @example
- *
- * // Basic usage
- * var str = '(t((e))s)t()(ing)';
- * XRegExp.matchRecursive(str, '\\(', '\\)', 'g');
- * // -> ['t((e))s', '', 'ing']
- *
- * // Extended information mode with valueNames
- * str = 'Here is <div> <div>an</div></div> example';
- * XRegExp.matchRecursive(str, '<div\\s*>', '</div>', 'gi', {
- *   valueNames: ['between', 'left', 'match', 'right']
- * });
- * // -> [
- * // {name: 'between', value: 'Here is ',       start: 0,  end: 8},
- * // {name: 'left',    value: '<div>',          start: 8,  end: 13},
- * // {name: 'match',   value: ' <div>an</div>', start: 13, end: 27},
- * // {name: 'right',   value: '</div>',         start: 27, end: 33},
- * // {name: 'between', value: ' example',       start: 33, end: 41}
- * // ]
- *
- * // Omitting unneeded parts with null valueNames, and using escapeChar
- * str = '...{1}\\{{function(x,y){return y+x;}}';
- * XRegExp.matchRecursive(str, '{', '}', 'g', {
- *   valueNames: ['literal', null, 'value', null],
- *   escapeChar: '\\'
- * });
- * // -> [
- * // {name: 'literal', value: '...', start: 0, end: 3},
- * // {name: 'value',   value: '1',   start: 4, end: 5},
- * // {name: 'literal', value: '\\{', start: 6, end: 8},
- * // {name: 'value',   value: 'function(x,y){return y+x;}', start: 9, end: 35}
- * // ]
- *
- * // Sticky mode via flag y
- * str = '<1><<<2>>><3>4<5>';
- * XRegExp.matchRecursive(str, '<', '>', 'gy');
- * // -> ['1', '<<2>>', '3']
- */
-    XRegExp.matchRecursive = function (str, left, right, flags, options) {
-        flags = flags || "";
-        options = options || {};
-        var global = flags.indexOf("g") > -1,
-            sticky = flags.indexOf("y") > -1,
-            basicFlags = flags.replace(/y/g, ""), // Flag y controlled internally
-            escapeChar = options.escapeChar,
-            vN = options.valueNames,
-            output = [],
-            openTokens = 0,
-            delimStart = 0,
-            delimEnd = 0,
-            lastOuterEnd = 0,
-            outerStart,
-            innerStart,
-            leftMatch,
-            rightMatch,
-            esc;
-        left = XRegExp(left, basicFlags);
-        right = XRegExp(right, basicFlags);
-
-        if (escapeChar) {
-            if (escapeChar.length > 1) {
-                throw new SyntaxError("can't use more than one escape character");
-            }
-            escapeChar = XRegExp.escape(escapeChar);
-            // Using XRegExp.union safely rewrites backreferences in `left` and `right`
-            esc = new RegExp(
-                "(?:" + escapeChar + "[\\S\\s]|(?:(?!" + XRegExp.union([left, right]).source + ")[^" + escapeChar + "])+)+",
-                flags.replace(/[^im]+/g, "") // Flags gy not needed here; flags nsx handled by XRegExp
-            );
-        }
-
-        while (true) {
-            // If using an escape character, advance to the delimiter's next starting position,
-            // skipping any escaped characters in between
-            if (escapeChar) {
-                delimEnd += (XRegExp.exec(str, esc, delimEnd, "sticky") || [""])[0].length;
-            }
-            leftMatch = XRegExp.exec(str, left, delimEnd);
-            rightMatch = XRegExp.exec(str, right, delimEnd);
-            // Keep the leftmost match only
-            if (leftMatch && rightMatch) {
-                if (leftMatch.index <= rightMatch.index) {
-                    rightMatch = null;
-                } else {
-                    leftMatch = null;
-                }
-            }
-            /* Paths (LM:leftMatch, RM:rightMatch, OT:openTokens):
-            LM | RM | OT | Result
-            1  | 0  | 1  | loop
-            1  | 0  | 0  | loop
-            0  | 1  | 1  | loop
-            0  | 1  | 0  | throw
-            0  | 0  | 1  | throw
-            0  | 0  | 0  | break
-            * Doesn't include the sticky mode special case
-            * Loop ends after the first completed match if `!global` */
-            if (leftMatch || rightMatch) {
-                delimStart = (leftMatch || rightMatch).index;
-                delimEnd = delimStart + (leftMatch || rightMatch)[0].length;
-            } else if (!openTokens) {
-                break;
-            }
-            if (sticky && !openTokens && delimStart > lastOuterEnd) {
-                break;
-            }
-            if (leftMatch) {
-                if (!openTokens) {
-                    outerStart = delimStart;
-                    innerStart = delimEnd;
-                }
-                ++openTokens;
-            } else if (rightMatch && openTokens) {
-                if (!--openTokens) {
-                    if (vN) {
-                        if (vN[0] && outerStart > lastOuterEnd) {
-                            output.push(row(vN[0], str.slice(lastOuterEnd, outerStart), lastOuterEnd, outerStart));
-                        }
-                        if (vN[1]) {
-                            output.push(row(vN[1], str.slice(outerStart, innerStart), outerStart, innerStart));
-                        }
-                        if (vN[2]) {
-                            output.push(row(vN[2], str.slice(innerStart, delimStart), innerStart, delimStart));
-                        }
-                        if (vN[3]) {
-                            output.push(row(vN[3], str.slice(delimStart, delimEnd), delimStart, delimEnd));
-                        }
-                    } else {
-                        output.push(str.slice(innerStart, delimStart));
-                    }
-                    lastOuterEnd = delimEnd;
-                    if (!global) {
-                        break;
-                    }
-                }
-            } else {
-                throw new Error("string contains unbalanced delimiters");
-            }
-            // If the delimiter matched an empty string, avoid an infinite loop
-            if (delimStart === delimEnd) {
-                ++delimEnd;
-            }
-        }
-
-        if (global && !sticky && vN && vN[0] && str.length > lastOuterEnd) {
-            output.push(row(vN[0], str.slice(lastOuterEnd), lastOuterEnd, str.length));
-        }
-
-        return output;
-    };
-
-}(XRegExp));
-
-
-/***** build.js *****/
-
-/*!
- * XRegExp.build v0.1.0
- * (c) 2012 Steven Levithan <http://xregexp.com/>
- * MIT License
- * Inspired by RegExp.create by Lea Verou <http://lea.verou.me/>
- */
-
-(function (XRegExp) {
-    "use strict";
-
-    var subparts = /(\()(?!\?)|\\([1-9]\d*)|\\[\s\S]|\[(?:[^\\\]]|\\[\s\S])*]/g,
-        parts = XRegExp.union([/\({{([\w$]+)}}\)|{{([\w$]+)}}/, subparts], "g");
-
-/**
- * Strips a leading `^` and trailing unescaped `$`, if both are present.
- * @private
- * @param {String} pattern Pattern to process.
- * @returns {String} Pattern with edge anchors removed.
- */
-    function deanchor(pattern) {
-        var startAnchor = /^(?:\(\?:\))?\^/, // Leading `^` or `(?:)^` (handles /x cruft)
-            endAnchor = /\$(?:\(\?:\))?$/; // Trailing `$` or `$(?:)` (handles /x cruft)
-        if (endAnchor.test(pattern.replace(/\\[\s\S]/g, ""))) { // Ensure trailing `$` isn't escaped
-            return pattern.replace(startAnchor, "").replace(endAnchor, "");
-        }
-        return pattern;
-    }
-
-/**
- * Converts the provided value to an XRegExp.
- * @private
- * @param {String|RegExp} value Value to convert.
- * @returns {RegExp} XRegExp object with XRegExp syntax applied.
- */
-    function asXRegExp(value) {
-        return XRegExp.isRegExp(value) ?
-                (value.xregexp && !value.xregexp.isNative ? value : XRegExp(value.source)) :
-                XRegExp(value);
-    }
-
-/**
- * Builds regexes using named subpatterns, for readability and pattern reuse. Backreferences in the
- * outer pattern and provided subpatterns are automatically renumbered to work correctly. Native
- * flags used by provided subpatterns are ignored in favor of the `flags` argument.
- * @memberOf XRegExp
- * @param {String} pattern XRegExp pattern using `{{name}}` for embedded subpatterns. Allows
- *   `({{name}})` as shorthand for `(?<name>{{name}})`. Patterns cannot be embedded within
- *   character classes.
- * @param {Object} subs Lookup object for named subpatterns. Values can be strings or regexes. A
- *   leading `^` and trailing unescaped `$` are stripped from subpatterns, if both are present.
- * @param {String} [flags] Any combination of XRegExp flags.
- * @returns {RegExp} Regex with interpolated subpatterns.
- * @example
- *
- * var time = XRegExp.build('(?x)^ {{hours}} ({{minutes}}) $', {
- *   hours: XRegExp.build('{{h12}} : | {{h24}}', {
- *     h12: /1[0-2]|0?[1-9]/,
- *     h24: /2[0-3]|[01][0-9]/
- *   }, 'x'),
- *   minutes: /^[0-5][0-9]$/
- * });
- * time.test('10:59'); // -> true
- * XRegExp.exec('10:59', time).minutes; // -> '59'
- */
-    XRegExp.build = function (pattern, subs, flags) {
-        var inlineFlags = /^\(\?([\w$]+)\)/.exec(pattern),
-            data = {},
-            numCaps = 0, // Caps is short for captures
-            numPriorCaps,
-            numOuterCaps = 0,
-            outerCapsMap = [0],
-            outerCapNames,
-            sub,
-            p;
-
-        // Add flags within a leading mode modifier to the overall pattern's flags
-        if (inlineFlags) {
-            flags = flags || "";
-            inlineFlags[1].replace(/./g, function (flag) {
-                flags += (flags.indexOf(flag) > -1 ? "" : flag); // Don't add duplicates
-            });
-        }
-
-        for (p in subs) {
-            if (subs.hasOwnProperty(p)) {
-                // Passing to XRegExp enables entended syntax for subpatterns provided as strings
-                // and ensures independent validity, lest an unescaped `(`, `)`, `[`, or trailing
-                // `\` breaks the `(?:)` wrapper. For subpatterns provided as regexes, it dies on
-                // octals and adds the `xregexp` property, for simplicity
-                sub = asXRegExp(subs[p]);
-                // Deanchoring allows embedding independently useful anchored regexes. If you
-                // really need to keep your anchors, double them (i.e., `^^...$$`)
-                data[p] = {pattern: deanchor(sub.source), names: sub.xregexp.captureNames || []};
-            }
-        }
-
-        // Passing to XRegExp dies on octals and ensures the outer pattern is independently valid;
-        // helps keep this simple. Named captures will be put back
-        pattern = asXRegExp(pattern);
-        outerCapNames = pattern.xregexp.captureNames || [];
-        pattern = pattern.source.replace(parts, function ($0, $1, $2, $3, $4) {
-            var subName = $1 || $2, capName, intro;
-            if (subName) { // Named subpattern
-                if (!data.hasOwnProperty(subName)) {
-                    throw new ReferenceError("undefined property " + $0);
-                }
-                if ($1) { // Named subpattern was wrapped in a capturing group
-                    capName = outerCapNames[numOuterCaps];
-                    outerCapsMap[++numOuterCaps] = ++numCaps;
-                    // If it's a named group, preserve the name. Otherwise, use the subpattern name
-                    // as the capture name
-                    intro = "(?<" + (capName || subName) + ">";
-                } else {
-                    intro = "(?:";
-                }
-                numPriorCaps = numCaps;
-                return intro + data[subName].pattern.replace(subparts, function (match, paren, backref) {
-                    if (paren) { // Capturing group
-                        capName = data[subName].names[numCaps - numPriorCaps];
-                        ++numCaps;
-                        if (capName) { // If the current capture has a name, preserve the name
-                            return "(?<" + capName + ">";
-                        }
-                    } else if (backref) { // Backreference
-                        return "\\" + (+backref + numPriorCaps); // Rewrite the backreference
-                    }
-                    return match;
-                }) + ")";
-            }
-            if ($3) { // Capturing group
-                capName = outerCapNames[numOuterCaps];
-                outerCapsMap[++numOuterCaps] = ++numCaps;
-                if (capName) { // If the current capture has a name, preserve the name
-                    return "(?<" + capName + ">";
-                }
-            } else if ($4) { // Backreference
-                return "\\" + outerCapsMap[+$4]; // Rewrite the backreference
-            }
-            return $0;
-        });
-
-        return XRegExp(pattern, flags);
-    };
-
-}(XRegExp));
-
-
-/***** prototypes.js *****/
-
-/*!
- * XRegExp Prototype Methods v1.0.0
- * (c) 2012 Steven Levithan <http://xregexp.com/>
- * MIT License
- */
-
-/**
- * Adds a collection of methods to `XRegExp.prototype`. RegExp objects copied by XRegExp are also
- * augmented with any `XRegExp.prototype` methods. Hence, the following work equivalently:
- *
- * XRegExp('[a-z]', 'ig').xexec('abc');
- * XRegExp(/[a-z]/ig).xexec('abc');
- * XRegExp.globalize(/[a-z]/i).xexec('abc');
- */
-(function (XRegExp) {
-    "use strict";
-
-/**
- * Copy properties of `b` to `a`.
- * @private
- * @param {Object} a Object that will receive new properties.
- * @param {Object} b Object whose properties will be copied.
- */
-    function extend(a, b) {
-        for (var p in b) {
-            if (b.hasOwnProperty(p)) {
-                a[p] = b[p];
-            }
-        }
-        //return a;
-    }
-
-    extend(XRegExp.prototype, {
-
-/**
- * Implicitly calls the regex's `test` method with the first value in the provided arguments array.
- * @memberOf XRegExp.prototype
- * @param {*} context Ignored. Accepted only for congruity with `Function.prototype.apply`.
- * @param {Array} args Array with the string to search as its first value.
- * @returns {Boolean} Whether the regex matched the provided value.
- * @example
- *
- * XRegExp('[a-z]').apply(null, ['abc']); // -> true
- */
-        apply: function (context, args) {
-            return this.test(args[0]);
-        },
-
-/**
- * Implicitly calls the regex's `test` method with the provided string.
- * @memberOf XRegExp.prototype
- * @param {*} context Ignored. Accepted only for congruity with `Function.prototype.call`.
- * @param {String} str String to search.
- * @returns {Boolean} Whether the regex matched the provided value.
- * @example
- *
- * XRegExp('[a-z]').call(null, 'abc'); // -> true
- */
-        call: function (context, str) {
-            return this.test(str);
-        },
-
-/**
- * Implicitly calls {@link #XRegExp.forEach}.
- * @memberOf XRegExp.prototype
- * @example
- *
- * XRegExp('\\d').forEach('1a2345', function (match, i) {
- *   if (i % 2) this.push(+match[0]);
- * }, []);
- * // -> [2, 4]
- */
-        forEach: function (str, callback, context) {
-            return XRegExp.forEach(str, this, callback, context);
-        },
-
-/**
- * Implicitly calls {@link #XRegExp.globalize}.
- * @memberOf XRegExp.prototype
- * @example
- *
- * var globalCopy = XRegExp('regex').globalize();
- * globalCopy.global; // -> true
- */
-        globalize: function () {
-            return XRegExp.globalize(this);
-        },
-
-/**
- * Implicitly calls {@link #XRegExp.exec}.
- * @memberOf XRegExp.prototype
- * @example
- *
- * var match = XRegExp('U\\+(?<hex>[0-9A-F]{4})').xexec('U+2620');
- * match.hex; // -> '2620'
- */
-        xexec: function (str, pos, sticky) {
-            return XRegExp.exec(str, this, pos, sticky);
-        },
-
-/**
- * Implicitly calls {@link #XRegExp.test}.
- * @memberOf XRegExp.prototype
- * @example
- *
- * XRegExp('c').xtest('abc'); // -> true
- */
-        xtest: function (str, pos, sticky) {
-            return XRegExp.test(str, this, pos, sticky);
-        }
-
-    });
-
-}(XRegExp));
-
-
-
-/***/ }),
-/* 27 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9585,15 +9834,15 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(28));
-__export(__webpack_require__(29));
-__export(__webpack_require__(31));
-__export(__webpack_require__(30));
-__export(__webpack_require__(33));
+__export(__webpack_require__(35));
+__export(__webpack_require__(36));
+__export(__webpack_require__(38));
+__export(__webpack_require__(37));
+__export(__webpack_require__(40));
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-/* 28 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9632,16 +9881,16 @@ exports.Funcao = Funcao;
 //# sourceMappingURL=fonte.js.map
 
 /***/ }),
-/* 29 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const include_1 = __webpack_require__(30);
-const Erro_1 = __webpack_require__(31);
-const fonte_1 = __webpack_require__(28);
-const package_json_1 = __webpack_require__(32);
+const include_1 = __webpack_require__(37);
+const Erro_1 = __webpack_require__(38);
+const fonte_1 = __webpack_require__(35);
+const package_json_1 = __webpack_require__(39);
 class ValidaAdvpl {
     constructor(comentFontePad, local, log = true) {
         this.log = log;
@@ -10106,13 +10355,13 @@ function traduz(key, local) {
 //# sourceMappingURL=validaAdvpl.js.map
 
 /***/ }),
-/* 30 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const Erro_1 = __webpack_require__(31);
+const Erro_1 = __webpack_require__(38);
 class Include {
     constructor(local) {
         this.local = local;
@@ -10647,7 +10896,7 @@ function traduz(key, local) {
 //# sourceMappingURL=include.js.map
 
 /***/ }),
-/* 31 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10672,13 +10921,13 @@ exports.Erro = Erro;
 //# sourceMappingURL=Erro.js.map
 
 /***/ }),
-/* 32 */
+/* 39 */
 /***/ (function(module) {
 
 module.exports = JSON.parse("{\"name\":\"analise-advpl\",\"version\":\"5.0.6\",\"description\":\"Extension of ADVPL code analysis.\",\"types\":\"lib/index.d.ts\",\"main\":\"lib/index.js\",\"scripts\":{\"compile\":\"tsc -p ./\",\"prepare\":\"npm run compile\",\"test\":\"npm run compile && mocha \\\"./test/validaadvpl.js\\\"\"},\"keywords\":[],\"author\":\"Robson Rogério Silva\",\"license\":\"ISC\",\"dependencies\":{\"@types/node\":\"^10.14.14\",\"asserts\":\"^4.0.2\",\"chai\":\"^4.2.0\",\"file-system\":\"^2.2.2\",\"globby\":\"^10.0.1\",\"i18n\":\"^0.8.3\",\"mocha\":\"^5.2.0\"},\"devDependencies\":{\"typescript\":\"^3.5.3\",\"vscode\":\"^1.1.36\"}}");
 
 /***/ }),
-/* 33 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10699,13 +10948,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const Erro_1 = __webpack_require__(31);
-const fonte_1 = __webpack_require__(28);
-const ItemProject_1 = __webpack_require__(34);
-const globby = __importStar(__webpack_require__(35));
+const Erro_1 = __webpack_require__(38);
+const fonte_1 = __webpack_require__(35);
+const ItemProject_1 = __webpack_require__(41);
+const globby = __importStar(__webpack_require__(42));
 const fileSystem = __importStar(__webpack_require__(6));
-const validaAdvpl_1 = __webpack_require__(29);
-const package_json_1 = __webpack_require__(32);
+const validaAdvpl_1 = __webpack_require__(36);
+const package_json_1 = __webpack_require__(39);
 class ValidaProjeto {
     constructor(comentFontePad, local, log = true) {
         this.log = log;
@@ -10938,7 +11187,7 @@ function traduz(key, local) {
 //# sourceMappingURL=validaProjeto.js.map
 
 /***/ }),
-/* 34 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10950,19 +11199,19 @@ exports.ItemModel = ItemModel;
 //# sourceMappingURL=ItemProject.js.map
 
 /***/ }),
-/* 35 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 const fs = __webpack_require__(6);
-const arrayUnion = __webpack_require__(36);
-const merge2 = __webpack_require__(37);
-const glob = __webpack_require__(39);
-const fastGlob = __webpack_require__(56);
-const dirGlob = __webpack_require__(127);
-const gitignore = __webpack_require__(129);
-const {FilterStream, UniqueStream} = __webpack_require__(132);
+const arrayUnion = __webpack_require__(43);
+const merge2 = __webpack_require__(44);
+const glob = __webpack_require__(46);
+const fastGlob = __webpack_require__(63);
+const dirGlob = __webpack_require__(130);
+const gitignore = __webpack_require__(132);
+const {FilterStream, UniqueStream} = __webpack_require__(135);
 
 const DEFAULT_FILTER = () => false;
 
@@ -11135,7 +11384,7 @@ module.exports.gitignore = gitignore;
 
 
 /***/ }),
-/* 36 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11147,7 +11396,7 @@ module.exports = (...arguments_) => {
 
 
 /***/ }),
-/* 37 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11159,7 +11408,7 @@ module.exports = (...arguments_) => {
  * Copyright (c) 2014-2016 Teambition
  * Licensed under the MIT license.
  */
-const Stream = __webpack_require__(38)
+const Stream = __webpack_require__(45)
 const PassThrough = Stream.PassThrough
 const slice = Array.prototype.slice
 
@@ -11261,13 +11510,13 @@ function pauseStreams (streams, options) {
 
 
 /***/ }),
-/* 38 */
+/* 45 */
 /***/ (function(module, exports) {
 
 module.exports = require("stream");
 
 /***/ }),
-/* 39 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Approach:
@@ -11313,26 +11562,26 @@ module.exports = require("stream");
 module.exports = glob
 
 var fs = __webpack_require__(6)
-var rp = __webpack_require__(40)
-var minimatch = __webpack_require__(42)
+var rp = __webpack_require__(47)
+var minimatch = __webpack_require__(49)
 var Minimatch = minimatch.Minimatch
-var inherits = __webpack_require__(46)
-var EE = __webpack_require__(48).EventEmitter
+var inherits = __webpack_require__(53)
+var EE = __webpack_require__(55).EventEmitter
 var path = __webpack_require__(8)
-var assert = __webpack_require__(49)
-var isAbsolute = __webpack_require__(50)
-var globSync = __webpack_require__(51)
-var common = __webpack_require__(52)
+var assert = __webpack_require__(56)
+var isAbsolute = __webpack_require__(57)
+var globSync = __webpack_require__(58)
+var common = __webpack_require__(59)
 var alphasort = common.alphasort
 var alphasorti = common.alphasorti
 var setopts = common.setopts
 var ownProp = common.ownProp
-var inflight = __webpack_require__(53)
+var inflight = __webpack_require__(60)
 var util = __webpack_require__(15)
 var childrenIgnored = common.childrenIgnored
 var isIgnored = common.isIgnored
 
-var once = __webpack_require__(55)
+var once = __webpack_require__(62)
 
 function glob (pattern, options, cb) {
   if (typeof options === 'function') cb = options, options = {}
@@ -12063,7 +12312,7 @@ Glob.prototype._stat2 = function (f, abs, er, stat, cb) {
 
 
 /***/ }),
-/* 40 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = realpath
@@ -12079,7 +12328,7 @@ var origRealpathSync = fs.realpathSync
 
 var version = process.version
 var ok = /^v[0-5]\./.test(version)
-var old = __webpack_require__(41)
+var old = __webpack_require__(48)
 
 function newError (er) {
   return er && er.syscall === 'realpath' && (
@@ -12135,7 +12384,7 @@ function unmonkeypatch () {
 
 
 /***/ }),
-/* 41 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Copyright Joyent, Inc. and other Node contributors.
@@ -12444,7 +12693,7 @@ exports.realpath = function realpath(p, cache, cb) {
 
 
 /***/ }),
-/* 42 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = minimatch
@@ -12456,7 +12705,7 @@ try {
 } catch (er) {}
 
 var GLOBSTAR = minimatch.GLOBSTAR = Minimatch.GLOBSTAR = {}
-var expand = __webpack_require__(43)
+var expand = __webpack_require__(50)
 
 var plTypes = {
   '!': { open: '(?:(?!(?:', close: '))[^/]*?)'},
@@ -13373,11 +13622,11 @@ function regExpEscape (s) {
 
 
 /***/ }),
-/* 43 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var concatMap = __webpack_require__(44);
-var balanced = __webpack_require__(45);
+var concatMap = __webpack_require__(51);
+var balanced = __webpack_require__(52);
 
 module.exports = expandTop;
 
@@ -13580,7 +13829,7 @@ function expand(str, isTop) {
 
 
 /***/ }),
-/* 44 */
+/* 51 */
 /***/ (function(module, exports) {
 
 module.exports = function (xs, fn) {
@@ -13599,7 +13848,7 @@ var isArray = Array.isArray || function (xs) {
 
 
 /***/ }),
-/* 45 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13665,61 +13914,67 @@ function range(a, b, str) {
 
 
 /***/ }),
-/* 46 */
+/* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
 try {
   var util = __webpack_require__(15);
+  /* istanbul ignore next */
   if (typeof util.inherits !== 'function') throw '';
   module.exports = util.inherits;
 } catch (e) {
-  module.exports = __webpack_require__(47);
+  /* istanbul ignore next */
+  module.exports = __webpack_require__(54);
 }
 
 
 /***/ }),
-/* 47 */
+/* 54 */
 /***/ (function(module, exports) {
 
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    ctor.prototype = Object.create(superCtor.prototype, {
-      constructor: {
-        value: ctor,
-        enumerable: false,
-        writable: true,
-        configurable: true
-      }
-    });
+    if (superCtor) {
+      ctor.super_ = superCtor
+      ctor.prototype = Object.create(superCtor.prototype, {
+        constructor: {
+          value: ctor,
+          enumerable: false,
+          writable: true,
+          configurable: true
+        }
+      })
+    }
   };
 } else {
   // old school shim for old browsers
   module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    var TempCtor = function () {}
-    TempCtor.prototype = superCtor.prototype
-    ctor.prototype = new TempCtor()
-    ctor.prototype.constructor = ctor
+    if (superCtor) {
+      ctor.super_ = superCtor
+      var TempCtor = function () {}
+      TempCtor.prototype = superCtor.prototype
+      ctor.prototype = new TempCtor()
+      ctor.prototype.constructor = ctor
+    }
   }
 }
 
 
 /***/ }),
-/* 48 */
+/* 55 */
 /***/ (function(module, exports) {
 
 module.exports = require("events");
 
 /***/ }),
-/* 49 */
+/* 56 */
 /***/ (function(module, exports) {
 
 module.exports = require("assert");
 
 /***/ }),
-/* 50 */
+/* 57 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13746,22 +14001,22 @@ module.exports.win32 = win32;
 
 
 /***/ }),
-/* 51 */
+/* 58 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = globSync
 globSync.GlobSync = GlobSync
 
 var fs = __webpack_require__(6)
-var rp = __webpack_require__(40)
-var minimatch = __webpack_require__(42)
+var rp = __webpack_require__(47)
+var minimatch = __webpack_require__(49)
 var Minimatch = minimatch.Minimatch
-var Glob = __webpack_require__(39).Glob
+var Glob = __webpack_require__(46).Glob
 var util = __webpack_require__(15)
 var path = __webpack_require__(8)
-var assert = __webpack_require__(49)
-var isAbsolute = __webpack_require__(50)
-var common = __webpack_require__(52)
+var assert = __webpack_require__(56)
+var isAbsolute = __webpack_require__(57)
+var common = __webpack_require__(59)
 var alphasort = common.alphasort
 var alphasorti = common.alphasorti
 var setopts = common.setopts
@@ -14238,7 +14493,7 @@ GlobSync.prototype._makeAbs = function (f) {
 
 
 /***/ }),
-/* 52 */
+/* 59 */
 /***/ (function(module, exports, __webpack_require__) {
 
 exports.alphasort = alphasort
@@ -14256,8 +14511,8 @@ function ownProp (obj, field) {
 }
 
 var path = __webpack_require__(8)
-var minimatch = __webpack_require__(42)
-var isAbsolute = __webpack_require__(50)
+var minimatch = __webpack_require__(49)
+var isAbsolute = __webpack_require__(57)
 var Minimatch = minimatch.Minimatch
 
 function alphasorti (a, b) {
@@ -14484,12 +14739,12 @@ function childrenIgnored (self, path) {
 
 
 /***/ }),
-/* 53 */
+/* 60 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var wrappy = __webpack_require__(54)
+var wrappy = __webpack_require__(61)
 var reqs = Object.create(null)
-var once = __webpack_require__(55)
+var once = __webpack_require__(62)
 
 module.exports = wrappy(inflight)
 
@@ -14544,7 +14799,7 @@ function slice (args) {
 
 
 /***/ }),
-/* 54 */
+/* 61 */
 /***/ (function(module, exports) {
 
 // Returns a wrapper function that returns a wrapped callback
@@ -14583,10 +14838,10 @@ function wrappy (fn, cb) {
 
 
 /***/ }),
-/* 55 */
+/* 62 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var wrappy = __webpack_require__(54)
+var wrappy = __webpack_require__(61)
 module.exports = wrappy(once)
 module.exports.strict = wrappy(onceStrict)
 
@@ -14631,17 +14886,17 @@ function onceStrict (fn) {
 
 
 /***/ }),
-/* 56 */
+/* 63 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-const taskManager = __webpack_require__(57);
-const async_1 = __webpack_require__(85);
-const stream_1 = __webpack_require__(123);
-const sync_1 = __webpack_require__(124);
-const settings_1 = __webpack_require__(126);
-const utils = __webpack_require__(58);
+const taskManager = __webpack_require__(64);
+const async_1 = __webpack_require__(93);
+const stream_1 = __webpack_require__(126);
+const sync_1 = __webpack_require__(127);
+const settings_1 = __webpack_require__(129);
+const utils = __webpack_require__(65);
 function FastGlob(source, options) {
     try {
         assertPatternsInput(source);
@@ -14652,6 +14907,8 @@ function FastGlob(source, options) {
     const works = getWorks(source, async_1.default, options);
     return Promise.all(works).then(utils.array.flatten);
 }
+// https://github.com/typescript-eslint/typescript-eslint/issues/60
+// eslint-disable-next-line no-redeclare
 (function (FastGlob) {
     function sync(source, options) {
         assertPatternsInput(source);
@@ -14677,6 +14934,17 @@ function FastGlob(source, options) {
         return taskManager.generate(patterns, settings);
     }
     FastGlob.generateTasks = generateTasks;
+    function isDynamicPattern(source, options) {
+        assertPatternsInput(source);
+        const settings = new settings_1.default(options);
+        return utils.pattern.isDynamicPattern(source, settings);
+    }
+    FastGlob.isDynamicPattern = isDynamicPattern;
+    function escapePath(source) {
+        assertPatternsInput(source);
+        return utils.path.escape(source);
+    }
+    FastGlob.escapePath = escapePath;
 })(FastGlob || (FastGlob = {}));
 function getWorks(source, _Provider, options) {
     const patterns = [].concat(source);
@@ -14692,29 +14960,24 @@ function assertPatternsInput(source) {
     throw new TypeError('Patterns must be a string or an array of strings');
 }
 function isString(source) {
-    /* tslint:disable-next-line strict-type-predicates */
     return typeof source === 'string';
 }
 module.exports = FastGlob;
 
 
 /***/ }),
-/* 57 */
+/* 64 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const utils = __webpack_require__(58);
+const utils = __webpack_require__(65);
 function generate(patterns, settings) {
     const positivePatterns = getPositivePatterns(patterns);
     const negativePatterns = getNegativePatternsAsPositive(patterns, settings.ignore);
-    /**
-     * When the `caseSensitiveMatch` option is disabled, all patterns must be marked as dynamic, because we cannot check
-     * filepath directly (without read directory).
-     */
-    const staticPatterns = !settings.caseSensitiveMatch ? [] : positivePatterns.filter(utils.pattern.isStaticPattern);
-    const dynamicPatterns = !settings.caseSensitiveMatch ? positivePatterns : positivePatterns.filter(utils.pattern.isDynamicPattern);
+    const staticPatterns = positivePatterns.filter((pattern) => utils.pattern.isStaticPattern(pattern, settings));
+    const dynamicPatterns = positivePatterns.filter((pattern) => utils.pattern.isDynamicPattern(pattern, settings));
     const staticTasks = convertPatternsToTasks(staticPatterns, negativePatterns, /* dynamic */ false);
     const dynamicTasks = convertPatternsToTasks(dynamicPatterns, negativePatterns, /* dynamic */ true);
     return staticTasks.concat(dynamicTasks);
@@ -14742,6 +15005,7 @@ function getNegativePatternsAsPositive(patterns, ignore) {
 }
 exports.getNegativePatternsAsPositive = getNegativePatternsAsPositive;
 function groupPatternsByBaseDirectory(patterns) {
+    const group = {};
     return patterns.reduce((collection, pattern) => {
         const base = utils.pattern.getBaseDirectory(pattern);
         if (base in collection) {
@@ -14751,7 +15015,7 @@ function groupPatternsByBaseDirectory(patterns) {
             collection[base] = [pattern];
         }
         return collection;
-    }, {});
+    }, group);
 }
 exports.groupPatternsByBaseDirectory = groupPatternsByBaseDirectory;
 function convertPatternGroupsToTasks(positive, negative, dynamic) {
@@ -14773,28 +15037,28 @@ exports.convertPatternGroupToTask = convertPatternGroupToTask;
 
 
 /***/ }),
-/* 58 */
+/* 65 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const array = __webpack_require__(59);
+const array = __webpack_require__(66);
 exports.array = array;
-const errno = __webpack_require__(60);
+const errno = __webpack_require__(67);
 exports.errno = errno;
-const fs = __webpack_require__(61);
+const fs = __webpack_require__(68);
 exports.fs = fs;
-const path = __webpack_require__(62);
+const path = __webpack_require__(69);
 exports.path = path;
-const pattern = __webpack_require__(63);
+const pattern = __webpack_require__(70);
 exports.pattern = pattern;
-const stream = __webpack_require__(84);
+const stream = __webpack_require__(92);
 exports.stream = stream;
 
 
 /***/ }),
-/* 59 */
+/* 66 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14807,7 +15071,7 @@ exports.flatten = flatten;
 
 
 /***/ }),
-/* 60 */
+/* 67 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14820,7 +15084,7 @@ exports.isEnoentCodeError = isEnoentCodeError;
 
 
 /***/ }),
-/* 61 */
+/* 68 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14845,13 +15109,14 @@ exports.createDirentFromStats = createDirentFromStats;
 
 
 /***/ }),
-/* 62 */
+/* 69 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = __webpack_require__(8);
+const UNESCAPED_GLOB_SYMBOLS_RE = /(\\?)([*?|(){}[\]]|^!|[@+!](?=\())/g;
 /**
  * Designed to work only with simple paths: `dir\\file`.
  */
@@ -14863,26 +15128,51 @@ function makeAbsolute(cwd, filepath) {
     return path.resolve(cwd, filepath);
 }
 exports.makeAbsolute = makeAbsolute;
+function escape(pattern) {
+    return pattern.replace(UNESCAPED_GLOB_SYMBOLS_RE, '\\$2');
+}
+exports.escape = escape;
 
 
 /***/ }),
-/* 63 */
+/* 70 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = __webpack_require__(8);
-const globParent = __webpack_require__(64);
-const isGlob = __webpack_require__(65);
-const micromatch = __webpack_require__(67);
+const globParent = __webpack_require__(71);
+const micromatch = __webpack_require__(75);
 const GLOBSTAR = '**';
-function isStaticPattern(pattern) {
-    return !isDynamicPattern(pattern);
+const ESCAPE_SYMBOL = '\\';
+const COMMON_GLOB_SYMBOLS_RE = /[*?]|^!/;
+const REGEX_CHARACTER_CLASS_SYMBOLS_RE = /\[.*]/;
+const REGEX_GROUP_SYMBOLS_RE = /(?:^|[^@!*?+])\(.*\|.*\)/;
+const GLOB_EXTENSION_SYMBOLS_RE = /[@!*?+]\(.*\)/;
+const BRACE_EXPANSIONS_SYMBOLS_RE = /{.*(?:,|\.\.).*}/;
+function isStaticPattern(pattern, options = {}) {
+    return !isDynamicPattern(pattern, options);
 }
 exports.isStaticPattern = isStaticPattern;
-function isDynamicPattern(pattern) {
-    return isGlob(pattern, { strict: false });
+function isDynamicPattern(pattern, options = {}) {
+    /**
+     * When the `caseSensitiveMatch` option is disabled, all patterns must be marked as dynamic, because we cannot check
+     * filepath directly (without read directory).
+     */
+    if (options.caseSensitiveMatch === false || pattern.includes(ESCAPE_SYMBOL)) {
+        return true;
+    }
+    if (COMMON_GLOB_SYMBOLS_RE.test(pattern) || REGEX_CHARACTER_CLASS_SYMBOLS_RE.test(pattern) || REGEX_GROUP_SYMBOLS_RE.test(pattern)) {
+        return true;
+    }
+    if (options.extglob !== false && GLOB_EXTENSION_SYMBOLS_RE.test(pattern)) {
+        return true;
+    }
+    if (options.braceExpansion !== false && BRACE_EXPANSIONS_SYMBOLS_RE.test(pattern)) {
+        return true;
+    }
+    return false;
 }
 exports.isDynamicPattern = isDynamicPattern;
 function convertToPositivePattern(pattern) {
@@ -14910,11 +15200,11 @@ function getPositivePatterns(patterns) {
 }
 exports.getPositivePatterns = getPositivePatterns;
 function getBaseDirectory(pattern) {
-    return globParent(pattern);
+    return globParent(pattern, { flipBackslashes: false });
 }
 exports.getBaseDirectory = getBaseDirectory;
 function hasGlobStar(pattern) {
-    return pattern.indexOf(GLOBSTAR) !== -1;
+    return pattern.includes(GLOBSTAR);
 }
 exports.hasGlobStar = hasGlobStar;
 function endsWithSlashGlobStar(pattern) {
@@ -14957,22 +15247,22 @@ function convertPatternsToRe(patterns, options) {
 }
 exports.convertPatternsToRe = convertPatternsToRe;
 function matchAny(entry, patternsRe) {
-    const filepath = entry.replace(/^\.[\\\/]/, '');
+    const filepath = entry.replace(/^\.[\\/]/, '');
     return patternsRe.some((patternRe) => patternRe.test(filepath));
 }
 exports.matchAny = matchAny;
 
 
 /***/ }),
-/* 64 */
+/* 71 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var isGlob = __webpack_require__(65);
+var isGlob = __webpack_require__(72);
 var pathPosixDirname = __webpack_require__(8).posix.dirname;
-var isWin32 = __webpack_require__(17).platform() === 'win32';
+var isWin32 = __webpack_require__(74).platform() === 'win32';
 
 var slash = '/';
 var backslash = /\\/g;
@@ -14980,9 +15270,16 @@ var enclosure = /[\{\[].*[\/]*.*[\}\]]$/;
 var globby = /(^|[^\\])([\{\[]|\([^\)]+$)/;
 var escaped = /\\([\*\?\|\[\]\(\)\{\}])/g;
 
-module.exports = function globParent(str) {
+/**
+ * @param {string} str
+ * @param {Object} opts
+ * @param {boolean} [opts.flipBackslashes=true]
+ */
+module.exports = function globParent(str, opts) {
+  var options = Object.assign({ flipBackslashes: true }, opts);
+
   // flip windows path separators
-  if (isWin32 && str.indexOf(slash) < 0) {
+  if (options.flipBackslashes && isWin32 && str.indexOf(slash) < 0) {
     str = str.replace(backslash, slash);
   }
 
@@ -15005,7 +15302,7 @@ module.exports = function globParent(str) {
 
 
 /***/ }),
-/* 65 */
+/* 72 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -15015,7 +15312,7 @@ module.exports = function globParent(str) {
  * Released under the MIT License.
  */
 
-var isExtglob = __webpack_require__(66);
+var isExtglob = __webpack_require__(73);
 var chars = { '{': '}', '(': ')', '[': ']'};
 var strictRegex = /\\(.)|(^!|\*|[\].+)]\?|\[[^\\\]]+\]|\{[^\\}]+\}|\(\?[:!=][^\\)]+\)|\([^|]+\|[^\\)]+\))/;
 var relaxedRegex = /\\(.)|(^!|[*?{}()[\]]|\(\?)/;
@@ -15059,7 +15356,7 @@ module.exports = function isGlob(str, options) {
 
 
 /***/ }),
-/* 66 */
+/* 73 */
 /***/ (function(module, exports) {
 
 /*!
@@ -15085,16 +15382,22 @@ module.exports = function isExtglob(str) {
 
 
 /***/ }),
-/* 67 */
+/* 74 */
+/***/ (function(module, exports) {
+
+module.exports = require("os");
+
+/***/ }),
+/* 75 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 const util = __webpack_require__(15);
-const braces = __webpack_require__(68);
-const picomatch = __webpack_require__(78);
-const utils = __webpack_require__(81);
+const braces = __webpack_require__(76);
+const picomatch = __webpack_require__(86);
+const utils = __webpack_require__(89);
 const isEmptyString = val => typeof val === 'string' && (val === '' || val === './');
 
 /**
@@ -15559,16 +15862,16 @@ module.exports = micromatch;
 
 
 /***/ }),
-/* 68 */
+/* 76 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-const stringify = __webpack_require__(69);
-const compile = __webpack_require__(71);
-const expand = __webpack_require__(75);
-const parse = __webpack_require__(76);
+const stringify = __webpack_require__(77);
+const compile = __webpack_require__(79);
+const expand = __webpack_require__(83);
+const parse = __webpack_require__(84);
 
 /**
  * Expand the given pattern or create a regex-compatible string.
@@ -15736,13 +16039,13 @@ module.exports = braces;
 
 
 /***/ }),
-/* 69 */
+/* 77 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-const utils = __webpack_require__(70);
+const utils = __webpack_require__(78);
 
 module.exports = (ast, options = {}) => {
   let stringify = (node, parent = {}) => {
@@ -15775,7 +16078,7 @@ module.exports = (ast, options = {}) => {
 
 
 /***/ }),
-/* 70 */
+/* 78 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15894,14 +16197,14 @@ exports.flatten = (...args) => {
 
 
 /***/ }),
-/* 71 */
+/* 79 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-const fill = __webpack_require__(72);
-const utils = __webpack_require__(70);
+const fill = __webpack_require__(80);
+const utils = __webpack_require__(78);
 
 const compile = (ast, options = {}) => {
   let walk = (node, parent = {}) => {
@@ -15958,7 +16261,7 @@ module.exports = compile;
 
 
 /***/ }),
-/* 72 */
+/* 80 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15972,7 +16275,7 @@ module.exports = compile;
 
 
 const util = __webpack_require__(15);
-const toRegexRange = __webpack_require__(73);
+const toRegexRange = __webpack_require__(81);
 
 const isObject = val => val !== null && typeof val === 'object' && !Array.isArray(val);
 
@@ -16214,7 +16517,7 @@ module.exports = fill;
 
 
 /***/ }),
-/* 73 */
+/* 81 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -16227,7 +16530,7 @@ module.exports = fill;
 
 
 
-const isNumber = __webpack_require__(74);
+const isNumber = __webpack_require__(82);
 
 const toRegexRange = (min, max, options) => {
   if (isNumber(min) === false) {
@@ -16509,7 +16812,7 @@ module.exports = toRegexRange;
 
 
 /***/ }),
-/* 74 */
+/* 82 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -16534,15 +16837,15 @@ module.exports = function(num) {
 
 
 /***/ }),
-/* 75 */
+/* 83 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-const fill = __webpack_require__(72);
-const stringify = __webpack_require__(69);
-const utils = __webpack_require__(70);
+const fill = __webpack_require__(80);
+const stringify = __webpack_require__(77);
+const utils = __webpack_require__(78);
 
 const append = (queue = '', stash = '', enclose = false) => {
   let result = [];
@@ -16654,13 +16957,13 @@ module.exports = expand;
 
 
 /***/ }),
-/* 76 */
+/* 84 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-const stringify = __webpack_require__(69);
+const stringify = __webpack_require__(77);
 
 /**
  * Constants
@@ -16682,7 +16985,7 @@ const {
   CHAR_SINGLE_QUOTE, /* ' */
   CHAR_NO_BREAK_SPACE,
   CHAR_ZERO_WIDTH_NOBREAK_SPACE
-} = __webpack_require__(77);
+} = __webpack_require__(85);
 
 /**
  * parse
@@ -16994,7 +17297,7 @@ module.exports = parse;
 
 
 /***/ }),
-/* 77 */
+/* 85 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17058,26 +17361,27 @@ module.exports = {
 
 
 /***/ }),
-/* 78 */
+/* 86 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-module.exports = __webpack_require__(79);
+module.exports = __webpack_require__(87);
 
 
 /***/ }),
-/* 79 */
+/* 87 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 const path = __webpack_require__(8);
-const scan = __webpack_require__(80);
-const parse = __webpack_require__(83);
-const utils = __webpack_require__(81);
+const scan = __webpack_require__(88);
+const parse = __webpack_require__(91);
+const utils = __webpack_require__(89);
+const constants = __webpack_require__(90);
 
 /**
  * Creates a matcher function from one or more glob patterns. The
@@ -17103,10 +17407,10 @@ const utils = __webpack_require__(81);
 
 const picomatch = (glob, options, returnState = false) => {
   if (Array.isArray(glob)) {
-    let fns = glob.map(input => picomatch(input, options, returnState));
+    const fns = glob.map(input => picomatch(input, options, returnState));
     return str => {
-      for (let isMatch of fns) {
-        let state = isMatch(str);
+      for (const isMatch of fns) {
+        const state = isMatch(str);
         if (state) return state;
       }
       return false;
@@ -17117,21 +17421,21 @@ const picomatch = (glob, options, returnState = false) => {
     throw new TypeError('Expected pattern to be a non-empty string');
   }
 
-  let opts = options || {};
-  let posix = utils.isWindows(options);
-  let regex = picomatch.makeRe(glob, options, false, true);
-  let state = regex.state;
+  const opts = options || {};
+  const posix = utils.isWindows(options);
+  const regex = picomatch.makeRe(glob, options, false, true);
+  const state = regex.state;
   delete regex.state;
 
   let isIgnored = () => false;
   if (opts.ignore) {
-    let ignoreOpts = { ...options, ignore: null, onMatch: null, onResult: null };
+    const ignoreOpts = { ...options, ignore: null, onMatch: null, onResult: null };
     isIgnored = picomatch(opts.ignore, ignoreOpts, returnState);
   }
 
   const matcher = (input, returnObject = false) => {
-    let { isMatch, match, output } = picomatch.test(input, regex, options, { glob, posix });
-    let result = { glob, state, regex, posix, input, output, match, isMatch };
+    const { isMatch, match, output } = picomatch.test(input, regex, options, { glob, posix });
+    const result = { glob, state, regex, posix, input, output, match, isMatch };
 
     if (typeof opts.onResult === 'function') {
       opts.onResult(result);
@@ -17189,8 +17493,8 @@ picomatch.test = (input, regex, options, { glob, posix } = {}) => {
     return { isMatch: false, output: '' };
   }
 
-  let opts = options || {};
-  let format = opts.format || (posix ? utils.toPosixSlashes : null);
+  const opts = options || {};
+  const format = opts.format || (posix ? utils.toPosixSlashes : null);
   let match = input === glob;
   let output = (match && format) ? format(input) : input;
 
@@ -17225,7 +17529,7 @@ picomatch.test = (input, regex, options, { glob, posix } = {}) => {
  */
 
 picomatch.matchBase = (input, glob, options, posix = utils.isWindows(options)) => {
-  let regex = glob instanceof RegExp ? glob : picomatch.makeRe(glob, options);
+  const regex = glob instanceof RegExp ? glob : picomatch.makeRe(glob, options);
   return regex.test(path.basename(input));
 };
 
@@ -17309,9 +17613,9 @@ picomatch.makeRe = (input, options, returnOutput = false, returnState = false) =
     throw new TypeError('Expected a non-empty string');
   }
 
-  let opts = options || {};
-  let prepend = opts.contains ? '' : '^';
-  let append = opts.contains ? '' : '$';
+  const opts = options || {};
+  const prepend = opts.contains ? '' : '^';
+  const append = opts.contains ? '' : '$';
   let state = { negated: false, fastpaths: true };
   let prefix = '';
   let output;
@@ -17340,7 +17644,7 @@ picomatch.makeRe = (input, options, returnOutput = false, returnState = false) =
     source = `^(?!${source}).*$`;
   }
 
-  let regex = picomatch.toRegex(source, options);
+  const regex = picomatch.toRegex(source, options);
   if (returnState === true) {
     regex.state = state;
   }
@@ -17367,7 +17671,7 @@ picomatch.makeRe = (input, options, returnOutput = false, returnState = false) =
 
 picomatch.toRegex = (source, options) => {
   try {
-    let opts = options || {};
+    const opts = options || {};
     return new RegExp(source, opts.flags || (opts.nocase ? 'i' : ''));
   } catch (err) {
     if (options && options.debug === true) throw err;
@@ -17380,7 +17684,7 @@ picomatch.toRegex = (source, options) => {
  * @return {Object}
  */
 
-picomatch.constants = __webpack_require__(82);
+picomatch.constants = constants;
 
 /**
  * Expose "picomatch"
@@ -17390,14 +17694,13 @@ module.exports = picomatch;
 
 
 /***/ }),
-/* 80 */
+/* 88 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-const utils = __webpack_require__(81);
-
+const utils = __webpack_require__(89);
 const {
   CHAR_ASTERISK,             /* * */
   CHAR_AT,                   /* @ */
@@ -17413,8 +17716,8 @@ const {
   CHAR_QUESTION_MARK,        /* ? */
   CHAR_RIGHT_CURLY_BRACE,    /* } */
   CHAR_RIGHT_PARENTHESES,    /* ) */
-  CHAR_RIGHT_SQUARE_BRACKET /* ] */
-} = __webpack_require__(82);
+  CHAR_RIGHT_SQUARE_BRACKET  /* ] */
+} = __webpack_require__(90);
 
 const isPathSeparator = code => {
   return code === CHAR_FORWARD_SLASH || code === CHAR_BACKWARD_SLASH;
@@ -17437,8 +17740,8 @@ const isPathSeparator = code => {
  */
 
 module.exports = (input, options) => {
-  let opts = options || {};
-  let length = input.length - 1;
+  const opts = options || {};
+  const length = input.length - 1;
   let index = -1;
   let start = 0;
   let lastIndex = 0;
@@ -17451,8 +17754,8 @@ module.exports = (input, options) => {
 
   let braceEscaped = false;
 
-  let eos = () => index >= length;
-  let advance = () => {
+  const eos = () => index >= length;
+  const advance = () => {
     prev = code;
     return input.charCodeAt(++index);
   };
@@ -17541,7 +17844,7 @@ module.exports = (input, options) => {
       }
     }
 
-    let isExtglobChar = code === CHAR_PLUS
+    const isExtglobChar = code === CHAR_PLUS
       || code === CHAR_AT
       || code === CHAR_EXCLAMATION_MARK;
 
@@ -17550,21 +17853,21 @@ module.exports = (input, options) => {
       break;
     }
 
-    if (code === CHAR_EXCLAMATION_MARK && index === start) {
+    if (!opts.nonegate && code === CHAR_EXCLAMATION_MARK && index === start) {
       negated = true;
       start++;
       continue;
     }
 
-    if (code === CHAR_LEFT_PARENTHESES) {
-      while (!eos() && (next = advance())) {
-        if (next === CHAR_BACKWARD_SLASH) {
+    if (opts.noparen !== true && code === CHAR_LEFT_PARENTHESES) {
+      while (!eos() && (code = advance())) {
+        if (code === CHAR_BACKWARD_SLASH) {
           backslashes = true;
-          next = advance();
+          code = advance();
           continue;
         }
 
-        if (next === CHAR_RIGHT_PARENTHESES) {
+        if (code === CHAR_RIGHT_PARENTHESES) {
           isGlob = true;
           break;
         }
@@ -17576,8 +17879,12 @@ module.exports = (input, options) => {
     }
   }
 
+  if (opts.noext === true) {
+    isGlob = false;
+  }
+
   let prefix = '';
-  let orig = input;
+  const orig = input;
   let base = input;
   let glob = '';
 
@@ -17616,7 +17923,7 @@ module.exports = (input, options) => {
 
 
 /***/ }),
-/* 81 */
+/* 89 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17625,26 +17932,27 @@ module.exports = (input, options) => {
 const path = __webpack_require__(8);
 const win32 = process.platform === 'win32';
 const {
+  REGEX_BACKSLASH,
+  REGEX_REMOVE_BACKSLASH,
   REGEX_SPECIAL_CHARS,
-  REGEX_SPECIAL_CHARS_GLOBAL,
-  REGEX_REMOVE_BACKSLASH
-} = __webpack_require__(82);
+  REGEX_SPECIAL_CHARS_GLOBAL
+} = __webpack_require__(90);
 
 exports.isObject = val => val !== null && typeof val === 'object' && !Array.isArray(val);
 exports.hasRegexChars = str => REGEX_SPECIAL_CHARS.test(str);
 exports.isRegexChar = str => str.length === 1 && exports.hasRegexChars(str);
 exports.escapeRegex = str => str.replace(REGEX_SPECIAL_CHARS_GLOBAL, '\\$1');
-exports.toPosixSlashes = str => str.replace(/\\/g, '/');
+exports.toPosixSlashes = str => str.replace(REGEX_BACKSLASH, '/');
 
 exports.removeBackslashes = str => {
   return str.replace(REGEX_REMOVE_BACKSLASH, match => {
     return match === '\\' ? '' : match;
   });
-}
+};
 
 exports.supportsLookbehinds = () => {
-  let segs = process.version.slice(1).split('.');
-  if (segs.length === 3 && +segs[0] >= 9 || (+segs[0] === 8 && +segs[1] >= 10)) {
+  const segs = process.version.slice(1).split('.').map(Number);
+  if (segs.length === 3 && segs[0] >= 9 || (segs[0] === 8 && segs[1] >= 10)) {
     return true;
   }
   return false;
@@ -17658,15 +17966,35 @@ exports.isWindows = options => {
 };
 
 exports.escapeLast = (input, char, lastIdx) => {
-  let idx = input.lastIndexOf(char, lastIdx);
+  const idx = input.lastIndexOf(char, lastIdx);
   if (idx === -1) return input;
   if (input[idx - 1] === '\\') return exports.escapeLast(input, char, idx - 1);
   return input.slice(0, idx) + '\\' + input.slice(idx);
 };
 
+exports.removePrefix = (input, state = {}) => {
+  let output = input;
+  if (output.startsWith('./')) {
+    output = output.slice(2);
+    state.prefix = './';
+  }
+  return output;
+};
+
+exports.wrapOutput = (input, state = {}, options = {}) => {
+  const prepend = options.contains ? '' : '^';
+  const append = options.contains ? '' : '$';
+
+  let output = `${prepend}(?:${input})${append}`;
+  if (state.negated === true) {
+    output = `(?:^(?!${output}).*$)`;
+  }
+  return output;
+};
+
 
 /***/ }),
-/* 82 */
+/* 90 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17761,7 +18089,7 @@ module.exports = {
 
   // regular expressions
   REGEX_BACKSLASH: /\\(?![*+?^${}(|)[\]])/g,
-  REGEX_NON_SPECIAL_CHAR: /^[^@![\].,$*+?^{}()|\\/]+/,
+  REGEX_NON_SPECIAL_CHARS: /^[^@![\].,$*+?^{}()|\\/]+/,
   REGEX_SPECIAL_CHARS: /[-*+?.^${}(|)[\]]/,
   REGEX_SPECIAL_CHARS_BACKREF: /(\\?)((\W)(\3*))/g,
   REGEX_SPECIAL_CHARS_GLOBAL: /([-*+?.^${}(|)[\]])/g,
@@ -17852,14 +18180,14 @@ module.exports = {
 
 
 /***/ }),
-/* 83 */
+/* 91 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-const utils = __webpack_require__(81);
-const constants = __webpack_require__(82);
+const constants = __webpack_require__(90);
+const utils = __webpack_require__(89);
 
 /**
  * Constants
@@ -17868,7 +18196,7 @@ const constants = __webpack_require__(82);
 const {
   MAX_LENGTH,
   POSIX_REGEX_SOURCE,
-  REGEX_NON_SPECIAL_CHAR,
+  REGEX_NON_SPECIAL_CHARS,
   REGEX_SPECIAL_CHARS_BACKREF,
   REPLACEMENTS
 } = constants;
@@ -17883,34 +18211,16 @@ const expandRange = (args, options) => {
   }
 
   args.sort();
-  let value = `[${args.join('-')}]`;
+  const value = `[${args.join('-')}]`;
 
   try {
-    /* eslint-disable no-new */
+    /* eslint-disable-next-line no-new */
     new RegExp(value);
   } catch (ex) {
     return args.map(v => utils.escapeRegex(v)).join('..');
   }
 
   return value;
-};
-
-const negate = state => {
-  let count = 1;
-
-  while (state.peek() === '!' && (state.peek(2) !== '(' || state.peek(3) === '?')) {
-    state.advance();
-    state.start++;
-    count++;
-  }
-
-  if (count % 2 === 0) {
-    return false;
-  }
-
-  state.negated = true;
-  state.start++;
-  return true;
 };
 
 /**
@@ -17935,18 +18245,19 @@ const parse = (input, options) => {
 
   input = REPLACEMENTS[input] || input;
 
-  let opts = { ...options };
-  let max = typeof opts.maxLength === 'number' ? Math.min(MAX_LENGTH, opts.maxLength) : MAX_LENGTH;
+  const opts = { ...options };
+  const max = typeof opts.maxLength === 'number' ? Math.min(MAX_LENGTH, opts.maxLength) : MAX_LENGTH;
+
   let len = input.length;
   if (len > max) {
     throw new SyntaxError(`Input length: ${len}, exceeds maximum allowed length: ${max}`);
   }
 
-  let bos = { type: 'bos', value: '', output: opts.prepend || '' };
-  let tokens = [bos];
+  const bos = { type: 'bos', value: '', output: opts.prepend || '' };
+  const tokens = [bos];
 
-  let capture = opts.capture ? '' : '?:';
-  let win32 = utils.isWindows(options);
+  const capture = opts.capture ? '' : '?:';
+  const win32 = utils.isWindows(options);
 
   // create constants based on platform, for windows or posix
   const PLATFORM_CHARS = constants.globChars(win32);
@@ -17971,9 +18282,9 @@ const parse = (input, options) => {
     return `(${capture}(?:(?!${START_ANCHOR}${opts.dot ? DOTS_SLASH : DOT_LITERAL}).)*?)`;
   };
 
-  let nodot = opts.dot ? '' : NO_DOT;
+  const nodot = opts.dot ? '' : NO_DOT;
+  const qmarkNoDot = opts.dot ? QMARK : QMARK_NO_DOT;
   let star = opts.bash === true ? globstar(opts) : STAR;
-  let qmarkNoDot = opts.dot ? QMARK : QMARK_NO_DOT;
 
   if (opts.capture) {
     star = `(${star})`;
@@ -17984,12 +18295,16 @@ const parse = (input, options) => {
     opts.noextglob = opts.noext;
   }
 
-  let state = {
+  const state = {
+    input,
     index: -1,
     start: 0,
+    dot: opts.dot === true,
     consumed: '',
     output: '',
+    prefix: '',
     backtrack: false,
+    negated: false,
     brackets: 0,
     braces: 0,
     parens: 0,
@@ -17997,8 +18312,11 @@ const parse = (input, options) => {
     tokens
   };
 
-  let extglobs = [];
-  let stack = [];
+  input = utils.removePrefix(input, state);
+  len = input.length;
+
+  const extglobs = [];
+  const stack = [];
   let prev = bos;
   let value;
 
@@ -18009,9 +18327,32 @@ const parse = (input, options) => {
   const eos = () => state.index === len - 1;
   const peek = state.peek = (n = 1) => input[state.index + n];
   const advance = state.advance = () => input[++state.index];
+  const remaining = () => input.slice(state.index + 1);
+  const consume = (value = '', num = 0) => {
+    state.consumed += value;
+    state.index += num;
+  };
   const append = token => {
     state.output += token.output != null ? token.output : token.value;
-    state.consumed += token.value || '';
+    consume(token.value);
+  };
+
+  const negate = () => {
+    let count = 1;
+
+    while (peek() === '!' && (peek(2) !== '(' || peek(3) === '?')) {
+      advance();
+      state.start++;
+      count++;
+    }
+
+    if (count % 2 === 0) {
+      return false;
+    }
+
+    state.negated = true;
+    state.start++;
+    return true;
   };
 
   const increment = type => {
@@ -18034,8 +18375,9 @@ const parse = (input, options) => {
 
   const push = tok => {
     if (prev.type === 'globstar') {
-      let isBrace = state.braces > 0 && (tok.type === 'comma' || tok.type === 'brace');
-      let isExtglob = extglobs.length && (tok.type === 'pipe' || tok.type === 'paren');
+      const isBrace = state.braces > 0 && (tok.type === 'comma' || tok.type === 'brace');
+      const isExtglob = tok.extglob === true || (extglobs.length && (tok.type === 'pipe' || tok.type === 'paren'));
+
       if (tok.type !== 'slash' && tok.type !== 'paren' && !isBrace && !isExtglob) {
         state.output = state.output.slice(0, -prev.output.length);
         prev.type = 'star';
@@ -18061,16 +18403,16 @@ const parse = (input, options) => {
   };
 
   const extglobOpen = (type, value) => {
-    let token = { ...EXTGLOB_CHARS[value], conditions: 1, inner: '' };
+    const token = { ...EXTGLOB_CHARS[value], conditions: 1, inner: '' };
 
     token.prev = prev;
     token.parens = state.parens;
     token.output = state.output;
-    let output = (opts.capture ? '(' : '') + token.open;
+    const output = (opts.capture ? '(' : '') + token.open;
 
+    increment('parens');
     push({ type, value, output: state.output ? '' : ONE_CHAR });
     push({ type: 'paren', extglob: true, value: advance(), output });
-    increment('parens');
     extglobs.push(token);
   };
 
@@ -18084,7 +18426,7 @@ const parse = (input, options) => {
         extglobStar = globstar(opts);
       }
 
-      if (extglobStar !== star || eos() || /^\)+$/.test(input.slice(state.index + 1))) {
+      if (extglobStar !== star || eos() || /^\)+$/.test(remaining())) {
         output = token.close = ')$))' + extglobStar;
       }
 
@@ -18097,7 +18439,11 @@ const parse = (input, options) => {
     decrement('parens');
   };
 
-  if (opts.fastpaths !== false && !/(^[*!]|[/{[()\]}"])/.test(input)) {
+  /**
+   * Fast paths
+   */
+
+  if (opts.fastpaths !== false && !/(^[*!]|[/()[\]{}"])/.test(input)) {
     let backslashes = false;
 
     let output = input.replace(REGEX_SPECIAL_CHARS_BACKREF, (m, esc, chars, first, rest, index) => {
@@ -18139,7 +18485,12 @@ const parse = (input, options) => {
       }
     }
 
-    state.output = output;
+    if (output === input && opts.contains === true) {
+      state.output = input;
+      return state;
+    }
+
+    state.output = utils.wrapOutput(output, state, options);
     return state;
   }
 
@@ -18159,7 +18510,7 @@ const parse = (input, options) => {
      */
 
     if (value === '\\') {
-      let next = peek();
+      const next = peek();
 
       if (next === '/' && opts.bash !== true) {
         continue;
@@ -18176,7 +18527,7 @@ const parse = (input, options) => {
       }
 
       // collapse slashes to reduce potential for exploits
-      let match = /^\\+/.exec(input.slice(state.index + 1));
+      const match = /^\\+/.exec(remaining());
       let slashes = 0;
 
       if (match && match[0].length > 2) {
@@ -18206,15 +18557,15 @@ const parse = (input, options) => {
 
     if (state.brackets > 0 && (value !== ']' || prev.value === '[' || prev.value === '[^')) {
       if (opts.posix !== false && value === ':') {
-        let inner = prev.value.slice(1);
+        const inner = prev.value.slice(1);
         if (inner.includes('[')) {
           prev.posix = true;
 
           if (inner.includes(':')) {
-            let idx = prev.value.lastIndexOf('[');
-            let pre = prev.value.slice(0, idx);
-            let rest = prev.value.slice(idx + 2);
-            let posix = POSIX_REGEX_SOURCE[rest];
+            const idx = prev.value.lastIndexOf('[');
+            const pre = prev.value.slice(0, idx);
+            const rest = prev.value.slice(idx + 2);
+            const posix = POSIX_REGEX_SOURCE[rest];
             if (posix) {
               prev.value = pre + posix;
               state.backtrack = true;
@@ -18275,8 +18626,8 @@ const parse = (input, options) => {
      */
 
     if (value === '(') {
-      push({ type: 'paren', value });
       increment('parens');
+      push({ type: 'paren', value });
       continue;
     }
 
@@ -18285,7 +18636,7 @@ const parse = (input, options) => {
         throw new SyntaxError(syntaxError('opening', '('));
       }
 
-      let extglob = extglobs[extglobs.length - 1];
+      const extglob = extglobs[extglobs.length - 1];
       if (extglob && state.parens === extglob.parens + 1) {
         extglobClose(extglobs.pop());
         continue;
@@ -18297,11 +18648,11 @@ const parse = (input, options) => {
     }
 
     /**
-     * Brackets
+     * Square brackets
      */
 
     if (value === '[') {
-      if (opts.nobracket === true || !input.slice(state.index + 1).includes(']')) {
+      if (opts.nobracket === true || !remaining().includes(']')) {
         if (opts.nobracket !== true && opts.strictBrackets === true) {
           throw new SyntaxError(syntaxError('closing', ']'));
         }
@@ -18332,7 +18683,7 @@ const parse = (input, options) => {
 
       decrement('brackets');
 
-      let prevValue = prev.value.slice(1);
+      const prevValue = prev.value.slice(1);
       if (prev.posix !== true && prevValue[0] === '^' && !prevValue.includes('/')) {
         value = '/' + value;
       }
@@ -18346,7 +18697,7 @@ const parse = (input, options) => {
         continue;
       }
 
-      let escaped = utils.escapeRegex(prev.value);
+      const escaped = utils.escapeRegex(prev.value);
       state.output = state.output.slice(0, -prev.value.length);
 
       // when literal brackets are explicitly enabled
@@ -18368,22 +18719,22 @@ const parse = (input, options) => {
      */
 
     if (value === '{' && opts.nobrace !== true) {
-      push({ type: 'brace', value, output: '(' });
       increment('braces');
+      push({ type: 'brace', value, output: '(' });
       continue;
     }
 
     if (value === '}') {
       if (opts.nobrace === true || state.braces === 0) {
-        push({ type: 'text', value, output: '\\' + value });
+        push({ type: 'text', value, output: value });
         continue;
       }
 
       let output = ')';
 
       if (state.dots === true) {
-        let arr = tokens.slice();
-        let range = [];
+        const arr = tokens.slice();
+        const range = [];
 
         for (let i = arr.length - 1; i >= 0; i--) {
           tokens.pop();
@@ -18440,7 +18791,7 @@ const parse = (input, options) => {
       // to the current index, and don't add the "./" characters
       // to the state. This greatly simplifies lookbehinds when
       // checking for BOS characters like "!" and "." (not "./")
-      if (prev.type === 'dot' && state.index === 1) {
+      if (prev.type === 'dot' && state.index === state.start + 1) {
         state.start = state.index + 1;
         state.consumed = '';
         state.output = '';
@@ -18467,6 +18818,11 @@ const parse = (input, options) => {
         continue;
       }
 
+      if ((state.braces + state.parens) === 0 && prev.type !== 'bos' && prev.type !== 'slash') {
+        push({ type: 'text', value, output: DOT_LITERAL });
+        continue;
+      }
+
       push({ type: 'dot', value, output: DOT_LITERAL });
       continue;
     }
@@ -18476,24 +18832,25 @@ const parse = (input, options) => {
      */
 
     if (value === '?') {
+      const isGroup = prev && prev.value === '(';
+      if (!isGroup && opts.noextglob !== true && peek() === '(' && peek(2) !== '?') {
+        extglobOpen('qmark', value);
+        continue;
+      }
+
       if (prev && prev.type === 'paren') {
-        let next = peek();
+        const next = peek();
         let output = value;
 
         if (next === '<' && !utils.supportsLookbehinds()) {
           throw new Error('Node.js v10 or higher is required for regex lookbehinds');
         }
 
-        if (prev.value === '(' && !/[!=<:]/.test(next) || (next === '<' && !/[!=]/.test(peek(2)))) {
+        if ((prev.value === '(' && !/[!=<:]/.test(next)) || (next === '<' && !/<([!=]|\w+>)/.test(remaining()))) {
           output = '\\' + value;
         }
 
         push({ type: 'text', value, output });
-        continue;
-      }
-
-      if (opts.noextglob !== true && peek() === '(' && peek(2) !== '?') {
-        extglobOpen('qmark', value);
         continue;
       }
 
@@ -18534,14 +18891,12 @@ const parse = (input, options) => {
         continue;
       }
 
-      if (prev && (prev.type === 'bracket' || prev.type === 'paren' || prev.type === 'brace')) {
-        let output = prev.extglob === true ? '\\' + value : value;
-        push({ type: 'plus', value, output });
+      if ((prev && prev.value === '(') || opts.regex === false) {
+        push({ type: 'plus', value, output: PLUS_LITERAL });
         continue;
       }
 
-      // use regex behavior inside parens
-      if (state.parens > 0 && opts.regex !== false) {
+      if ((prev && (prev.type === 'bracket' || prev.type === 'paren' || prev.type === 'brace')) || state.parens > 0) {
         push({ type: 'plus', value });
         continue;
       }
@@ -18556,7 +18911,7 @@ const parse = (input, options) => {
 
     if (value === '@') {
       if (opts.noextglob !== true && peek() === '(' && peek(2) !== '?') {
-        push({ type: 'at', value, output: '' });
+        push({ type: 'at', extglob: true, value, output: '' });
         continue;
       }
 
@@ -18573,7 +18928,7 @@ const parse = (input, options) => {
         value = '\\' + value;
       }
 
-      let match = REGEX_NON_SPECIAL_CHAR.exec(input.slice(state.index + 1));
+      const match = REGEX_NON_SPECIAL_CHARS.exec(remaining());
       if (match) {
         value += match[0];
         state.index += match[0].length;
@@ -18593,46 +18948,47 @@ const parse = (input, options) => {
       prev.value += value;
       prev.output = star;
       state.backtrack = true;
-      state.consumed += value;
+      consume(value);
       continue;
     }
 
-    if (opts.noextglob !== true && peek() === '(' && peek(2) !== '?') {
+    let rest = remaining();
+    if (opts.noextglob !== true && /^\([^?]/.test(rest)) {
       extglobOpen('star', value);
       continue;
     }
 
     if (prev.type === 'star') {
       if (opts.noglobstar === true) {
-        state.consumed += value;
+        consume(value);
         continue;
       }
 
-      let prior = prev.prev;
-      let before = prior.prev;
-      let isStart = prior.type === 'slash' || prior.type === 'bos';
-      let afterStar = before && (before.type === 'star' || before.type === 'globstar');
+      const prior = prev.prev;
+      const before = prior.prev;
+      const isStart = prior.type === 'slash' || prior.type === 'bos';
+      const afterStar = before && (before.type === 'star' || before.type === 'globstar');
 
-      if (opts.bash === true && (!isStart || (!eos() && peek() !== '/'))) {
+      if (opts.bash === true && (!isStart || (rest[0] && rest[0] !== '/'))) {
         push({ type: 'star', value, output: '' });
         continue;
       }
 
-      let isBrace = state.braces > 0 && (prior.type === 'comma' || prior.type === 'brace');
-      let isExtglob = extglobs.length && (prior.type === 'pipe' || prior.type === 'paren');
+      const isBrace = state.braces > 0 && (prior.type === 'comma' || prior.type === 'brace');
+      const isExtglob = extglobs.length && (prior.type === 'pipe' || prior.type === 'paren');
       if (!isStart && prior.type !== 'paren' && !isBrace && !isExtglob) {
         push({ type: 'star', value, output: '' });
         continue;
       }
 
       // strip consecutive `/**/`
-      while (input.slice(state.index + 1, state.index + 4) === '/**') {
-        let after = input[state.index + 4];
+      while (rest.slice(0, 3) === '/**') {
+        const after = input[state.index + 4];
         if (after && after !== '/') {
           break;
         }
-        state.consumed += '/**';
-        state.index += 3;
+        rest = rest.slice(3);
+        consume('/**', 3);
       }
 
       if (prior.type === 'bos' && eos()) {
@@ -18640,7 +18996,7 @@ const parse = (input, options) => {
         prev.value += value;
         prev.output = globstar(opts);
         state.output = prev.output;
-        state.consumed += value;
+        consume(value);
         continue;
       }
 
@@ -18649,17 +19005,16 @@ const parse = (input, options) => {
         prior.output = '(?:' + prior.output;
 
         prev.type = 'globstar';
-        prev.output = globstar(opts) + '|$)';
+        prev.output = globstar(opts) + (opts.strictSlashes ? ')' : '|$)');
         prev.value += value;
 
         state.output += prior.output + prev.output;
-        state.consumed += value;
+        consume(value);
         continue;
       }
 
-      let next = peek();
-      if (prior.type === 'slash' && prior.prev.type !== 'bos' && next === '/') {
-        let end = peek(2) !== void 0 ? '|$' : '';
+      if (prior.type === 'slash' && prior.prev.type !== 'bos' && rest[0] === '/') {
+        const end = rest[1] !== void 0 ? '|$' : '';
 
         state.output = state.output.slice(0, -(prior.output + prev.output).length);
         prior.output = '(?:' + prior.output;
@@ -18669,18 +19024,18 @@ const parse = (input, options) => {
         prev.value += value;
 
         state.output += prior.output + prev.output;
-        state.consumed += value + advance();
+        consume(value + advance());
 
         push({ type: 'slash', value, output: '' });
         continue;
       }
 
-      if (prior.type === 'bos' && next === '/') {
+      if (prior.type === 'bos' && rest[0] === '/') {
         prev.type = 'globstar';
         prev.value += value;
         prev.output = `(?:^|${SLASH_LITERAL}|${globstar(opts)}${SLASH_LITERAL})`;
         state.output = prev.output;
-        state.consumed += value + advance();
+        consume(value + advance());
         push({ type: 'slash', value, output: '' });
         continue;
       }
@@ -18695,11 +19050,11 @@ const parse = (input, options) => {
 
       // reset output with globstar
       state.output += prev.output;
-      state.consumed += value;
+      consume(value);
       continue;
     }
 
-    let token = { type: 'star', value, output: star };
+    const token = { type: 'star', value, output: star };
 
     if (opts.bash === true) {
       token.output = '.*?';
@@ -18765,7 +19120,7 @@ const parse = (input, options) => {
   if (state.backtrack === true) {
     state.output = '';
 
-    for (let token of state.tokens) {
+    for (const token of state.tokens) {
       state.output += token.output != null ? token.output : token.value;
 
       if (token.suffix) {
@@ -18784,15 +19139,15 @@ const parse = (input, options) => {
  */
 
 parse.fastpaths = (input, options) => {
-  let opts = { ...options };
-  let max = typeof opts.maxLength === 'number' ? Math.min(MAX_LENGTH, opts.maxLength) : MAX_LENGTH;
-  let len = input.length;
+  const opts = { ...options };
+  const max = typeof opts.maxLength === 'number' ? Math.min(MAX_LENGTH, opts.maxLength) : MAX_LENGTH;
+  const len = input.length;
   if (len > max) {
     throw new SyntaxError(`Input length: ${len}, exceeds maximum allowed length: ${max}`);
   }
 
   input = REPLACEMENTS[input] || input;
-  let win32 = utils.isWindows(options);
+  const win32 = utils.isWindows(options);
 
   // create constants based on platform, for windows or posix
   const {
@@ -18807,16 +19162,18 @@ parse.fastpaths = (input, options) => {
     START_ANCHOR
   } = constants.globChars(win32);
 
-  let capture = opts.capture ? '' : '?:';
+  const nodot = opts.dot ? NO_DOTS : NO_DOT;
+  const slashDot = opts.dot ? NO_DOTS_SLASH : NO_DOT;
+  const capture = opts.capture ? '' : '?:';
+  const state = { negated: false, prefix: '' };
   let star = opts.bash === true ? '.*?' : STAR;
-  let nodot = opts.dot ? NO_DOTS : NO_DOT;
-  let slashDot = opts.dot ? NO_DOTS_SLASH : NO_DOT;
 
   if (opts.capture) {
     star = `(${star})`;
   }
 
   const globstar = (opts) => {
+    if (opts.noglobstar === true) return star;
     return `(${capture}(?:(?!${START_ANCHOR}${opts.dot ? DOTS_SLASH : DOT_LITERAL}).)*?)`;
   };
 
@@ -18847,10 +19204,10 @@ parse.fastpaths = (input, options) => {
         return `(?:${nodot}${globstar(opts)}${SLASH_LITERAL})?${DOT_LITERAL}${ONE_CHAR}${star}`;
 
       default: {
-        let match = /^(.*?)\.(\w+)$/.exec(str);
+        const match = /^(.*?)\.(\w+)$/.exec(str);
         if (!match) return;
 
-        let source = create(match[1], options);
+        const source = create(match[1], options);
         if (!source) return;
 
         return source + DOT_LITERAL + match[2];
@@ -18858,44 +19215,51 @@ parse.fastpaths = (input, options) => {
     }
   };
 
-  let output = create(input);
-  if (output && opts.strictSlashes !== true) {
-    output += `${SLASH_LITERAL}?`;
+  const output = utils.removePrefix(input, state);
+  let source = create(output);
+
+  if (source && opts.strictSlashes !== true) {
+    source += `${SLASH_LITERAL}?`;
   }
 
-  return output;
+  return source;
 };
 
 module.exports = parse;
 
 
 /***/ }),
-/* 84 */
+/* 92 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const merge2 = __webpack_require__(37);
+const merge2 = __webpack_require__(44);
 function merge(streams) {
     const mergedStream = merge2(streams);
     streams.forEach((stream) => {
-        stream.once('error', (err) => mergedStream.emit('error', err));
+        stream.once('error', (error) => mergedStream.emit('error', error));
     });
+    mergedStream.once('close', () => propagateCloseEventToSources(streams));
+    mergedStream.once('end', () => propagateCloseEventToSources(streams));
     return mergedStream;
 }
 exports.merge = merge;
+function propagateCloseEventToSources(streams) {
+    streams.forEach((stream) => stream.emit('close'));
+}
 
 
 /***/ }),
-/* 85 */
+/* 93 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const stream_1 = __webpack_require__(86);
-const provider_1 = __webpack_require__(118);
+const stream_1 = __webpack_require__(94);
+const provider_1 = __webpack_require__(121);
 class ProviderAsync extends provider_1.default {
     constructor() {
         super(...arguments);
@@ -18923,16 +19287,16 @@ exports.default = ProviderAsync;
 
 
 /***/ }),
-/* 86 */
+/* 94 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const stream_1 = __webpack_require__(38);
-const fsStat = __webpack_require__(87);
-const fsWalk = __webpack_require__(92);
-const reader_1 = __webpack_require__(117);
+const stream_1 = __webpack_require__(45);
+const fsStat = __webpack_require__(95);
+const fsWalk = __webpack_require__(100);
+const reader_1 = __webpack_require__(120);
 class ReaderStream extends reader_1.default {
     constructor() {
         super(...arguments);
@@ -18976,7 +19340,7 @@ class ReaderStream extends reader_1.default {
     _getStat(filepath) {
         return new Promise((resolve, reject) => {
             this._stat(filepath, this._fsStatSettings, (error, stats) => {
-                error ? reject(error) : resolve(stats);
+                return error === null ? resolve(stats) : reject(error);
             });
         });
     }
@@ -18985,15 +19349,15 @@ exports.default = ReaderStream;
 
 
 /***/ }),
-/* 87 */
+/* 95 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const async = __webpack_require__(88);
-const sync = __webpack_require__(89);
-const settings_1 = __webpack_require__(90);
+const async = __webpack_require__(96);
+const sync = __webpack_require__(97);
+const settings_1 = __webpack_require__(98);
 exports.Settings = settings_1.default;
 function stat(path, optionsOrSettingsOrCallback, callback) {
     if (typeof optionsOrSettingsOrCallback === 'function') {
@@ -19016,7 +19380,7 @@ function getSettings(settingsOrOptions = {}) {
 
 
 /***/ }),
-/* 88 */
+/* 96 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -19024,14 +19388,14 @@ function getSettings(settingsOrOptions = {}) {
 Object.defineProperty(exports, "__esModule", { value: true });
 function read(path, settings, callback) {
     settings.fs.lstat(path, (lstatError, lstat) => {
-        if (lstatError) {
+        if (lstatError !== null) {
             return callFailureCallback(callback, lstatError);
         }
         if (!lstat.isSymbolicLink() || !settings.followSymbolicLink) {
             return callSuccessCallback(callback, lstat);
         }
         settings.fs.stat(path, (statError, stat) => {
-            if (statError) {
+            if (statError !== null) {
                 if (settings.throwErrorOnBrokenSymbolicLink) {
                     return callFailureCallback(callback, statError);
                 }
@@ -19054,7 +19418,7 @@ function callSuccessCallback(callback, result) {
 
 
 /***/ }),
-/* 89 */
+/* 97 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -19083,13 +19447,13 @@ exports.read = read;
 
 
 /***/ }),
-/* 90 */
+/* 98 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const fs = __webpack_require__(91);
+const fs = __webpack_require__(99);
 class Settings {
     constructor(_options = {}) {
         this._options = _options;
@@ -19106,7 +19470,7 @@ exports.default = Settings;
 
 
 /***/ }),
-/* 91 */
+/* 99 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -19120,42 +19484,42 @@ exports.FILE_SYSTEM_ADAPTER = {
     statSync: fs.statSync
 };
 function createFileSystemAdapter(fsMethods) {
-    if (!fsMethods) {
+    if (fsMethods === undefined) {
         return exports.FILE_SYSTEM_ADAPTER;
     }
-    return Object.assign({}, exports.FILE_SYSTEM_ADAPTER, fsMethods);
+    return Object.assign(Object.assign({}, exports.FILE_SYSTEM_ADAPTER), fsMethods);
 }
 exports.createFileSystemAdapter = createFileSystemAdapter;
 
 
 /***/ }),
-/* 92 */
+/* 100 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const async_1 = __webpack_require__(93);
-const stream_1 = __webpack_require__(113);
-const sync_1 = __webpack_require__(114);
-const settings_1 = __webpack_require__(116);
+const async_1 = __webpack_require__(101);
+const stream_1 = __webpack_require__(116);
+const sync_1 = __webpack_require__(117);
+const settings_1 = __webpack_require__(119);
 exports.Settings = settings_1.default;
-function walk(dir, optionsOrSettingsOrCallback, callback) {
+function walk(directory, optionsOrSettingsOrCallback, callback) {
     if (typeof optionsOrSettingsOrCallback === 'function') {
-        return new async_1.default(dir, getSettings()).read(optionsOrSettingsOrCallback);
+        return new async_1.default(directory, getSettings()).read(optionsOrSettingsOrCallback);
     }
-    new async_1.default(dir, getSettings(optionsOrSettingsOrCallback)).read(callback);
+    new async_1.default(directory, getSettings(optionsOrSettingsOrCallback)).read(callback);
 }
 exports.walk = walk;
-function walkSync(dir, optionsOrSettings) {
+function walkSync(directory, optionsOrSettings) {
     const settings = getSettings(optionsOrSettings);
-    const provider = new sync_1.default(dir, settings);
+    const provider = new sync_1.default(directory, settings);
     return provider.read();
 }
 exports.walkSync = walkSync;
-function walkStream(dir, optionsOrSettings) {
+function walkStream(directory, optionsOrSettings) {
     const settings = getSettings(optionsOrSettings);
-    const provider = new stream_1.default(dir, settings);
+    const provider = new stream_1.default(directory, settings);
     return provider.read();
 }
 exports.walkStream = walkStream;
@@ -19168,13 +19532,13 @@ function getSettings(settingsOrOptions = {}) {
 
 
 /***/ }),
-/* 93 */
+/* 101 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const async_1 = __webpack_require__(94);
+const async_1 = __webpack_require__(102);
 class AsyncProvider {
     constructor(_root, _settings) {
         this._root = _root;
@@ -19190,7 +19554,7 @@ class AsyncProvider {
             this._storage.add(entry);
         });
         this._reader.onEnd(() => {
-            callSuccessCallback(callback, Array.from(this._storage));
+            callSuccessCallback(callback, [...this._storage]);
         });
         this._reader.read();
     }
@@ -19205,17 +19569,17 @@ function callSuccessCallback(callback, entries) {
 
 
 /***/ }),
-/* 94 */
+/* 102 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const events_1 = __webpack_require__(48);
-const fsScandir = __webpack_require__(95);
-const fastq = __webpack_require__(109);
-const common = __webpack_require__(111);
-const reader_1 = __webpack_require__(112);
+const events_1 = __webpack_require__(55);
+const fsScandir = __webpack_require__(103);
+const fastq = __webpack_require__(112);
+const common = __webpack_require__(114);
+const reader_1 = __webpack_require__(115);
 class AsyncReader extends reader_1.default {
     constructor(_root, _settings) {
         super(_root, _settings);
@@ -19255,17 +19619,17 @@ class AsyncReader extends reader_1.default {
     onEnd(callback) {
         this._emitter.once('end', callback);
     }
-    _pushToQueue(dir, base) {
-        const queueItem = { dir, base };
+    _pushToQueue(directory, base) {
+        const queueItem = { directory, base };
         this._queue.push(queueItem, (error) => {
-            if (error) {
+            if (error !== null) {
                 this._handleError(error);
             }
         });
     }
     _worker(item, done) {
-        this._scandir(item.dir, this._settings.fsScandirSettings, (error, entries) => {
-            if (error) {
+        this._scandir(item.directory, this._settings.fsScandirSettings, (error, entries) => {
+            if (error !== null) {
                 return done(error, undefined);
             }
             for (const entry of entries) {
@@ -19305,15 +19669,15 @@ exports.default = AsyncReader;
 
 
 /***/ }),
-/* 95 */
+/* 103 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const async = __webpack_require__(96);
-const sync = __webpack_require__(106);
-const settings_1 = __webpack_require__(107);
+const async = __webpack_require__(104);
+const sync = __webpack_require__(109);
+const settings_1 = __webpack_require__(110);
 exports.Settings = settings_1.default;
 function scandir(path, optionsOrSettingsOrCallback, callback) {
     if (typeof optionsOrSettingsOrCallback === 'function') {
@@ -19336,39 +19700,39 @@ function getSettings(settingsOrOptions = {}) {
 
 
 /***/ }),
-/* 96 */
+/* 104 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const fsStat = __webpack_require__(97);
-const rpl = __webpack_require__(102);
-const constants_1 = __webpack_require__(103);
-const utils = __webpack_require__(104);
-function read(dir, settings, callback) {
+const fsStat = __webpack_require__(95);
+const rpl = __webpack_require__(105);
+const constants_1 = __webpack_require__(106);
+const utils = __webpack_require__(107);
+function read(directory, settings, callback) {
     if (!settings.stats && constants_1.IS_SUPPORT_READDIR_WITH_FILE_TYPES) {
-        return readdirWithFileTypes(dir, settings, callback);
+        return readdirWithFileTypes(directory, settings, callback);
     }
-    return readdir(dir, settings, callback);
+    return readdir(directory, settings, callback);
 }
 exports.read = read;
-function readdirWithFileTypes(dir, settings, callback) {
-    settings.fs.readdir(dir, { withFileTypes: true }, (readdirError, dirents) => {
-        if (readdirError) {
+function readdirWithFileTypes(directory, settings, callback) {
+    settings.fs.readdir(directory, { withFileTypes: true }, (readdirError, dirents) => {
+        if (readdirError !== null) {
             return callFailureCallback(callback, readdirError);
         }
         const entries = dirents.map((dirent) => ({
             dirent,
             name: dirent.name,
-            path: `${dir}${settings.pathSegmentSeparator}${dirent.name}`
+            path: `${directory}${settings.pathSegmentSeparator}${dirent.name}`
         }));
         if (!settings.followSymbolicLinks) {
             return callSuccessCallback(callback, entries);
         }
         const tasks = entries.map((entry) => makeRplTaskEntry(entry, settings));
         rpl(tasks, (rplError, rplEntries) => {
-            if (rplError) {
+            if (rplError !== null) {
                 return callFailureCallback(callback, rplError);
             }
             callSuccessCallback(callback, rplEntries);
@@ -19382,7 +19746,7 @@ function makeRplTaskEntry(entry, settings) {
             return done(null, entry);
         }
         settings.fs.stat(entry.path, (statError, stats) => {
-            if (statError) {
+            if (statError !== null) {
                 if (settings.throwErrorOnBrokenSymbolicLink) {
                     return done(statError);
                 }
@@ -19393,22 +19757,21 @@ function makeRplTaskEntry(entry, settings) {
         });
     };
 }
-function readdir(dir, settings, callback) {
-    settings.fs.readdir(dir, (readdirError, names) => {
-        if (readdirError) {
+function readdir(directory, settings, callback) {
+    settings.fs.readdir(directory, (readdirError, names) => {
+        if (readdirError !== null) {
             return callFailureCallback(callback, readdirError);
         }
-        const filepaths = names.map((name) => `${dir}${settings.pathSegmentSeparator}${name}`);
+        const filepaths = names.map((name) => `${directory}${settings.pathSegmentSeparator}${name}`);
         const tasks = filepaths.map((filepath) => {
             return (done) => fsStat.stat(filepath, settings.fsStatSettings, done);
         });
         rpl(tasks, (rplError, results) => {
-            if (rplError) {
+            if (rplError !== null) {
                 return callFailureCallback(callback, rplError);
             }
             const entries = [];
-            for (let index = 0; index < names.length; index++) {
-                const name = names[index];
+            names.forEach((name, index) => {
                 const stats = results[index];
                 const entry = {
                     name,
@@ -19419,7 +19782,7 @@ function readdir(dir, settings, callback) {
                     entry.stats = stats;
                 }
                 entries.push(entry);
-            }
+            });
             callSuccessCallback(callback, entries);
         });
     });
@@ -19434,151 +19797,7 @@ function callSuccessCallback(callback, result) {
 
 
 /***/ }),
-/* 97 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const async = __webpack_require__(98);
-const sync = __webpack_require__(99);
-const settings_1 = __webpack_require__(100);
-exports.Settings = settings_1.default;
-function stat(path, optionsOrSettingsOrCallback, callback) {
-    if (typeof optionsOrSettingsOrCallback === 'function') {
-        return async.read(path, getSettings(), optionsOrSettingsOrCallback);
-    }
-    async.read(path, getSettings(optionsOrSettingsOrCallback), callback);
-}
-exports.stat = stat;
-function statSync(path, optionsOrSettings) {
-    const settings = getSettings(optionsOrSettings);
-    return sync.read(path, settings);
-}
-exports.statSync = statSync;
-function getSettings(settingsOrOptions = {}) {
-    if (settingsOrOptions instanceof settings_1.default) {
-        return settingsOrOptions;
-    }
-    return new settings_1.default(settingsOrOptions);
-}
-
-
-/***/ }),
-/* 98 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-function read(path, settings, callback) {
-    settings.fs.lstat(path, (lstatError, lstat) => {
-        if (lstatError) {
-            return callFailureCallback(callback, lstatError);
-        }
-        if (!lstat.isSymbolicLink() || !settings.followSymbolicLink) {
-            return callSuccessCallback(callback, lstat);
-        }
-        settings.fs.stat(path, (statError, stat) => {
-            if (statError) {
-                if (settings.throwErrorOnBrokenSymbolicLink) {
-                    return callFailureCallback(callback, statError);
-                }
-                return callSuccessCallback(callback, lstat);
-            }
-            if (settings.markSymbolicLink) {
-                stat.isSymbolicLink = () => true;
-            }
-            callSuccessCallback(callback, stat);
-        });
-    });
-}
-exports.read = read;
-function callFailureCallback(callback, error) {
-    callback(error);
-}
-function callSuccessCallback(callback, result) {
-    callback(null, result);
-}
-
-
-/***/ }),
-/* 99 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-function read(path, settings) {
-    const lstat = settings.fs.lstatSync(path);
-    if (!lstat.isSymbolicLink() || !settings.followSymbolicLink) {
-        return lstat;
-    }
-    try {
-        const stat = settings.fs.statSync(path);
-        if (settings.markSymbolicLink) {
-            stat.isSymbolicLink = () => true;
-        }
-        return stat;
-    }
-    catch (error) {
-        if (!settings.throwErrorOnBrokenSymbolicLink) {
-            return lstat;
-        }
-        throw error;
-    }
-}
-exports.read = read;
-
-
-/***/ }),
-/* 100 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const fs = __webpack_require__(101);
-class Settings {
-    constructor(_options = {}) {
-        this._options = _options;
-        this.followSymbolicLink = this._getValue(this._options.followSymbolicLink, true);
-        this.fs = fs.createFileSystemAdapter(this._options.fs);
-        this.markSymbolicLink = this._getValue(this._options.markSymbolicLink, false);
-        this.throwErrorOnBrokenSymbolicLink = this._getValue(this._options.throwErrorOnBrokenSymbolicLink, true);
-    }
-    _getValue(option, value) {
-        return option === undefined ? value : option;
-    }
-}
-exports.default = Settings;
-
-
-/***/ }),
-/* 101 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const fs = __webpack_require__(6);
-exports.FILE_SYSTEM_ADAPTER = {
-    lstat: fs.lstat,
-    stat: fs.stat,
-    lstatSync: fs.lstatSync,
-    statSync: fs.statSync
-};
-function createFileSystemAdapter(fsMethods) {
-    if (!fsMethods) {
-        return exports.FILE_SYSTEM_ADAPTER;
-    }
-    return Object.assign({}, exports.FILE_SYSTEM_ADAPTER, fsMethods);
-}
-exports.createFileSystemAdapter = createFileSystemAdapter;
-
-
-/***/ }),
-/* 102 */
+/* 105 */
 /***/ (function(module, exports) {
 
 module.exports = runParallel
@@ -19632,7 +19851,7 @@ function runParallel (tasks, cb) {
 
 
 /***/ }),
-/* 103 */
+/* 106 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -19641,25 +19860,29 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const NODE_PROCESS_VERSION_PARTS = process.versions.node.split('.');
 const MAJOR_VERSION = parseInt(NODE_PROCESS_VERSION_PARTS[0], 10);
 const MINOR_VERSION = parseInt(NODE_PROCESS_VERSION_PARTS[1], 10);
+const SUPPORTED_MAJOR_VERSION = 10;
+const SUPPORTED_MINOR_VERSION = 10;
+const IS_MATCHED_BY_MAJOR = MAJOR_VERSION > SUPPORTED_MAJOR_VERSION;
+const IS_MATCHED_BY_MAJOR_AND_MINOR = MAJOR_VERSION === SUPPORTED_MAJOR_VERSION && MINOR_VERSION >= SUPPORTED_MINOR_VERSION;
 /**
  * IS `true` for Node.js 10.10 and greater.
  */
-exports.IS_SUPPORT_READDIR_WITH_FILE_TYPES = MAJOR_VERSION > 10 || (MAJOR_VERSION === 10 && MINOR_VERSION >= 10);
+exports.IS_SUPPORT_READDIR_WITH_FILE_TYPES = IS_MATCHED_BY_MAJOR || IS_MATCHED_BY_MAJOR_AND_MINOR;
 
 
 /***/ }),
-/* 104 */
+/* 107 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const fs = __webpack_require__(105);
+const fs = __webpack_require__(108);
 exports.fs = fs;
 
 
 /***/ }),
-/* 105 */
+/* 108 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -19684,29 +19907,29 @@ exports.createDirentFromStats = createDirentFromStats;
 
 
 /***/ }),
-/* 106 */
+/* 109 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const fsStat = __webpack_require__(97);
-const constants_1 = __webpack_require__(103);
-const utils = __webpack_require__(104);
-function read(dir, settings) {
+const fsStat = __webpack_require__(95);
+const constants_1 = __webpack_require__(106);
+const utils = __webpack_require__(107);
+function read(directory, settings) {
     if (!settings.stats && constants_1.IS_SUPPORT_READDIR_WITH_FILE_TYPES) {
-        return readdirWithFileTypes(dir, settings);
+        return readdirWithFileTypes(directory, settings);
     }
-    return readdir(dir, settings);
+    return readdir(directory, settings);
 }
 exports.read = read;
-function readdirWithFileTypes(dir, settings) {
-    const dirents = settings.fs.readdirSync(dir, { withFileTypes: true });
+function readdirWithFileTypes(directory, settings) {
+    const dirents = settings.fs.readdirSync(directory, { withFileTypes: true });
     return dirents.map((dirent) => {
         const entry = {
             dirent,
             name: dirent.name,
-            path: `${dir}${settings.pathSegmentSeparator}${dirent.name}`
+            path: `${directory}${settings.pathSegmentSeparator}${dirent.name}`
         };
         if (entry.dirent.isSymbolicLink() && settings.followSymbolicLinks) {
             try {
@@ -19723,10 +19946,10 @@ function readdirWithFileTypes(dir, settings) {
     });
 }
 exports.readdirWithFileTypes = readdirWithFileTypes;
-function readdir(dir, settings) {
-    const names = settings.fs.readdirSync(dir);
+function readdir(directory, settings) {
+    const names = settings.fs.readdirSync(directory);
     return names.map((name) => {
-        const entryPath = `${dir}${settings.pathSegmentSeparator}${name}`;
+        const entryPath = `${directory}${settings.pathSegmentSeparator}${name}`;
         const stats = fsStat.statSync(entryPath, settings.fsStatSettings);
         const entry = {
             name,
@@ -19743,15 +19966,15 @@ exports.readdir = readdir;
 
 
 /***/ }),
-/* 107 */
+/* 110 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = __webpack_require__(8);
-const fsStat = __webpack_require__(97);
-const fs = __webpack_require__(108);
+const fsStat = __webpack_require__(95);
+const fs = __webpack_require__(111);
 class Settings {
     constructor(_options = {}) {
         this._options = _options;
@@ -19774,7 +19997,7 @@ exports.default = Settings;
 
 
 /***/ }),
-/* 108 */
+/* 111 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -19790,22 +20013,22 @@ exports.FILE_SYSTEM_ADAPTER = {
     readdirSync: fs.readdirSync
 };
 function createFileSystemAdapter(fsMethods) {
-    if (!fsMethods) {
+    if (fsMethods === undefined) {
         return exports.FILE_SYSTEM_ADAPTER;
     }
-    return Object.assign({}, exports.FILE_SYSTEM_ADAPTER, fsMethods);
+    return Object.assign(Object.assign({}, exports.FILE_SYSTEM_ADAPTER), fsMethods);
 }
 exports.createFileSystemAdapter = createFileSystemAdapter;
 
 
 /***/ }),
-/* 109 */
+/* 112 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var reusify = __webpack_require__(110)
+var reusify = __webpack_require__(113)
 
 function fastqueue (context, worker, concurrency) {
   if (typeof context === 'function') {
@@ -19979,7 +20202,7 @@ module.exports = fastqueue
 
 
 /***/ }),
-/* 110 */
+/* 113 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20019,7 +20242,7 @@ module.exports = reusify
 
 
 /***/ }),
-/* 111 */
+/* 114 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20037,7 +20260,7 @@ function isAppliedFilter(filter, value) {
 }
 exports.isAppliedFilter = isAppliedFilter;
 function replacePathSegmentSeparator(filepath, separator) {
-    return filepath.split(/[\\\/]/).join(separator);
+    return filepath.split(/[\\/]/).join(separator);
 }
 exports.replacePathSegmentSeparator = replacePathSegmentSeparator;
 function joinPathSegments(a, b, separator) {
@@ -20050,13 +20273,13 @@ exports.joinPathSegments = joinPathSegments;
 
 
 /***/ }),
-/* 112 */
+/* 115 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const common = __webpack_require__(111);
+const common = __webpack_require__(114);
 class Reader {
     constructor(_root, _settings) {
         this._root = _root;
@@ -20068,14 +20291,14 @@ exports.default = Reader;
 
 
 /***/ }),
-/* 113 */
+/* 116 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const stream_1 = __webpack_require__(38);
-const async_1 = __webpack_require__(94);
+const stream_1 = __webpack_require__(45);
+const async_1 = __webpack_require__(102);
 class StreamProvider {
     constructor(_root, _settings) {
         this._root = _root;
@@ -20105,13 +20328,13 @@ exports.default = StreamProvider;
 
 
 /***/ }),
-/* 114 */
+/* 117 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const sync_1 = __webpack_require__(115);
+const sync_1 = __webpack_require__(118);
 class SyncProvider {
     constructor(_root, _settings) {
         this._root = _root;
@@ -20126,15 +20349,15 @@ exports.default = SyncProvider;
 
 
 /***/ }),
-/* 115 */
+/* 118 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const fsScandir = __webpack_require__(95);
-const common = __webpack_require__(111);
-const reader_1 = __webpack_require__(112);
+const fsScandir = __webpack_require__(103);
+const common = __webpack_require__(114);
+const reader_1 = __webpack_require__(115);
 class SyncReader extends reader_1.default {
     constructor() {
         super(...arguments);
@@ -20145,19 +20368,19 @@ class SyncReader extends reader_1.default {
     read() {
         this._pushToQueue(this._root, this._settings.basePath);
         this._handleQueue();
-        return Array.from(this._storage);
+        return [...this._storage];
     }
-    _pushToQueue(dir, base) {
-        this._queue.add({ dir, base });
+    _pushToQueue(directory, base) {
+        this._queue.add({ directory, base });
     }
     _handleQueue() {
         for (const item of this._queue.values()) {
-            this._handleDirectory(item.dir, item.base);
+            this._handleDirectory(item.directory, item.base);
         }
     }
-    _handleDirectory(dir, base) {
+    _handleDirectory(directory, base) {
         try {
-            const entries = this._scandir(dir, this._settings.fsScandirSettings);
+            const entries = this._scandir(directory, this._settings.fsScandirSettings);
             for (const entry of entries) {
                 this._handleEntry(entry, base);
             }
@@ -20192,14 +20415,14 @@ exports.default = SyncReader;
 
 
 /***/ }),
-/* 116 */
+/* 119 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = __webpack_require__(8);
-const fsScandir = __webpack_require__(95);
+const fsScandir = __webpack_require__(103);
 class Settings {
     constructor(_options = {}) {
         this._options = _options;
@@ -20225,15 +20448,15 @@ exports.default = Settings;
 
 
 /***/ }),
-/* 117 */
+/* 120 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = __webpack_require__(8);
-const fsStat = __webpack_require__(87);
-const utils = __webpack_require__(58);
+const fsStat = __webpack_require__(95);
+const utils = __webpack_require__(65);
 class Reader {
     constructor(_settings) {
         this._settings = _settings;
@@ -20265,17 +20488,17 @@ exports.default = Reader;
 
 
 /***/ }),
-/* 118 */
+/* 121 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = __webpack_require__(8);
-const deep_1 = __webpack_require__(119);
-const entry_1 = __webpack_require__(120);
-const error_1 = __webpack_require__(121);
-const entry_2 = __webpack_require__(122);
+const deep_1 = __webpack_require__(122);
+const entry_1 = __webpack_require__(123);
+const error_1 = __webpack_require__(124);
+const entry_2 = __webpack_require__(125);
 class Provider {
     constructor(_settings) {
         this._settings = _settings;
@@ -20320,13 +20543,13 @@ exports.default = Provider;
 
 
 /***/ }),
-/* 119 */
+/* 122 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const utils = __webpack_require__(58);
+const utils = __webpack_require__(65);
 class DeepFilter {
     constructor(_settings, _micromatchOptions) {
         this._settings = _settings;
@@ -20356,9 +20579,6 @@ class DeepFilter {
         if (this._isSkippedSymbolicLink(entry)) {
             return false;
         }
-        if (this._isSkippedDotDirectory(entry)) {
-            return false;
-        }
         return this._isSkippedByNegativePatterns(entry, negativeRe);
     }
     _getEntryDepth(basePath, entryPath) {
@@ -20375,9 +20595,6 @@ class DeepFilter {
     _isSkippedSymbolicLink(entry) {
         return !this._settings.followSymbolicLinks && entry.dirent.isSymbolicLink();
     }
-    _isSkippedDotDirectory(entry) {
-        return !this._settings.dot && entry.name.startsWith('.');
-    }
     _isSkippedByNegativePatterns(entry, negativeRe) {
         return !utils.pattern.matchAny(entry.path, negativeRe);
     }
@@ -20386,13 +20603,13 @@ exports.default = DeepFilter;
 
 
 /***/ }),
-/* 120 */
+/* 123 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const utils = __webpack_require__(58);
+const utils = __webpack_require__(65);
 class EntryFilter {
     constructor(_settings, _micromatchOptions) {
         this._settings = _settings;
@@ -20447,13 +20664,13 @@ exports.default = EntryFilter;
 
 
 /***/ }),
-/* 121 */
+/* 124 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const utils = __webpack_require__(58);
+const utils = __webpack_require__(65);
 class ErrorFilter {
     constructor(_settings) {
         this._settings = _settings;
@@ -20469,13 +20686,13 @@ exports.default = ErrorFilter;
 
 
 /***/ }),
-/* 122 */
+/* 125 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const utils = __webpack_require__(58);
+const utils = __webpack_require__(65);
 class EntryTransformer {
     constructor(_settings) {
         this._settings = _settings;
@@ -20495,22 +20712,22 @@ class EntryTransformer {
         if (!this._settings.objectMode) {
             return filepath;
         }
-        return Object.assign({}, entry, { path: filepath });
+        return Object.assign(Object.assign({}, entry), { path: filepath });
     }
 }
 exports.default = EntryTransformer;
 
 
 /***/ }),
-/* 123 */
+/* 126 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const stream_1 = __webpack_require__(38);
-const stream_2 = __webpack_require__(86);
-const provider_1 = __webpack_require__(118);
+const stream_1 = __webpack_require__(45);
+const stream_2 = __webpack_require__(94);
+const provider_1 = __webpack_require__(121);
 class ProviderStream extends provider_1.default {
     constructor() {
         super(...arguments);
@@ -20520,12 +20737,14 @@ class ProviderStream extends provider_1.default {
         const root = this._getRootDirectory(task);
         const options = this._getReaderOptions(task);
         const source = this.api(root, task, options);
-        const dest = new stream_1.Readable({ objectMode: true, read: () => { } });
+        const destination = new stream_1.Readable({ objectMode: true, read: () => { } });
         source
-            .once('error', (error) => dest.emit('error', error))
-            .on('data', (entry) => dest.emit('data', options.transform(entry)))
-            .once('end', () => dest.emit('end'));
-        return dest;
+            .once('error', (error) => destination.emit('error', error))
+            .on('data', (entry) => destination.emit('data', options.transform(entry)))
+            .once('end', () => destination.emit('end'));
+        destination
+            .once('close', () => source.destroy());
+        return destination;
     }
     api(root, task, options) {
         if (task.dynamic) {
@@ -20538,14 +20757,14 @@ exports.default = ProviderStream;
 
 
 /***/ }),
-/* 124 */
+/* 127 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const sync_1 = __webpack_require__(125);
-const provider_1 = __webpack_require__(118);
+const sync_1 = __webpack_require__(128);
+const provider_1 = __webpack_require__(121);
 class ProviderSync extends provider_1.default {
     constructor() {
         super(...arguments);
@@ -20568,15 +20787,15 @@ exports.default = ProviderSync;
 
 
 /***/ }),
-/* 125 */
+/* 128 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const fsStat = __webpack_require__(87);
-const fsWalk = __webpack_require__(92);
-const reader_1 = __webpack_require__(117);
+const fsStat = __webpack_require__(95);
+const fsWalk = __webpack_require__(100);
+const reader_1 = __webpack_require__(120);
 class ReaderSync extends reader_1.default {
     constructor() {
         super(...arguments);
@@ -20618,14 +20837,14 @@ exports.default = ReaderSync;
 
 
 /***/ }),
-/* 126 */
+/* 129 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __webpack_require__(6);
-const os = __webpack_require__(17);
+const os = __webpack_require__(74);
 const CPU_COUNT = os.cpus().length;
 exports.DEFAULT_FILE_SYSTEM_ADAPTER = {
     lstat: fs.lstat,
@@ -20635,7 +20854,6 @@ exports.DEFAULT_FILE_SYSTEM_ADAPTER = {
     readdir: fs.readdir,
     readdirSync: fs.readdirSync
 };
-// tslint:enable no-redundant-jsdoc
 class Settings {
     constructor(_options = {}) {
         this._options = _options;
@@ -20671,20 +20889,20 @@ class Settings {
         return option === undefined ? value : option;
     }
     _getFileSystemMethods(methods = {}) {
-        return Object.assign({}, exports.DEFAULT_FILE_SYSTEM_ADAPTER, methods);
+        return Object.assign(Object.assign({}, exports.DEFAULT_FILE_SYSTEM_ADAPTER), methods);
     }
 }
 exports.default = Settings;
 
 
 /***/ }),
-/* 127 */
+/* 130 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 const path = __webpack_require__(8);
-const pathType = __webpack_require__(128);
+const pathType = __webpack_require__(131);
 
 const getExtensions = extensions => extensions.length > 1 ? `{${extensions.join(',')}}` : extensions[0];
 
@@ -20760,7 +20978,7 @@ module.exports.sync = (input, options) => {
 
 
 /***/ }),
-/* 128 */
+/* 131 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20810,7 +21028,7 @@ exports.isSymlinkSync = isTypeSync.bind(null, 'lstatSync', 'isSymbolicLink');
 
 
 /***/ }),
-/* 129 */
+/* 132 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20818,9 +21036,9 @@ exports.isSymlinkSync = isTypeSync.bind(null, 'lstatSync', 'isSymbolicLink');
 const {promisify} = __webpack_require__(15);
 const fs = __webpack_require__(6);
 const path = __webpack_require__(8);
-const fastGlob = __webpack_require__(56);
-const gitIgnore = __webpack_require__(130);
-const slash = __webpack_require__(131);
+const fastGlob = __webpack_require__(63);
+const gitIgnore = __webpack_require__(133);
+const slash = __webpack_require__(134);
 
 const DEFAULT_IGNORE = [
 	'**/node_modules/**',
@@ -20934,7 +21152,7 @@ module.exports.sync = options => {
 
 
 /***/ }),
-/* 130 */
+/* 133 */
 /***/ (function(module, exports) {
 
 // A simple implementation of make-array
@@ -21508,7 +21726,7 @@ if (
 
 
 /***/ }),
-/* 131 */
+/* 134 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21526,12 +21744,12 @@ module.exports = path => {
 
 
 /***/ }),
-/* 132 */
+/* 135 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-const {Transform} = __webpack_require__(38);
+const {Transform} = __webpack_require__(45);
 
 class ObjectTransform extends Transform {
 	constructor() {
@@ -21576,6 +21794,266 @@ module.exports = {
 	FilterStream,
 	UniqueStream
 };
+
+
+/***/ }),
+/* 136 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const vscode_1 = __webpack_require__(1);
+const formmatingRules_1 = __webpack_require__(137);
+class Formatting {
+    constructor() {
+        this.lineContinue = false;
+        // Regras de estruturas que não sofrem identação interna
+        this.structsNoIdent = ['beginsql (alias)?', 'Comentários'];
+    }
+    provideDocumentFormattingEdits(document, options, token) {
+        const formattingRules = new formmatingRules_1.FormattingRules();
+        const tab = options.insertSpaces ? ' '.repeat(options.tabSize) : '\t';
+        let identBlock = "";
+        let cont = 0;
+        let result = [];
+        const lc = document.lineCount;
+        const rulesIgnored = formattingRules.getClosedStructures().filter((rule) => { return this.structsNoIdent.indexOf(rule.id) !== -1; });
+        for (let nl = 0; nl < lc; nl++) {
+            const line = document.lineAt(nl);
+            let lastRule = formattingRules.openStructures[formattingRules.openStructures.length - 1];
+            let foundIgnore = rulesIgnored.filter((rule) => { return rule.id === lastRule; });
+            // dentro do BeginSql não mexe na identação
+            if ((foundIgnore.length > 0 && !line.text.match(foundIgnore[0].end))) {
+                result.push(vscode_1.TextEdit.replace(line.range, line.text.trimRight()));
+            }
+            else {
+                if ((!line.isEmptyOrWhitespace) && (formattingRules.match(line.text))) {
+                    let ruleMatch = formattingRules.getLastMatch();
+                    if (ruleMatch) {
+                        if (ruleMatch.decrement) {
+                            cont = cont < 1 ? 0 : cont - 1;
+                            identBlock = tab.repeat(cont);
+                        }
+                    }
+                    const newLine = line.text.replace(/(\s*)?/, identBlock + (this.lineContinue ? tab : "")).trimRight();
+                    result.push(vscode_1.TextEdit.replace(line.range, newLine));
+                    this.lineContinue = newLine.endsWith(';');
+                    if (ruleMatch) {
+                        if (ruleMatch.increment) {
+                            cont++;
+                            identBlock = tab.repeat(cont);
+                        }
+                    }
+                }
+                else {
+                    let newLine = '';
+                    if (!line.isEmptyOrWhitespace) {
+                        newLine = line.text.replace(/(\s*)?/, identBlock + (this.lineContinue ? tab : "")).trimRight();
+                    }
+                    result.push(vscode_1.TextEdit.replace(line.range, newLine));
+                    this.lineContinue = newLine.endsWith(';');
+                }
+            }
+        }
+        return result;
+    }
+}
+class RangeFormatting {
+    provideDocumentRangeFormattingEdits(document, range, options, token) {
+        throw new Error("Method not implemented.");
+    }
+}
+const formatter = new Formatting();
+const rangeFormatter = new RangeFormatting();
+function formattingEditProvider() {
+    return formatter;
+}
+exports.formattingEditProvider = formattingEditProvider;
+function rangeFormattingEditProvider() {
+    return rangeFormatter;
+}
+exports.rangeFormattingEditProvider = rangeFormattingEditProvider;
+
+
+/***/ }),
+/* 137 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const util_1 = __webpack_require__(15);
+class FormattingRules {
+    constructor() {
+        this.lastMatch = null;
+        this.insideOpenStructure = false;
+        this.openStructures = [];
+    }
+    instanceOfClosedStructureRule(object) {
+        return 'begin' in object;
+    }
+    match(line) {
+        let lastRule = this.openStructures[this.openStructures.length - 1];
+        if (line.trim().length === 0) {
+            return false;
+        }
+        let finddedRule = null;
+        this.getRules().every((rule) => {
+            if (this.instanceOfClosedStructureRule(rule)) {
+                if (line.match(rule.begin)) {
+                    finddedRule = { rule: rule, increment: true, decrement: false };
+                    this.openStructures.push(rule.id);
+                }
+                else if ((rule.middle) && (line.match(rule.middle))) {
+                    finddedRule = { rule: rule, increment: true, decrement: true };
+                }
+                else if (line.match(rule.end) && lastRule === rule.id) {
+                    finddedRule = { rule: rule, increment: false, decrement: true };
+                    this.openStructures.pop();
+                }
+            }
+            return util_1.isNull(finddedRule);
+        });
+        if (!util_1.isNull(finddedRule)) {
+            this.lastMatch = finddedRule;
+            return true;
+        }
+        return false;
+    }
+    getLastMatch() {
+        return this.lastMatch;
+    }
+    getRules() {
+        return [...this.getClosedStructures(), ...this.getCustomStructures()];
+    }
+    getCustomStructures() {
+        return [];
+    }
+    // marcadores regexp utilizados
+    // (\s+) = um ou mais whitespaces
+    // (\w+) = uma ou mais letras/digitos => palavra
+    // (constante) = constante (palavra chave)
+    // (.*) =  qualquer coisa
+    // ? = 0 ou mais ocorrências
+    // ^ = inicio da linha
+    // /i = ignorar caixa
+    getClosedStructures() {
+        return [
+            {
+                id: 'function',
+                begin: /^(\s*)((\w+)(\s+))?(function)(\s+)(\w+)/i,
+                end: /^(\s*)(return)/i
+            },
+            {
+                id: 'method',
+                begin: /^(\s*)(method)(\s+)(\w+)(\s*)(.*)(\s+)(class)(\s+)(\w+)/i,
+                end: /^(\s*)(return)/i
+            },
+            {
+                id: 'method rest',
+                begin: /^(\s*)(wsmethod)(\s+)(\w+)(\s*)(.*)(\s+)(wsservice)(\s+)(\w+)/i,
+                end: /^(\s*)(return)/i
+            },
+            {
+                id: '#ifdef/#ifndef',
+                begin: /^(\s*)(#)(\s*)(ifdef|ifndef)/i,
+                middle: /^(\s*)(#)(\s*)(else)/i,
+                end: /^(\s*)(#)(\s*)(endif)/i
+            },
+            {
+                id: 'begin report query',
+                begin: /^(\s*)(begin)(\s+)(report)(\s+)(query)/i,
+                end: /^(\s*)(end)(\s+)(report)(\s+)(query)/i,
+            },
+            {
+                id: 'begin transaction',
+                begin: /^(\s*)(begin)(\s+)(transaction)/i,
+                end: /^(\s*)(end)(\s+)(transaction)?/i,
+            },
+            {
+                id: 'beginsql (alias)?',
+                begin: /^(\s*)(beginsql)(\s+)(\w+)/i,
+                end: /^(\s*)(endsql)$/i,
+            },
+            {
+                id: 'do case',
+                begin: /^(\s*)(do)(\s+)(case)/i,
+                middle: /^(\s*)(case|otherwise)/i,
+                end: /^(\s*)(end)(\s*)(case)$/i
+            },
+            {
+                id: 'try..catch',
+                begin: /^(\s*)(try)/i,
+                middle: /^(\s*)(catch)/i,
+                end: /^(\s*)(end)(\s*)(try)?/i
+            },
+            {
+                id: 'class',
+                begin: /^(\s*)(class)(\s+)(\w+)/i,
+                end: /^(\s*)(end)(\s*)(class)?/i
+            },
+            {
+                id: 'endwsclient',
+                begin: /^(\s*)(wsclient)(\s+)(\w+)/i,
+                end: /^(\s*)(endwsclient)/i
+            },
+            {
+                id: 'for',
+                begin: /^(\s*)(for)(\s+)(\w+)/i,
+                end: /^(\s*)(next)(\s*)/i
+            },
+            {
+                id: 'if',
+                begin: /^(\s*)+(if)+(\t|\ |\(|;|\/\*)+/i,
+                middle: /^(\s*)((else)|(elseif))+(\t|\ |\(|;|\/\*|$)+/i,
+                end: /^(\s*)(end)(if)?$/i,
+            },
+            {
+                id: 'structure',
+                begin: /^(\s*)(structure)/i,
+                end: /^(\s*)(end)(\s*)(structure)/i
+            },
+            {
+                id: 'while',
+                begin: /^(\s*)(do)?(\s*)(while)/i,
+                end: /^(\s*)(end)(do)?$/i
+            },
+            {
+                id: 'wsrestful',
+                begin: /^(\s*)(wsrestful)/i,
+                end: /^(\s*)(end)(\s*)(wsrestful)/i
+            },
+            {
+                id: 'wsservice',
+                begin: /^(\s*)(wsservice)/i,
+                end: /^(\s*)(end)(\s*)(wsservice)/i
+            },
+            {
+                id: 'wsstruct',
+                begin: /^(\s*)(wsstruct)/i,
+                end: /^(\s*)(end)(\s*)(wsstruct)/i
+            },
+            {
+                id: 'begin sequence',
+                begin: /^(\s*)(begin)(\s*)(sequence)/i,
+                middle: /^(\s*)(recover)(\s*)(sequence)/i,
+                end: /^(\s*)(end)(\s*)(sequence)?$/i
+            },
+            {
+                id: 'Protheus Doc',
+                begin: /^(\s*)(\/\*\/\{Protheus.doc\} )/i,
+                end: /^(\s*)(\/\*\/)/i
+            },
+            {
+                id: 'Comentários',
+                begin: /^(\s*)(\/\*)/i,
+                end: /^(\s*)(\*\/)/i
+            }
+        ];
+    }
+}
+exports.FormattingRules = FormattingRules;
 
 
 /***/ })

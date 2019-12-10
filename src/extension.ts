@@ -9,9 +9,10 @@ import {
     Range,
     TextDocument
 } from 'vscode';
-import { MergeAdvpl } from './m erge';
+import { MergeAdvpl } from './merge';
 import { ValidaAdvpl, Fonte, ValidaProjeto } from 'analise-advpl';
 import { ItemModel } from 'analise-advpl/lib/models/ItemProject';
+import { formattingEditProvider, rangeFormattingEditProvider } from './formatting';
 //Cria um colection para os erros ADVPL
 const collection = languages.createDiagnosticCollection('advpl');
 
@@ -133,6 +134,14 @@ export async function activate(context: ExtensionContext) {
                 validaProjeto();
             });
         })
+    );
+
+    languages.registerDocumentFormattingEditProvider('advpl',
+        formattingEditProvider()
+    );
+
+    languages.registerDocumentRangeFormattingEditProvider('advpl',
+        rangeFormattingEditProvider()
     );
 
     //Adiciona comando de limeza de branches
@@ -278,7 +287,7 @@ export function deactivate() { }
 
 function validaProjeto(
 ) {
-    return new Promise(()=>{
+    return new Promise(() => {
         // prepara o objeto de validação
         let validaPrj: ValidaProjeto = new ValidaProjeto(validaAdvpl.comentFontPad, vscodeOptions);
 
@@ -287,9 +296,9 @@ function validaProjeto(
         validaPrj.local = vscodeOptions;
 
         let pastas: string[] = [];
-
-        workspace.workspaceFolders.forEach((path) => {
-            pastas.push(path.uri.fsPath)
+        let workspaceFolders = workspace['workspaceFolders'];
+        workspaceFolders.forEach((path) => {
+            pastas.push(path.uri.fsPath);
         });
 
         validaPrj.validaProjeto(pastas).then((objProjeto: ValidaProjeto) => {

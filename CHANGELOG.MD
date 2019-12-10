@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.1.0
+
+- Implementação de Formatação de Fonte ADVPL.
+
 ### 1.0.8
 
 - Ajuste de execução assincrona.

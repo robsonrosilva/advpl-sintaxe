@@ -308,4 +308,4 @@ function localize(key) {
     return i18n.__(key);
 }
 
-//# sourceMappingURL=Merge.js.map
+//# sourceMappingURL=merge.js.map

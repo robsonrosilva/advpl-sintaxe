@@ -1,86 +1,52 @@
-import { isNull } from "util";
-
-export interface Rule {
-    id: string;
-    options?: {
-        ident: boolean;
-        linesBefore: Number;
-        linesAfter: Number;
-        linesSameBlock: Number;
-    };
-}
-
-export interface ClosedStructureRule extends Rule {
-    begin: RegExp;
-    middle?: RegExp;
-    end: RegExp;
-}
-
-export interface OpenStructureRule extends Rule {
-    expression: RegExp;
-}
-
-
-export interface RuleMatch {
-    rule: Rule;
-    increment: boolean;
-    decrement: boolean;
-}
-
-export class FormattingRules {
-    lastMatch: RuleMatch | null = null;
-    insideOpenStructure: boolean = false;
-    openStructures: string[] = [];
-
-    private instanceOfClosedStructureRule(object: any): object is ClosedStructureRule {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const util_1 = require("util");
+class FormattingRules {
+    constructor() {
+        this.lastMatch = null;
+        this.insideOpenStructure = false;
+        this.openStructures = [];
+    }
+    instanceOfClosedStructureRule(object) {
         return 'begin' in object;
     }
-
-    public match(line: string): boolean {
-        let lastRule: string = this.openStructures[this.openStructures.length - 1];
+    match(line) {
+        let lastRule = this.openStructures[this.openStructures.length - 1];
         if (line.trim().length === 0) {
             return false;
         }
-
-        let finddedRule: any = null;
-
-        this.getRules().every((rule: Rule) => {
-
+        let finddedRule = null;
+        this.getRules().every((rule) => {
             if (this.instanceOfClosedStructureRule(rule)) {
                 if (line.match(rule.begin)) {
                     finddedRule = { rule: rule, increment: true, decrement: false };
                     this.openStructures.push(rule.id);
-                } else if ((rule.middle) && (line.match(rule.middle))) {
+                }
+                else if ((rule.middle) && (line.match(rule.middle))) {
                     finddedRule = { rule: rule, increment: true, decrement: true };
-                } else if (line.match(rule.end) && lastRule === rule.id) {
+                }
+                else if (line.match(rule.end) && lastRule === rule.id) {
                     finddedRule = { rule: rule, increment: false, decrement: true };
                     this.openStructures.pop();
                 }
             }
-
-            return isNull(finddedRule);
+            return util_1.isNull(finddedRule);
         });
-
-        if (!isNull(finddedRule)) {
+        if (!util_1.isNull(finddedRule)) {
             this.lastMatch = finddedRule;
             return true;
         }
-
         return false;
     }
-
-    public getLastMatch(): RuleMatch | null {
+    getLastMatch() {
         return this.lastMatch;
     }
-
-    public getRules(): Rule[] {
+    getRules() {
         return [...this.getClosedStructures(), ...this.getCustomStructures()];
     }
-
-    private getCustomStructures(): Rule[] {
+    getCustomStructures() {
         return [];
     }
-
     // marcadores regexp utilizados
     // (\s+) = um ou mais whitespaces
     // (\w+) = uma ou mais letras/digitos => palavra
@@ -89,8 +55,7 @@ export class FormattingRules {
     // ? = 0 ou mais ocorrências
     // ^ = inicio da linha
     // /i = ignorar caixa
-
-    public getClosedStructures(): ClosedStructureRule[] {
+    getClosedStructures() {
         return [
             {
                 id: 'function',
@@ -205,3 +170,6 @@ export class FormattingRules {
         ];
     }
 }
+exports.FormattingRules = FormattingRules;
+
+//# sourceMappingURL=formmatingRules.js.map
