@@ -9,7 +9,7 @@ import {
     Range,
     TextDocument
 } from 'vscode';
-import { MergeAdvpl } from './Merge';
+import { MergeAdvpl } from './m erge';
 import { ValidaAdvpl, Fonte, ValidaProjeto } from 'analise-advpl';
 import { ItemModel } from 'analise-advpl/lib/models/ItemProject';
 //Cria um colection para os erros ADVPL
