@@ -165,7 +165,7 @@ class FormattingRules {
             {
                 id: 'Comentários',
                 begin: /^(\s*)(\/\*)/i,
-                end: /^(\s*)(\*\/)/i
+                end: /(\*\/)/i
             }
         ];
     }

@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.1.1
+
+- Correção de identação de comentários.
+
 ### 1.1.0
 
 - Implementação de Formatação de Fonte ADVPL.
