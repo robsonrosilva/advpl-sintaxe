@@ -194,8 +194,8 @@ export class FormattingRules {
             },
             {
                 id: 'Protheus Doc',
-                begin: /^(\s*)(\/\*\/\{Protheus.doc\} )/i,
-                end: /^(\s*)(\/\*\/)/i
+                begin: /^(\s*)(\/\*\/(.*)?\{Protheus.doc\}(.*)?)/i,
+                end: /(\*\/)/i
             },
             {
                 id: 'Comentários',

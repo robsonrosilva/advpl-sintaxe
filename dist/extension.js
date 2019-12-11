@@ -10924,7 +10924,7 @@ exports.Erro = Erro;
 /* 39 */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"name\":\"analise-advpl\",\"version\":\"5.0.7\",\"description\":\"Extension of ADVPL code analysis.\",\"types\":\"lib/index.d.ts\",\"main\":\"lib/index.js\",\"scripts\":{\"compile\":\"tsc -p ./\",\"prepare\":\"npm run compile\",\"test\":\"npm run compile && mocha \\\"./test/validaadvpl.js\\\"\"},\"keywords\":[],\"author\":\"Robson Rogério Silva\",\"license\":\"ISC\",\"dependencies\":{\"@types/node\":\"^10.14.14\",\"asserts\":\"^4.0.2\",\"chai\":\"^4.2.0\",\"file-system\":\"^2.2.2\",\"globby\":\"^10.0.1\",\"i18n\":\"^0.8.3\",\"mocha\":\"^5.2.0\"},\"devDependencies\":{\"typescript\":\"^3.5.3\",\"vscode\":\"^1.1.36\"}}");
+module.exports = JSON.parse("{\"name\":\"analise-advpl\",\"version\":\"5.0.6\",\"description\":\"Extension of ADVPL code analysis.\",\"types\":\"lib/index.d.ts\",\"main\":\"lib/index.js\",\"scripts\":{\"compile\":\"tsc -p ./\",\"prepare\":\"npm run compile\",\"test\":\"npm run compile && mocha \\\"./test/validaadvpl.js\\\"\"},\"keywords\":[],\"author\":\"Robson Rogério Silva\",\"license\":\"ISC\",\"dependencies\":{\"@types/node\":\"^10.14.14\",\"asserts\":\"^4.0.2\",\"chai\":\"^4.2.0\",\"file-system\":\"^2.2.2\",\"globby\":\"^10.0.1\",\"i18n\":\"^0.8.3\",\"mocha\":\"^5.2.0\"},\"devDependencies\":{\"typescript\":\"^3.5.3\",\"vscode\":\"^1.1.36\"}}");
 
 /***/ }),
 /* 40 */
@@ -22042,8 +22042,8 @@ class FormattingRules {
             },
             {
                 id: 'Protheus Doc',
-                begin: /^(\s*)(\/\*\/\{Protheus.doc\} )/i,
-                end: /^(\s*)(\/\*\/)/i
+                begin: /^(\s*)(\/\*\/(.*)?\{Protheus.doc\}(.*)?)/i,
+                end: /(\*\/)/i
             },
             {
                 id: 'Comentários',

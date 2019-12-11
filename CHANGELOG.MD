@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.1.2
+
+- Correção de loop em formatação.
+
 ### 1.1.1
 
 - Correção de identação de comentários.
@@ -27,7 +31,7 @@
 - Correção de validação quando desativa a validação do projeto.
 - Adição de ativações da extensão do TDS.
 - Validação de fonte na abertura, alteração, seleção e salvamento.
-- Correção de validação de funções com X?_.
+- Correção de validação de funções com X?\_.
 
 ### 1.0.4
 
