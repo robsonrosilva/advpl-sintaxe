@@ -21,6 +21,7 @@ class Formatting implements DocumentFormattingEditProvider {
 		);
 
 		for (let nl = 0; nl < lc; nl++) {
+			console.log(nl);
 			const line = document.lineAt(nl);
 			let lastRule: string = formattingRules.openStructures[formattingRules.openStructures.length - 1];
 			let foundIgnore: any[] = rulesIgnored.filter((rule) => { return rule.id === lastRule; });
@@ -80,4 +81,3 @@ export function formattingEditProvider() {
 export function rangeFormattingEditProvider() {
 	return rangeFormatter;
 }
-

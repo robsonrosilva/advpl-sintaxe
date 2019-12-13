@@ -157,7 +157,7 @@ export class FormattingRules {
             },
             {
                 id: 'if',
-                begin: /^(\s*)+(if)+(\t|\ |\(|;|\/\*)+/i,
+                begin: /^(\s*)(if)(\t|\ |\()+/i,
                 middle: /^(\s*)((else)|(elseif))+(\t|\ |\(|;|\/\*|$)+/i,
                 end: /^(\s*)(end)(if)?$/i,
             },

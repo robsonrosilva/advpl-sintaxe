@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.1.3
+
+- Correção de travamento em avaliação de if na Formatação.
+
 ### 1.1.2
 
 - Correção de loop em formatação.
