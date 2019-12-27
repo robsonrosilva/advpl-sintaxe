@@ -18,7 +18,14 @@ class FormattingRules {
         let finddedRule = null;
         this.getRules().every((rule) => {
             if (this.instanceOfClosedStructureRule(rule)) {
-                if (line.match(rule.begin)) {
+                if (line.match(rule.begin) && rule.noBegin) {
+                    console.log(line.match(rule.begin));
+                    console.log(rule.noBegin);
+                    console.log(line.match(rule.noBegin));
+                    console.log(!((rule.noBegin) && (line.match(rule.noBegin))));
+                    console.log(line.match(rule.begin) && !((rule.noBegin) && (line.match(rule.noBegin))));
+                }
+                if (line.match(rule.begin) && ((!rule.noBegin) || (!line.match(rule.noBegin)))) {
                     finddedRule = { rule: rule, increment: true, decrement: false };
                     this.openStructures.push(rule.id);
                 }
@@ -122,8 +129,8 @@ class FormattingRules {
             },
             {
                 id: 'if',
-                begin: /^(\s*)(if)(\t|\ |\()+/i,
-                middle: /^(\s*)((else)|(elseif))+(\t|\ |\(|;|\/\*|$)+/i,
+                begin: /^(\s*)(if)(\t|\ |\(|;|\/\*|$)/i,
+                middle: /^(\s*)((else)|(elseif))(\t|\ |\(|;|\/\*|$)/i,
                 end: /^(\s*)(end)(if)?$/i,
             },
             {
@@ -165,6 +172,7 @@ class FormattingRules {
             {
                 id: 'Comentários',
                 begin: /^(\s*)(\/\*)/i,
+                noBegin: /^\s*(\/\*.*\*\/)/i,
                 end: /(\*\/)/i
             }
         ];

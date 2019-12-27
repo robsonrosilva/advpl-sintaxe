@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.1.4
+
+- Tratamento para correção de comentário multiline que encerra na mesma linha.
+
 ### 1.1.3
 
 - Correção de travamento em avaliação de if na Formatação.

@@ -12,6 +12,7 @@ export interface Rule {
 
 export interface ClosedStructureRule extends Rule {
     begin: RegExp;
+    noBegin?: RegExp;
     middle?: RegExp;
     end: RegExp;
 }
@@ -47,7 +48,14 @@ export class FormattingRules {
         this.getRules().every((rule: Rule) => {
 
             if (this.instanceOfClosedStructureRule(rule)) {
-                if (line.match(rule.begin)) {
+                if (line.match(rule.begin) && rule.noBegin) {
+                    console.log(line.match(rule.begin));
+                    console.log(rule.noBegin);
+                    console.log(line.match(rule.noBegin));
+                    console.log(!((rule.noBegin) && (line.match(rule.noBegin))));
+                    console.log(line.match(rule.begin) && !((rule.noBegin) && (line.match(rule.noBegin))));
+                }
+                if (line.match(rule.begin) && ((!rule.noBegin) || (!line.match(rule.noBegin)))) {
                     finddedRule = { rule: rule, increment: true, decrement: false };
                     this.openStructures.push(rule.id);
                 } else if ((rule.middle) && (line.match(rule.middle))) {
@@ -157,8 +165,8 @@ export class FormattingRules {
             },
             {
                 id: 'if',
-                begin: /^(\s*)(if)(\t|\ |\()+/i,
-                middle: /^(\s*)((else)|(elseif))+(\t|\ |\(|;|\/\*|$)+/i,
+                begin: /^(\s*)(if)(\t|\ |\(|;|\/\*|$)/i,
+                middle: /^(\s*)((else)|(elseif))(\t|\ |\(|;|\/\*|$)/i,
                 end: /^(\s*)(end)(if)?$/i,
             },
             {
@@ -200,6 +208,7 @@ export class FormattingRules {
             {
                 id: 'Comentários',
                 begin: /^(\s*)(\/\*)/i,
+                noBegin: /^\s*(\/\*.*\*\/)/i,
                 end: /(\*\/)/i
             }
         ];
