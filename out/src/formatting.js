@@ -34,7 +34,7 @@ class Formatting {
                             identBlock = tab.repeat(cont);
                         }
                     }
-                    const newLine = line.text.replace(/(\s*)?/, identBlock + (this.lineContinue ? tab : "")).trimRight();
+                    const newLine = line.text.replace(/(\s*)?/, identBlock).trimRight();
                     result.push(vscode_1.TextEdit.replace(line.range, newLine));
                     this.lineContinue = newLine.endsWith(';');
                     if (ruleMatch) {
