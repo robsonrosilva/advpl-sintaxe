@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.1.5
+
+- Correção de identação de quebra de linha(;) com linha posterior compatível com uma estrura identável.
+
 ### 1.1.4
 
 - Tratamento para correção de comentário multiline que encerra na mesma linha.

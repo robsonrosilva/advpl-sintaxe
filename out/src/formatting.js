@@ -26,7 +26,7 @@ class Formatting {
                 result.push(vscode_1.TextEdit.replace(line.range, line.text.trimRight()));
             }
             else {
-                if ((!line.isEmptyOrWhitespace) && (formattingRules.match(line.text))) {
+                if ((!line.isEmptyOrWhitespace) && (formattingRules.match(line.text)) && (!this.lineContinue)) {
                     let ruleMatch = formattingRules.getLastMatch();
                     if (ruleMatch) {
                         if (ruleMatch.decrement) {

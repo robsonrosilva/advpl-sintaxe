@@ -29,7 +29,7 @@ class Formatting implements DocumentFormattingEditProvider {
 			if ((foundIgnore.length > 0 && !line.text.match(foundIgnore[0].end))) {
 				result.push(TextEdit.replace(line.range, line.text.trimRight()));
 			} else {
-				if ((!line.isEmptyOrWhitespace) && (formattingRules.match(line.text))) {
+				if ((!line.isEmptyOrWhitespace) && (formattingRules.match(line.text)) && (!this.lineContinue)) {
 					let ruleMatch: RuleMatch | null = formattingRules.getLastMatch();
 
 					if (ruleMatch) {
@@ -39,7 +39,7 @@ class Formatting implements DocumentFormattingEditProvider {
 						}
 					}
 
-					const newLine: string = line.text.replace(/(\s*)?/, identBlock + (this.lineContinue ? tab : "")).trimRight();
+					const newLine: string = line.text.replace(/(\s*)?/, identBlock ).trimRight();
 					result.push(TextEdit.replace(line.range, newLine));
 					this.lineContinue = newLine.endsWith(';');
 
