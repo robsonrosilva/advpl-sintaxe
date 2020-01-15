@@ -42,12 +42,10 @@ class MergeAdvpl {
             }
             // Atualiza branch Corrente com a Release
             objeto.atualiza().catch((erro) => {
-                console.log(erro);
                 reject(erro);
             }).then(() => {
                 // efetua o push da branche
                 this.run(['push', '--set-upstream', 'origin', this.repository.headLabel]).catch((erro) => {
-                    console.log(erro);
                     reject(localize('merge.pushError') + '\n' + erro.stderr);
                 }).then(() => {
                     // efetua os merges
@@ -61,7 +59,6 @@ class MergeAdvpl {
                                             branchDestino + '(' + tag + ')');
                                         resolve();
                                     }).catch((erro) => {
-                                        console.log(erro);
                                         reject(localize('merge.mergeError') + '\n' + erro.stderr);
                                     });
                                 }
@@ -73,7 +70,6 @@ class MergeAdvpl {
                                     resolve();
                                 }
                             }).catch((erro) => {
-                                console.log(erro);
                                 reject(localize('merge.mergeError') + '\n' + erro.stderr);
                             });
                         }
@@ -85,7 +81,6 @@ class MergeAdvpl {
                             resolve();
                         }
                     }).catch((erro) => {
-                        console.log(erro);
                         reject(localize('merge.mergeError') + '\n' + erro.stderr);
                     });
                 });
@@ -108,19 +103,15 @@ class MergeAdvpl {
                         this.run(['merge', '--no-ff', this.branchHomol]).then(() => {
                             resolve(localize('merge.atualizacaoFinish'));
                         }).catch((erro) => {
-                            console.log(erro);
                             reject(localize('merge.mergeError') + '\n' + erro.stderr);
                         });
                     }).catch((erro) => {
-                        console.log(erro);
                         reject(localize('merge.checkoutError') + '\n' + erro.stderr);
                     });
                 }).catch((erro) => {
-                    console.log(erro);
                     reject(localize('merge.pullError') + '\n' + erro.stderr);
                 });
             }).catch((erro) => {
-                console.log(erro);
                 reject(localize('merge.checkoutError') + '\n' + erro.stderr);
             });
         });
@@ -146,22 +137,17 @@ class MergeAdvpl {
                                     this.run(['branch', '-d', branche]);
                                 }
                             });
-                            console.log(ret);
                             resolve(localize('merge.cleanFinish'));
                         }).catch((erro) => {
-                            console.log(erro);
                             reject(localize('merge.mergedError') + '\n' + erro.stderr);
                         });
                     }).catch((erro) => {
-                        console.log(erro);
                         reject(localize('merge.remotePruneError') + '\n' + erro.stderr);
                     });
                 }).catch((erro) => {
-                    console.log(erro);
                     reject(localize('merge.pullError') + '\n' + erro.stderr);
                 });
             }).catch((erro) => {
-                console.log(erro);
                 reject(localize('merge.pullError') + '\n' + erro.stderr);
             });
         });
@@ -228,11 +214,9 @@ class MergeAdvpl {
                                 this.pushAll().then(() => {
                                     resolve(tag);
                                 }).catch((erro) => {
-                                    console.log(erro);
                                     reject(localize('merge.pushError') + '\n' + erro.stderr);
                                 });
                             }).catch((erro) => {
-                                console.log(erro);
                                 reject(localize('merge.checkoutError') + '\n' + erro.stderr);
                             });
                         }
@@ -240,20 +224,16 @@ class MergeAdvpl {
                             this.repository.push().then(() => {
                                 resolve();
                             }).catch((erro) => {
-                                console.log(erro);
                                 reject(localize('merge.pushError') + '\n' + erro.stderr);
                             });
                         }
                     }).catch((erro) => {
-                        console.log(erro);
                         reject(localize('merge.mergeError') + '\n' + erro.stderr);
                     });
                 }).catch((erro) => {
-                    console.log(erro);
                     reject(localize('merge.pullError') + '\n' + erro.stderr);
                 });
             }).catch((erro) => {
-                console.log(erro);
                 reject(localize('merge.checkoutError') + '\n' + erro.stderr);
             });
         });

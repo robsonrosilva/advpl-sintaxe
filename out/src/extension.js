@@ -43,7 +43,6 @@ if (!validaAdvpl.empresas) {
 // your extension is activated the very first time the command is executed
 function activate(context) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('Ativando ' + new Date());
         vscode_1.window.showInformationMessage(localize('extension.activeMessage', 'Active ADVPL Validation!'));
         vscode_1.workspace.onDidChangeTextDocument(validaFonte);
         vscode_1.workspace.onDidOpenTextDocument(validaFonte);
@@ -129,7 +128,6 @@ function activate(context) {
         else {
             validaFonte(vscode_1.window.activeTextEditor);
         }
-        console.log('Fim ' + new Date());
     });
 }
 exports.activate = activate;
@@ -151,14 +149,11 @@ function validaFonte(editor) {
         if (document && document.languageId === 'advpl' && document.getText()) {
             // Se estiver pendente de processamento não faz a validação
             if (pendingValidation) {
-                //console.log('pulou')
                 return;
             }
             else {
-                //console.log('agendou')
                 pendingValidation = true;
                 setTimeout(() => {
-                    //console.log('comecou')
                     pendingValidation = false;
                     validaAdvpl.validacao(document.getText(), document.uri.fsPath);
                     // se valida projeto faz a validação se não somente atualiza o fonte atual
@@ -188,7 +183,6 @@ function validaFonte(editor) {
                                 collection.delete(file);
                                 collection.set(file, errorVsCode(item.errors));
                             });
-                            //console.log('terminou')
                         });
                     }
                     else {

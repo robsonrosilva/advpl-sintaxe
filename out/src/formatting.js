@@ -17,7 +17,6 @@ class Formatting {
         const lc = document.lineCount;
         const rulesIgnored = formattingRules.getClosedStructures().filter((rule) => { return this.structsNoIdent.indexOf(rule.id) !== -1; });
         for (let nl = 0; nl < lc; nl++) {
-            console.log(nl);
             const line = document.lineAt(nl);
             let lastRule = formattingRules.openStructures[formattingRules.openStructures.length - 1];
             let foundIgnore = rulesIgnored.filter((rule) => { return rule.id === lastRule; });

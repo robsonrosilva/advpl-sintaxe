@@ -51,7 +51,6 @@ if (!validaAdvpl.empresas) {
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export async function activate(context: ExtensionContext) {
-    console.log('Ativando ' + new Date());
     window.showInformationMessage(
         localize('extension.activeMessage', 'Active ADVPL Validation!')
     );
@@ -164,7 +163,6 @@ export async function activate(context: ExtensionContext) {
     } else {
         validaFonte(window.activeTextEditor);
     }
-    console.log('Fim ' + new Date());
 }
 function validaFonte(editor: any) {
     return new Promise(() => {
@@ -185,13 +183,10 @@ function validaFonte(editor: any) {
         if (document && document.languageId === 'advpl' && document.getText()) {
             // Se estiver pendente de processamento não faz a validação
             if (pendingValidation) {
-                //console.log('pulou')
                 return;
             } else {
-                //console.log('agendou')
                 pendingValidation = true;
                 setTimeout(() => {
-                    //console.log('comecou')
                     pendingValidation = false;
                     validaAdvpl.validacao(document.getText(), document.uri.fsPath);
 
@@ -227,7 +222,6 @@ function validaFonte(editor: any) {
                                 collection.delete(file);
                                 collection.set(file, errorVsCode(item.errors));
                             });
-                            //console.log('terminou')
                         });
                     } else {
                         let file = getUri(validaAdvpl.fonte.fonte);

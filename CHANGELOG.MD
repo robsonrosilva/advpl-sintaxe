@@ -2,6 +2,11 @@
 
 ## Release Notes
 
+### 1.1.6
+
+- Tratamento para correção de identação de if inline.
+- Tratamento para correção de /*/ que fecha comnentário multiline.
+
 ### 1.1.5
 
 - Correção de identação de quebra de linha(;) com linha posterior compatível com uma estrura identável.
