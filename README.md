@@ -71,7 +71,6 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
 - **tReport5** - Modelo de TReport 5 Sessões.
 - **tReportTrCell** - Modelo de TRCell para uso nas sessões.
 - **tReportAllParam** - Modelo de adição de parâmetros de impressão.
-- **pergunta** - Modelo de PutSx1 para geraçãod e parâmetros para o relatório.
 
 2. WebServices
 
