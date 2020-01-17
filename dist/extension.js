@@ -102,9 +102,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const vscode_1 = __webpack_require__(1);
 const merge_1 = __webpack_require__(2);
-const analise_advpl_1 = __webpack_require__(36);
-const ItemProject_1 = __webpack_require__(43);
-const formatting_1 = __webpack_require__(137);
+const analise_advpl_1 = __webpack_require__(34);
+const ItemProject_1 = __webpack_require__(41);
+const formatting_1 = __webpack_require__(136);
 //Cria um colection para os erros ADVPL
 const collection = vscode_1.languages.createDiagnosticCollection('advpl');
 let pendingValidation = false;
@@ -693,10 +693,10 @@ var vsprintf = __webpack_require__(5).vsprintf,
   debug = __webpack_require__(9)('i18n:debug'),
   warn = __webpack_require__(9)('i18n:warn'),
   error = __webpack_require__(9)('i18n:error'),
-  Mustache = __webpack_require__(19),
-  Messageformat = __webpack_require__(20),
-  MakePlural = __webpack_require__(34),
-  parseInterval = __webpack_require__(35).default;
+  Mustache = __webpack_require__(17),
+  Messageformat = __webpack_require__(18),
+  MakePlural = __webpack_require__(32),
+  parseInterval = __webpack_require__(33).default;
 
 
 // exports an instance
@@ -2125,14 +2125,14 @@ module.exports = require("path");
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
- * Detect Electron renderer / nwjs process, which is node, but we should
+ * Detect Electron renderer process, which is node, but we should
  * treat as a browser.
  */
 
-if (typeof process === 'undefined' || process.type === 'renderer' || process.browser === true || process.__nwjs) {
-	module.exports = __webpack_require__(10);
+if (typeof process !== 'undefined' && process.type === 'renderer') {
+  module.exports = __webpack_require__(10);
 } else {
-	module.exports = __webpack_require__(13);
+  module.exports = __webpack_require__(13);
 }
 
 
@@ -2140,100 +2140,34 @@ if (typeof process === 'undefined' || process.type === 'renderer' || process.bro
 /* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* eslint-env browser */
-
 /**
  * This is the web browser implementation of `debug()`.
+ *
+ * Expose `debug()` as the module.
  */
 
+exports = module.exports = __webpack_require__(11);
 exports.log = log;
 exports.formatArgs = formatArgs;
 exports.save = save;
 exports.load = load;
 exports.useColors = useColors;
-exports.storage = localstorage();
+exports.storage = 'undefined' != typeof chrome
+               && 'undefined' != typeof chrome.storage
+                  ? chrome.storage.local
+                  : localstorage();
 
 /**
  * Colors.
  */
 
 exports.colors = [
-	'#0000CC',
-	'#0000FF',
-	'#0033CC',
-	'#0033FF',
-	'#0066CC',
-	'#0066FF',
-	'#0099CC',
-	'#0099FF',
-	'#00CC00',
-	'#00CC33',
-	'#00CC66',
-	'#00CC99',
-	'#00CCCC',
-	'#00CCFF',
-	'#3300CC',
-	'#3300FF',
-	'#3333CC',
-	'#3333FF',
-	'#3366CC',
-	'#3366FF',
-	'#3399CC',
-	'#3399FF',
-	'#33CC00',
-	'#33CC33',
-	'#33CC66',
-	'#33CC99',
-	'#33CCCC',
-	'#33CCFF',
-	'#6600CC',
-	'#6600FF',
-	'#6633CC',
-	'#6633FF',
-	'#66CC00',
-	'#66CC33',
-	'#9900CC',
-	'#9900FF',
-	'#9933CC',
-	'#9933FF',
-	'#99CC00',
-	'#99CC33',
-	'#CC0000',
-	'#CC0033',
-	'#CC0066',
-	'#CC0099',
-	'#CC00CC',
-	'#CC00FF',
-	'#CC3300',
-	'#CC3333',
-	'#CC3366',
-	'#CC3399',
-	'#CC33CC',
-	'#CC33FF',
-	'#CC6600',
-	'#CC6633',
-	'#CC9900',
-	'#CC9933',
-	'#CCCC00',
-	'#CCCC33',
-	'#FF0000',
-	'#FF0033',
-	'#FF0066',
-	'#FF0099',
-	'#FF00CC',
-	'#FF00FF',
-	'#FF3300',
-	'#FF3333',
-	'#FF3366',
-	'#FF3399',
-	'#FF33CC',
-	'#FF33FF',
-	'#FF6600',
-	'#FF6633',
-	'#FF9900',
-	'#FF9933',
-	'#FFCC00',
-	'#FFCC33'
+  'lightseagreen',
+  'forestgreen',
+  'goldenrod',
+  'dodgerblue',
+  'darkorchid',
+  'crimson'
 ];
 
 /**
@@ -2244,31 +2178,38 @@ exports.colors = [
  * TODO: add a `localStorage` variable to explicitly enable/disable colors
  */
 
-// eslint-disable-next-line complexity
 function useColors() {
-	// NB: In an Electron preload script, document will be defined but not fully
-	// initialized. Since we know we're in Chrome, we'll just detect this case
-	// explicitly
-	if (typeof window !== 'undefined' && window.process && (window.process.type === 'renderer' || window.process.__nwjs)) {
-		return true;
-	}
+  // NB: In an Electron preload script, document will be defined but not fully
+  // initialized. Since we know we're in Chrome, we'll just detect this case
+  // explicitly
+  if (typeof window !== 'undefined' && window.process && window.process.type === 'renderer') {
+    return true;
+  }
 
-	// Internet Explorer and Edge do not support colors.
-	if (typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.toLowerCase().match(/(edge|trident)\/(\d+)/)) {
-		return false;
-	}
-
-	// Is webkit? http://stackoverflow.com/a/16459606/376773
-	// document is undefined in react-native: https://github.com/facebook/react-native/pull/1632
-	return (typeof document !== 'undefined' && document.documentElement && document.documentElement.style && document.documentElement.style.WebkitAppearance) ||
-		// Is firebug? http://stackoverflow.com/a/398120/376773
-		(typeof window !== 'undefined' && window.console && (window.console.firebug || (window.console.exception && window.console.table))) ||
-		// Is firefox >= v31?
-		// https://developer.mozilla.org/en-US/docs/Tools/Web_Console#Styling_messages
-		(typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.toLowerCase().match(/firefox\/(\d+)/) && parseInt(RegExp.$1, 10) >= 31) ||
-		// Double check webkit in userAgent just in case we are in a worker
-		(typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.toLowerCase().match(/applewebkit\/(\d+)/));
+  // is webkit? http://stackoverflow.com/a/16459606/376773
+  // document is undefined in react-native: https://github.com/facebook/react-native/pull/1632
+  return (typeof document !== 'undefined' && document.documentElement && document.documentElement.style && document.documentElement.style.WebkitAppearance) ||
+    // is firebug? http://stackoverflow.com/a/398120/376773
+    (typeof window !== 'undefined' && window.console && (window.console.firebug || (window.console.exception && window.console.table))) ||
+    // is firefox >= v31?
+    // https://developer.mozilla.org/en-US/docs/Tools/Web_Console#Styling_messages
+    (typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.toLowerCase().match(/firefox\/(\d+)/) && parseInt(RegExp.$1, 10) >= 31) ||
+    // double check webkit in userAgent just in case we are in a worker
+    (typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.toLowerCase().match(/applewebkit\/(\d+)/));
 }
+
+/**
+ * Map %j to `JSON.stringify()`, since no Web Inspectors do that by default.
+ */
+
+exports.formatters.j = function(v) {
+  try {
+    return JSON.stringify(v);
+  } catch (err) {
+    return '[UnexpectedJSONParseError]: ' + err.message;
+  }
+};
+
 
 /**
  * Colorize log arguments if enabled.
@@ -2277,38 +2218,36 @@ function useColors() {
  */
 
 function formatArgs(args) {
-	args[0] = (this.useColors ? '%c' : '') +
-		this.namespace +
-		(this.useColors ? ' %c' : ' ') +
-		args[0] +
-		(this.useColors ? '%c ' : ' ') +
-		'+' + module.exports.humanize(this.diff);
+  var useColors = this.useColors;
 
-	if (!this.useColors) {
-		return;
-	}
+  args[0] = (useColors ? '%c' : '')
+    + this.namespace
+    + (useColors ? ' %c' : ' ')
+    + args[0]
+    + (useColors ? '%c ' : ' ')
+    + '+' + exports.humanize(this.diff);
 
-	const c = 'color: ' + this.color;
-	args.splice(1, 0, c, 'color: inherit');
+  if (!useColors) return;
 
-	// The final "%c" is somewhat tricky, because there could be other
-	// arguments passed either before or after the %c, so we need to
-	// figure out the correct index to insert the CSS into
-	let index = 0;
-	let lastC = 0;
-	args[0].replace(/%[a-zA-Z%]/g, match => {
-		if (match === '%%') {
-			return;
-		}
-		index++;
-		if (match === '%c') {
-			// We only are interested in the *last* %c
-			// (the user may have provided their own)
-			lastC = index;
-		}
-	});
+  var c = 'color: ' + this.color;
+  args.splice(1, 0, c, 'color: inherit')
 
-	args.splice(lastC, 0, c);
+  // the final "%c" is somewhat tricky, because there could be other
+  // arguments passed either before or after the %c, so we need to
+  // figure out the correct index to insert the CSS into
+  var index = 0;
+  var lastC = 0;
+  args[0].replace(/%[a-zA-Z%]/g, function(match) {
+    if ('%%' === match) return;
+    index++;
+    if ('%c' === match) {
+      // we only are interested in the *last* %c
+      // (the user may have provided their own)
+      lastC = index;
+    }
+  });
+
+  args.splice(lastC, 0, c);
 }
 
 /**
@@ -2317,12 +2256,13 @@ function formatArgs(args) {
  *
  * @api public
  */
-function log(...args) {
-	// This hackery is required for IE8/9, where
-	// the `console.log` function doesn't have 'apply'
-	return typeof console === 'object' &&
-		console.log &&
-		console.log(...args);
+
+function log() {
+  // this hackery is required for IE8/9, where
+  // the `console.log` function doesn't have 'apply'
+  return 'object' === typeof console
+    && console.log
+    && Function.prototype.apply.call(console.log, console, arguments);
 }
 
 /**
@@ -2331,17 +2271,15 @@ function log(...args) {
  * @param {String} namespaces
  * @api private
  */
+
 function save(namespaces) {
-	try {
-		if (namespaces) {
-			exports.storage.setItem('debug', namespaces);
-		} else {
-			exports.storage.removeItem('debug');
-		}
-	} catch (error) {
-		// Swallow
-		// XXX (@Qix-) should we be logging these?
-	}
+  try {
+    if (null == namespaces) {
+      exports.storage.removeItem('debug');
+    } else {
+      exports.storage.debug = namespaces;
+    }
+  } catch(e) {}
 }
 
 /**
@@ -2350,22 +2288,26 @@ function save(namespaces) {
  * @return {String} returns the previously persisted debug modes
  * @api private
  */
+
 function load() {
-	let r;
-	try {
-		r = exports.storage.getItem('debug');
-	} catch (error) {
-		// Swallow
-		// XXX (@Qix-) should we be logging these?
-	}
+  var r;
+  try {
+    r = exports.storage.debug;
+  } catch(e) {}
 
-	// If debug isn't set in LS, and we're in Electron, try to load $DEBUG
-	if (!r && typeof process !== 'undefined' && 'env' in process) {
-		r = process.env.DEBUG;
-	}
+  // If debug isn't set in LS, and we're in Electron, try to load $DEBUG
+  if (!r && typeof process !== 'undefined' && 'env' in process) {
+    r = process.env.DEBUG;
+  }
 
-	return r;
+  return r;
 }
+
+/**
+ * Enable namespaces listed in `localStorage.debug` initially.
+ */
+
+exports.enable(load());
 
 /**
  * Localstorage attempts to return the localstorage.
@@ -2379,31 +2321,10 @@ function load() {
  */
 
 function localstorage() {
-	try {
-		// TVMLKit (Apple TV JS Runtime) does not have a window object, just localStorage in the global context
-		// The Browser also has localStorage in the global context.
-		return localStorage;
-	} catch (error) {
-		// Swallow
-		// XXX (@Qix-) should we be logging these?
-	}
+  try {
+    return window.localStorage;
+  } catch (e) {}
 }
-
-module.exports = __webpack_require__(11)(exports);
-
-const {formatters} = module.exports;
-
-/**
- * Map %j to `JSON.stringify()`, since no Web Inspectors do that by default.
- */
-
-formatters.j = function (v) {
-	try {
-		return JSON.stringify(v);
-	} catch (error) {
-		return '[UnexpectedJSONParseError]: ' + error.message;
-	}
-};
 
 
 /***/ }),
@@ -2414,268 +2335,204 @@ formatters.j = function (v) {
 /**
  * This is the common logic for both the Node.js and web browser
  * implementations of `debug()`.
+ *
+ * Expose `debug()` as the module.
  */
 
-function setup(env) {
-	createDebug.debug = createDebug;
-	createDebug.default = createDebug;
-	createDebug.coerce = coerce;
-	createDebug.disable = disable;
-	createDebug.enable = enable;
-	createDebug.enabled = enabled;
-	createDebug.humanize = __webpack_require__(12);
+exports = module.exports = createDebug.debug = createDebug['default'] = createDebug;
+exports.coerce = coerce;
+exports.disable = disable;
+exports.enable = enable;
+exports.enabled = enabled;
+exports.humanize = __webpack_require__(12);
 
-	Object.keys(env).forEach(key => {
-		createDebug[key] = env[key];
-	});
+/**
+ * The currently active debug mode names, and names to skip.
+ */
 
-	/**
-	* Active `debug` instances.
-	*/
-	createDebug.instances = [];
+exports.names = [];
+exports.skips = [];
 
-	/**
-	* The currently active debug mode names, and names to skip.
-	*/
+/**
+ * Map of special "%n" handling functions, for the debug "format" argument.
+ *
+ * Valid key names are a single, lower or upper-case letter, i.e. "n" and "N".
+ */
 
-	createDebug.names = [];
-	createDebug.skips = [];
+exports.formatters = {};
 
-	/**
-	* Map of special "%n" handling functions, for the debug "format" argument.
-	*
-	* Valid key names are a single, lower or upper-case letter, i.e. "n" and "N".
-	*/
-	createDebug.formatters = {};
+/**
+ * Previous log timestamp.
+ */
 
-	/**
-	* Selects a color for a debug namespace
-	* @param {String} namespace The namespace string for the for the debug instance to be colored
-	* @return {Number|String} An ANSI color code for the given namespace
-	* @api private
-	*/
-	function selectColor(namespace) {
-		let hash = 0;
+var prevTime;
 
-		for (let i = 0; i < namespace.length; i++) {
-			hash = ((hash << 5) - hash) + namespace.charCodeAt(i);
-			hash |= 0; // Convert to 32bit integer
-		}
+/**
+ * Select a color.
+ * @param {String} namespace
+ * @return {Number}
+ * @api private
+ */
 
-		return createDebug.colors[Math.abs(hash) % createDebug.colors.length];
-	}
-	createDebug.selectColor = selectColor;
+function selectColor(namespace) {
+  var hash = 0, i;
 
-	/**
-	* Create a debugger with the given `namespace`.
-	*
-	* @param {String} namespace
-	* @return {Function}
-	* @api public
-	*/
-	function createDebug(namespace) {
-		let prevTime;
+  for (i in namespace) {
+    hash  = ((hash << 5) - hash) + namespace.charCodeAt(i);
+    hash |= 0; // Convert to 32bit integer
+  }
 
-		function debug(...args) {
-			// Disabled?
-			if (!debug.enabled) {
-				return;
-			}
-
-			const self = debug;
-
-			// Set `diff` timestamp
-			const curr = Number(new Date());
-			const ms = curr - (prevTime || curr);
-			self.diff = ms;
-			self.prev = prevTime;
-			self.curr = curr;
-			prevTime = curr;
-
-			args[0] = createDebug.coerce(args[0]);
-
-			if (typeof args[0] !== 'string') {
-				// Anything else let's inspect with %O
-				args.unshift('%O');
-			}
-
-			// Apply any `formatters` transformations
-			let index = 0;
-			args[0] = args[0].replace(/%([a-zA-Z%])/g, (match, format) => {
-				// If we encounter an escaped % then don't increase the array index
-				if (match === '%%') {
-					return match;
-				}
-				index++;
-				const formatter = createDebug.formatters[format];
-				if (typeof formatter === 'function') {
-					const val = args[index];
-					match = formatter.call(self, val);
-
-					// Now we need to remove `args[index]` since it's inlined in the `format`
-					args.splice(index, 1);
-					index--;
-				}
-				return match;
-			});
-
-			// Apply env-specific formatting (colors, etc.)
-			createDebug.formatArgs.call(self, args);
-
-			const logFn = self.log || createDebug.log;
-			logFn.apply(self, args);
-		}
-
-		debug.namespace = namespace;
-		debug.enabled = createDebug.enabled(namespace);
-		debug.useColors = createDebug.useColors();
-		debug.color = selectColor(namespace);
-		debug.destroy = destroy;
-		debug.extend = extend;
-		// Debug.formatArgs = formatArgs;
-		// debug.rawLog = rawLog;
-
-		// env-specific initialization logic for debug instances
-		if (typeof createDebug.init === 'function') {
-			createDebug.init(debug);
-		}
-
-		createDebug.instances.push(debug);
-
-		return debug;
-	}
-
-	function destroy() {
-		const index = createDebug.instances.indexOf(this);
-		if (index !== -1) {
-			createDebug.instances.splice(index, 1);
-			return true;
-		}
-		return false;
-	}
-
-	function extend(namespace, delimiter) {
-		const newDebug = createDebug(this.namespace + (typeof delimiter === 'undefined' ? ':' : delimiter) + namespace);
-		newDebug.log = this.log;
-		return newDebug;
-	}
-
-	/**
-	* Enables a debug mode by namespaces. This can include modes
-	* separated by a colon and wildcards.
-	*
-	* @param {String} namespaces
-	* @api public
-	*/
-	function enable(namespaces) {
-		createDebug.save(namespaces);
-
-		createDebug.names = [];
-		createDebug.skips = [];
-
-		let i;
-		const split = (typeof namespaces === 'string' ? namespaces : '').split(/[\s,]+/);
-		const len = split.length;
-
-		for (i = 0; i < len; i++) {
-			if (!split[i]) {
-				// ignore empty strings
-				continue;
-			}
-
-			namespaces = split[i].replace(/\*/g, '.*?');
-
-			if (namespaces[0] === '-') {
-				createDebug.skips.push(new RegExp('^' + namespaces.substr(1) + '$'));
-			} else {
-				createDebug.names.push(new RegExp('^' + namespaces + '$'));
-			}
-		}
-
-		for (i = 0; i < createDebug.instances.length; i++) {
-			const instance = createDebug.instances[i];
-			instance.enabled = createDebug.enabled(instance.namespace);
-		}
-	}
-
-	/**
-	* Disable debug output.
-	*
-	* @return {String} namespaces
-	* @api public
-	*/
-	function disable() {
-		const namespaces = [
-			...createDebug.names.map(toNamespace),
-			...createDebug.skips.map(toNamespace).map(namespace => '-' + namespace)
-		].join(',');
-		createDebug.enable('');
-		return namespaces;
-	}
-
-	/**
-	* Returns true if the given mode name is enabled, false otherwise.
-	*
-	* @param {String} name
-	* @return {Boolean}
-	* @api public
-	*/
-	function enabled(name) {
-		if (name[name.length - 1] === '*') {
-			return true;
-		}
-
-		let i;
-		let len;
-
-		for (i = 0, len = createDebug.skips.length; i < len; i++) {
-			if (createDebug.skips[i].test(name)) {
-				return false;
-			}
-		}
-
-		for (i = 0, len = createDebug.names.length; i < len; i++) {
-			if (createDebug.names[i].test(name)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	/**
-	* Convert regexp to namespace
-	*
-	* @param {RegExp} regxep
-	* @return {String} namespace
-	* @api private
-	*/
-	function toNamespace(regexp) {
-		return regexp.toString()
-			.substring(2, regexp.toString().length - 2)
-			.replace(/\.\*\?$/, '*');
-	}
-
-	/**
-	* Coerce `val`.
-	*
-	* @param {Mixed} val
-	* @return {Mixed}
-	* @api private
-	*/
-	function coerce(val) {
-		if (val instanceof Error) {
-			return val.stack || val.message;
-		}
-		return val;
-	}
-
-	createDebug.enable(createDebug.load());
-
-	return createDebug;
+  return exports.colors[Math.abs(hash) % exports.colors.length];
 }
 
-module.exports = setup;
+/**
+ * Create a debugger with the given `namespace`.
+ *
+ * @param {String} namespace
+ * @return {Function}
+ * @api public
+ */
+
+function createDebug(namespace) {
+
+  function debug() {
+    // disabled?
+    if (!debug.enabled) return;
+
+    var self = debug;
+
+    // set `diff` timestamp
+    var curr = +new Date();
+    var ms = curr - (prevTime || curr);
+    self.diff = ms;
+    self.prev = prevTime;
+    self.curr = curr;
+    prevTime = curr;
+
+    // turn the `arguments` into a proper Array
+    var args = new Array(arguments.length);
+    for (var i = 0; i < args.length; i++) {
+      args[i] = arguments[i];
+    }
+
+    args[0] = exports.coerce(args[0]);
+
+    if ('string' !== typeof args[0]) {
+      // anything else let's inspect with %O
+      args.unshift('%O');
+    }
+
+    // apply any `formatters` transformations
+    var index = 0;
+    args[0] = args[0].replace(/%([a-zA-Z%])/g, function(match, format) {
+      // if we encounter an escaped % then don't increase the array index
+      if (match === '%%') return match;
+      index++;
+      var formatter = exports.formatters[format];
+      if ('function' === typeof formatter) {
+        var val = args[index];
+        match = formatter.call(self, val);
+
+        // now we need to remove `args[index]` since it's inlined in the `format`
+        args.splice(index, 1);
+        index--;
+      }
+      return match;
+    });
+
+    // apply env-specific formatting (colors, etc.)
+    exports.formatArgs.call(self, args);
+
+    var logFn = debug.log || exports.log || console.log.bind(console);
+    logFn.apply(self, args);
+  }
+
+  debug.namespace = namespace;
+  debug.enabled = exports.enabled(namespace);
+  debug.useColors = exports.useColors();
+  debug.color = selectColor(namespace);
+
+  // env-specific initialization logic for debug instances
+  if ('function' === typeof exports.init) {
+    exports.init(debug);
+  }
+
+  return debug;
+}
+
+/**
+ * Enables a debug mode by namespaces. This can include modes
+ * separated by a colon and wildcards.
+ *
+ * @param {String} namespaces
+ * @api public
+ */
+
+function enable(namespaces) {
+  exports.save(namespaces);
+
+  exports.names = [];
+  exports.skips = [];
+
+  var split = (typeof namespaces === 'string' ? namespaces : '').split(/[\s,]+/);
+  var len = split.length;
+
+  for (var i = 0; i < len; i++) {
+    if (!split[i]) continue; // ignore empty strings
+    namespaces = split[i].replace(/\*/g, '.*?');
+    if (namespaces[0] === '-') {
+      exports.skips.push(new RegExp('^' + namespaces.substr(1) + '$'));
+    } else {
+      exports.names.push(new RegExp('^' + namespaces + '$'));
+    }
+  }
+}
+
+/**
+ * Disable debug output.
+ *
+ * @api public
+ */
+
+function disable() {
+  exports.enable('');
+}
+
+/**
+ * Returns true if the given mode name is enabled, false otherwise.
+ *
+ * @param {String} name
+ * @return {Boolean}
+ * @api public
+ */
+
+function enabled(name) {
+  var i, len;
+  for (i = 0, len = exports.skips.length; i < len; i++) {
+    if (exports.skips[i].test(name)) {
+      return false;
+    }
+  }
+  for (i = 0, len = exports.names.length; i < len; i++) {
+    if (exports.names[i].test(name)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Coerce `val`.
+ *
+ * @param {Mixed} val
+ * @return {Mixed}
+ * @api private
+ */
+
+function coerce(val) {
+  if (val instanceof Error) return val.stack || val.message;
+  return val;
+}
 
 
 /***/ }),
@@ -2690,7 +2547,6 @@ var s = 1000;
 var m = s * 60;
 var h = m * 60;
 var d = h * 24;
-var w = d * 7;
 var y = d * 365.25;
 
 /**
@@ -2712,7 +2568,7 @@ module.exports = function(val, options) {
   var type = typeof val;
   if (type === 'string' && val.length > 0) {
     return parse(val);
-  } else if (type === 'number' && isFinite(val)) {
+  } else if (type === 'number' && isNaN(val) === false) {
     return options.long ? fmtLong(val) : fmtShort(val);
   }
   throw new Error(
@@ -2734,7 +2590,7 @@ function parse(str) {
   if (str.length > 100) {
     return;
   }
-  var match = /^(-?(?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|years?|yrs?|y)?$/i.exec(
+  var match = /^((?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|years?|yrs?|y)?$/i.exec(
     str
   );
   if (!match) {
@@ -2749,10 +2605,6 @@ function parse(str) {
     case 'yr':
     case 'y':
       return n * y;
-    case 'weeks':
-    case 'week':
-    case 'w':
-      return n * w;
     case 'days':
     case 'day':
     case 'd':
@@ -2795,17 +2647,16 @@ function parse(str) {
  */
 
 function fmtShort(ms) {
-  var msAbs = Math.abs(ms);
-  if (msAbs >= d) {
+  if (ms >= d) {
     return Math.round(ms / d) + 'd';
   }
-  if (msAbs >= h) {
+  if (ms >= h) {
     return Math.round(ms / h) + 'h';
   }
-  if (msAbs >= m) {
+  if (ms >= m) {
     return Math.round(ms / m) + 'm';
   }
-  if (msAbs >= s) {
+  if (ms >= s) {
     return Math.round(ms / s) + 's';
   }
   return ms + 'ms';
@@ -2820,29 +2671,25 @@ function fmtShort(ms) {
  */
 
 function fmtLong(ms) {
-  var msAbs = Math.abs(ms);
-  if (msAbs >= d) {
-    return plural(ms, msAbs, d, 'day');
-  }
-  if (msAbs >= h) {
-    return plural(ms, msAbs, h, 'hour');
-  }
-  if (msAbs >= m) {
-    return plural(ms, msAbs, m, 'minute');
-  }
-  if (msAbs >= s) {
-    return plural(ms, msAbs, s, 'second');
-  }
-  return ms + ' ms';
+  return plural(ms, d, 'day') ||
+    plural(ms, h, 'hour') ||
+    plural(ms, m, 'minute') ||
+    plural(ms, s, 'second') ||
+    ms + ' ms';
 }
 
 /**
  * Pluralization helper.
  */
 
-function plural(ms, msAbs, n, name) {
-  var isPlural = msAbs >= n * 1.5;
-  return Math.round(ms / n) + ' ' + name + (isPlural ? 's' : '');
+function plural(ms, n, name) {
+  if (ms < n) {
+    return;
+  }
+  if (ms < n * 1.5) {
+    return Math.floor(ms / n) + ' ' + name;
+  }
+  return Math.ceil(ms / n) + ' ' + name + 's';
 }
 
 
@@ -2854,13 +2701,16 @@ function plural(ms, msAbs, n, name) {
  * Module dependencies.
  */
 
-const tty = __webpack_require__(14);
-const util = __webpack_require__(15);
+var tty = __webpack_require__(14);
+var util = __webpack_require__(15);
 
 /**
  * This is the Node.js implementation of `debug()`.
+ *
+ * Expose `debug()` as the module.
  */
 
+exports = module.exports = __webpack_require__(11);
 exports.init = init;
 exports.log = log;
 exports.formatArgs = formatArgs;
@@ -2874,137 +2724,79 @@ exports.useColors = useColors;
 
 exports.colors = [6, 2, 3, 4, 5, 1];
 
-try {
-	// Optional dependency (as in, doesn't need to be installed, NOT like optionalDependencies in package.json)
-	// eslint-disable-next-line import/no-extraneous-dependencies
-	const supportsColor = __webpack_require__(16);
-
-	if (supportsColor && (supportsColor.stderr || supportsColor).level >= 2) {
-		exports.colors = [
-			20,
-			21,
-			26,
-			27,
-			32,
-			33,
-			38,
-			39,
-			40,
-			41,
-			42,
-			43,
-			44,
-			45,
-			56,
-			57,
-			62,
-			63,
-			68,
-			69,
-			74,
-			75,
-			76,
-			77,
-			78,
-			79,
-			80,
-			81,
-			92,
-			93,
-			98,
-			99,
-			112,
-			113,
-			128,
-			129,
-			134,
-			135,
-			148,
-			149,
-			160,
-			161,
-			162,
-			163,
-			164,
-			165,
-			166,
-			167,
-			168,
-			169,
-			170,
-			171,
-			172,
-			173,
-			178,
-			179,
-			184,
-			185,
-			196,
-			197,
-			198,
-			199,
-			200,
-			201,
-			202,
-			203,
-			204,
-			205,
-			206,
-			207,
-			208,
-			209,
-			214,
-			215,
-			220,
-			221
-		];
-	}
-} catch (error) {
-	// Swallow - we only care if `supports-color` is available; it doesn't have to be.
-}
-
 /**
  * Build up the default `inspectOpts` object from the environment variables.
  *
  *   $ DEBUG_COLORS=no DEBUG_DEPTH=10 DEBUG_SHOW_HIDDEN=enabled node script.js
  */
 
-exports.inspectOpts = Object.keys(process.env).filter(key => {
-	return /^debug_/i.test(key);
-}).reduce((obj, key) => {
-	// Camel-case
-	const prop = key
-		.substring(6)
-		.toLowerCase()
-		.replace(/_([a-z])/g, (_, k) => {
-			return k.toUpperCase();
-		});
+exports.inspectOpts = Object.keys(process.env).filter(function (key) {
+  return /^debug_/i.test(key);
+}).reduce(function (obj, key) {
+  // camel-case
+  var prop = key
+    .substring(6)
+    .toLowerCase()
+    .replace(/_([a-z])/g, function (_, k) { return k.toUpperCase() });
 
-	// Coerce string value into JS value
-	let val = process.env[key];
-	if (/^(yes|on|true|enabled)$/i.test(val)) {
-		val = true;
-	} else if (/^(no|off|false|disabled)$/i.test(val)) {
-		val = false;
-	} else if (val === 'null') {
-		val = null;
-	} else {
-		val = Number(val);
-	}
+  // coerce string value into JS value
+  var val = process.env[key];
+  if (/^(yes|on|true|enabled)$/i.test(val)) val = true;
+  else if (/^(no|off|false|disabled)$/i.test(val)) val = false;
+  else if (val === 'null') val = null;
+  else val = Number(val);
 
-	obj[prop] = val;
-	return obj;
+  obj[prop] = val;
+  return obj;
 }, {});
+
+/**
+ * The file descriptor to write the `debug()` calls to.
+ * Set the `DEBUG_FD` env variable to override with another value. i.e.:
+ *
+ *   $ DEBUG_FD=3 node script.js 3>debug.log
+ */
+
+var fd = parseInt(process.env.DEBUG_FD, 10) || 2;
+
+if (1 !== fd && 2 !== fd) {
+  util.deprecate(function(){}, 'except for stderr(2) and stdout(1), any other usage of DEBUG_FD is deprecated. Override debug.log if you want to use a different log function (https://git.io/debug_fd)')()
+}
+
+var stream = 1 === fd ? process.stdout :
+             2 === fd ? process.stderr :
+             createWritableStdioStream(fd);
 
 /**
  * Is stdout a TTY? Colored output is enabled when `true`.
  */
 
 function useColors() {
-	return 'colors' in exports.inspectOpts ?
-		Boolean(exports.inspectOpts.colors) :
-		tty.isatty(process.stderr.fd);
+  return 'colors' in exports.inspectOpts
+    ? Boolean(exports.inspectOpts.colors)
+    : tty.isatty(fd);
 }
+
+/**
+ * Map %o to `util.inspect()`, all on a single line.
+ */
+
+exports.formatters.o = function(v) {
+  this.inspectOpts.colors = this.useColors;
+  return util.inspect(v, this.inspectOpts)
+    .split('\n').map(function(str) {
+      return str.trim()
+    }).join(' ');
+};
+
+/**
+ * Map %o to `util.inspect()`, allowing multiple lines if needed.
+ */
+
+exports.formatters.O = function(v) {
+  this.inspectOpts.colors = this.useColors;
+  return util.inspect(v, this.inspectOpts);
+};
 
 /**
  * Adds ANSI color escape codes if enabled.
@@ -3013,33 +2805,27 @@ function useColors() {
  */
 
 function formatArgs(args) {
-	const {namespace: name, useColors} = this;
+  var name = this.namespace;
+  var useColors = this.useColors;
 
-	if (useColors) {
-		const c = this.color;
-		const colorCode = '\u001B[3' + (c < 8 ? c : '8;5;' + c);
-		const prefix = `  ${colorCode};1m${name} \u001B[0m`;
+  if (useColors) {
+    var c = this.color;
+    var prefix = '  \u001b[3' + c + ';1m' + name + ' ' + '\u001b[0m';
 
-		args[0] = prefix + args[0].split('\n').join('\n' + prefix);
-		args.push(colorCode + 'm+' + module.exports.humanize(this.diff) + '\u001B[0m');
-	} else {
-		args[0] = getDate() + name + ' ' + args[0];
-	}
-}
-
-function getDate() {
-	if (exports.inspectOpts.hideDate) {
-		return '';
-	}
-	return new Date().toISOString() + ' ';
+    args[0] = prefix + args[0].split('\n').join('\n' + prefix);
+    args.push('\u001b[3' + c + 'm+' + exports.humanize(this.diff) + '\u001b[0m');
+  } else {
+    args[0] = new Date().toUTCString()
+      + ' ' + name + ' ' + args[0];
+  }
 }
 
 /**
- * Invokes `util.format()` with the specified arguments and writes to stderr.
+ * Invokes `util.format()` with the specified arguments and writes to `stream`.
  */
 
-function log(...args) {
-	return process.stderr.write(util.format(...args) + '\n');
+function log() {
+  return stream.write(util.format.apply(util, arguments) + '\n');
 }
 
 /**
@@ -3048,14 +2834,15 @@ function log(...args) {
  * @param {String} namespaces
  * @api private
  */
+
 function save(namespaces) {
-	if (namespaces) {
-		process.env.DEBUG = namespaces;
-	} else {
-		// If you set a process.env field to null or undefined, it gets cast to the
-		// string 'null' or 'undefined'. Just delete instead.
-		delete process.env.DEBUG;
-	}
+  if (null == namespaces) {
+    // If you set a process.env field to null or undefined, it gets cast to the
+    // string 'null' or 'undefined'. Just delete instead.
+    delete process.env.DEBUG;
+  } else {
+    process.env.DEBUG = namespaces;
+  }
 }
 
 /**
@@ -3066,7 +2853,75 @@ function save(namespaces) {
  */
 
 function load() {
-	return process.env.DEBUG;
+  return process.env.DEBUG;
+}
+
+/**
+ * Copied from `node/src/node.js`.
+ *
+ * XXX: It's lame that node doesn't expose this API out-of-the-box. It also
+ * relies on the undocumented `tty_wrap.guessHandleType()` which is also lame.
+ */
+
+function createWritableStdioStream (fd) {
+  var stream;
+  var tty_wrap = process.binding('tty_wrap');
+
+  // Note stream._type is used for test-module-load-list.js
+
+  switch (tty_wrap.guessHandleType(fd)) {
+    case 'TTY':
+      stream = new tty.WriteStream(fd);
+      stream._type = 'tty';
+
+      // Hack to have stream not keep the event loop alive.
+      // See https://github.com/joyent/node/issues/1726
+      if (stream._handle && stream._handle.unref) {
+        stream._handle.unref();
+      }
+      break;
+
+    case 'FILE':
+      var fs = __webpack_require__(6);
+      stream = new fs.SyncWriteStream(fd, { autoClose: false });
+      stream._type = 'fs';
+      break;
+
+    case 'PIPE':
+    case 'TCP':
+      var net = __webpack_require__(16);
+      stream = new net.Socket({
+        fd: fd,
+        readable: false,
+        writable: true
+      });
+
+      // FIXME Should probably have an option in net.Socket to create a
+      // stream from an existing fd which is writable only. But for now
+      // we'll just add this hack and set the `readable` member to false.
+      // Test: ./node test/fixtures/echo.js < /etc/passwd
+      stream.readable = false;
+      stream.read = null;
+      stream._type = 'pipe';
+
+      // FIXME Hack to have stream not keep the event loop alive.
+      // See https://github.com/joyent/node/issues/1726
+      if (stream._handle && stream._handle.unref) {
+        stream._handle.unref();
+      }
+      break;
+
+    default:
+      // Probably an error on in uv_guess_handle()
+      throw new Error('Implement me. Unknown stream file type!');
+  }
+
+  // For supporting legacy API we put the FD here.
+  stream.fd = fd;
+
+  stream._isStdio = true;
+
+  return stream;
 }
 
 /**
@@ -3076,37 +2931,20 @@ function load() {
  * differently for a particular `debug` instance.
  */
 
-function init(debug) {
-	debug.inspectOpts = {};
+function init (debug) {
+  debug.inspectOpts = {};
 
-	const keys = Object.keys(exports.inspectOpts);
-	for (let i = 0; i < keys.length; i++) {
-		debug.inspectOpts[keys[i]] = exports.inspectOpts[keys[i]];
-	}
+  var keys = Object.keys(exports.inspectOpts);
+  for (var i = 0; i < keys.length; i++) {
+    debug.inspectOpts[keys[i]] = exports.inspectOpts[keys[i]];
+  }
 }
 
-module.exports = __webpack_require__(11)(exports);
-
-const {formatters} = module.exports;
-
 /**
- * Map %o to `util.inspect()`, all on a single line.
+ * Enable namespaces listed in `process.env.DEBUG` initially.
  */
 
-formatters.o = function (v) {
-	this.inspectOpts.colors = this.useColors;
-	return util.inspect(v, this.inspectOpts)
-		.replace(/\s*\n\s*/g, ' ');
-};
-
-/**
- * Map %O to `util.inspect()`, allowing multiple lines if needed.
- */
-
-formatters.O = function (v) {
-	this.inspectOpts.colors = this.useColors;
-	return util.inspect(v, this.inspectOpts);
-};
+exports.enable(load());
 
 
 /***/ }),
@@ -3123,177 +2961,31 @@ module.exports = require("util");
 
 /***/ }),
 /* 16 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, exports) {
 
-"use strict";
-
-const os = __webpack_require__(17);
-const hasFlag = __webpack_require__(18);
-
-const env = process.env;
-
-let forceColor;
-if (hasFlag('no-color') ||
-	hasFlag('no-colors') ||
-	hasFlag('color=false')) {
-	forceColor = false;
-} else if (hasFlag('color') ||
-	hasFlag('colors') ||
-	hasFlag('color=true') ||
-	hasFlag('color=always')) {
-	forceColor = true;
-}
-if ('FORCE_COLOR' in env) {
-	forceColor = env.FORCE_COLOR.length === 0 || parseInt(env.FORCE_COLOR, 10) !== 0;
-}
-
-function translateLevel(level) {
-	if (level === 0) {
-		return false;
-	}
-
-	return {
-		level,
-		hasBasic: true,
-		has256: level >= 2,
-		has16m: level >= 3
-	};
-}
-
-function supportsColor(stream) {
-	if (forceColor === false) {
-		return 0;
-	}
-
-	if (hasFlag('color=16m') ||
-		hasFlag('color=full') ||
-		hasFlag('color=truecolor')) {
-		return 3;
-	}
-
-	if (hasFlag('color=256')) {
-		return 2;
-	}
-
-	if (stream && !stream.isTTY && forceColor !== true) {
-		return 0;
-	}
-
-	const min = forceColor ? 1 : 0;
-
-	if (process.platform === 'win32') {
-		// Node.js 7.5.0 is the first version of Node.js to include a patch to
-		// libuv that enables 256 color output on Windows. Anything earlier and it
-		// won't work. However, here we target Node.js 8 at minimum as it is an LTS
-		// release, and Node.js 7 is not. Windows 10 build 10586 is the first Windows
-		// release that supports 256 colors. Windows 10 build 14931 is the first release
-		// that supports 16m/TrueColor.
-		const osRelease = os.release().split('.');
-		if (
-			Number(process.versions.node.split('.')[0]) >= 8 &&
-			Number(osRelease[0]) >= 10 &&
-			Number(osRelease[2]) >= 10586
-		) {
-			return Number(osRelease[2]) >= 14931 ? 3 : 2;
-		}
-
-		return 1;
-	}
-
-	if ('CI' in env) {
-		if (['TRAVIS', 'CIRCLECI', 'APPVEYOR', 'GITLAB_CI'].some(sign => sign in env) || env.CI_NAME === 'codeship') {
-			return 1;
-		}
-
-		return min;
-	}
-
-	if ('TEAMCITY_VERSION' in env) {
-		return /^(9\.(0*[1-9]\d*)\.|\d{2,}\.)/.test(env.TEAMCITY_VERSION) ? 1 : 0;
-	}
-
-	if (env.COLORTERM === 'truecolor') {
-		return 3;
-	}
-
-	if ('TERM_PROGRAM' in env) {
-		const version = parseInt((env.TERM_PROGRAM_VERSION || '').split('.')[0], 10);
-
-		switch (env.TERM_PROGRAM) {
-			case 'iTerm.app':
-				return version >= 3 ? 3 : 2;
-			case 'Apple_Terminal':
-				return 2;
-			// No default
-		}
-	}
-
-	if (/-256(color)?$/i.test(env.TERM)) {
-		return 2;
-	}
-
-	if (/^screen|^xterm|^vt100|^rxvt|color|ansi|cygwin|linux/i.test(env.TERM)) {
-		return 1;
-	}
-
-	if ('COLORTERM' in env) {
-		return 1;
-	}
-
-	if (env.TERM === 'dumb') {
-		return min;
-	}
-
-	return min;
-}
-
-function getSupportLevel(stream) {
-	const level = supportsColor(stream);
-	return translateLevel(level);
-}
-
-module.exports = {
-	supportsColor: getSupportLevel,
-	stdout: getSupportLevel(process.stdout),
-	stderr: getSupportLevel(process.stderr)
-};
-
+module.exports = require("net");
 
 /***/ }),
 /* 17 */
-/***/ (function(module, exports) {
-
-module.exports = require("os");
-
-/***/ }),
-/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
+var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
+ * mustache.js - Logic-less {{mustache}} templates with JavaScript
+ * http://github.com/janl/mustache.js
+ */
 
-module.exports = (flag, argv) => {
-	argv = argv || process.argv;
-	const prefix = flag.startsWith('-') ? '' : (flag.length === 1 ? '-' : '--');
-	const pos = argv.indexOf(prefix + flag);
-	const terminatorPos = argv.indexOf('--');
-	return pos !== -1 && (terminatorPos === -1 ? true : pos < terminatorPos);
-};
+/*global define: false Mustache: true*/
 
-
-/***/ }),
-/* 19 */
-/***/ (function(module, exports, __webpack_require__) {
-
-// This file has been generated from mustache.mjs
-(function (global, factory) {
-   true ? module.exports = factory() :
-  undefined;
-}(this, (function () { 'use strict';
-
-  /*!
-   * mustache.js - Logic-less {{mustache}} templates with JavaScript
-   * http://github.com/janl/mustache.js
-   */
+(function defineMustache (global, factory) {
+  if ( true && exports && typeof exports.nodeName !== 'string') {
+    factory(exports); // CommonJS
+  } else if (true) {
+    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [exports], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
+				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+  } else {}
+}(this, function mustacheFactory (mustache) {
 
   var objectToString = Object.prototype.toString;
   var isArray = Array.isArray || function isArrayPolyfill (object) {
@@ -3812,7 +3504,7 @@ module.exports = (flag, argv) => {
    */
   Writer.prototype.render = function render (template, view, partials, tags) {
     var tokens = this.parse(template, tags);
-    var context = (view instanceof Context) ? view : new Context(view, undefined);
+    var context = (view instanceof Context) ? view : new Context(view);
     return this.renderTokens(tokens, context, partials, template, tags);
   };
 
@@ -3934,19 +3626,9 @@ module.exports = (flag, argv) => {
     return token[1];
   };
 
-  var mustache = {
-    name: 'mustache.js',
-    version: '3.2.1',
-    tags: [ '{{', '}}' ],
-    clearCache: undefined,
-    escape: undefined,
-    parse: undefined,
-    render: undefined,
-    to_html: undefined,
-    Scanner: undefined,
-    Context: undefined,
-    Writer: undefined
-  };
+  mustache.name = 'mustache.js';
+  mustache.version = '3.1.0';
+  mustache.tags = [ '{{', '}}' ];
 
   // All high-level mustache.* functions use this writer.
   var defaultWriter = new Writer();
@@ -4007,19 +3689,18 @@ module.exports = (flag, argv) => {
   mustache.Writer = Writer;
 
   return mustache;
-
-})));
+}));
 
 
 /***/ }),
-/* 20 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(21).default;
+module.exports = __webpack_require__(19).default;
 
 
 /***/ }),
-/* 21 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4030,15 +3711,15 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var _messageformatFormatters = _interopRequireDefault(__webpack_require__(22));
+var _messageformatFormatters = _interopRequireDefault(__webpack_require__(20));
 
-var _compiler = _interopRequireDefault(__webpack_require__(27));
+var _compiler = _interopRequireDefault(__webpack_require__(25));
 
-var _utils = __webpack_require__(29);
+var _utils = __webpack_require__(27);
 
-var _plurals = __webpack_require__(30);
+var _plurals = __webpack_require__(28);
 
-var _runtime = _interopRequireDefault(__webpack_require__(33));
+var _runtime = _interopRequireDefault(__webpack_require__(31));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -4476,7 +4157,7 @@ MessageFormat.defaultLocale = 'en';
 MessageFormat.formatters = _messageformatFormatters.default;
 
 /***/ }),
-/* 22 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -4509,15 +4190,15 @@ MessageFormat.formatters = _messageformatFormatters.default;
  */
 
 module.exports = {
-  date: __webpack_require__(23),
-  duration: __webpack_require__(24),
-  number: __webpack_require__(25),
-  time: __webpack_require__(26)
+  date: __webpack_require__(21),
+  duration: __webpack_require__(22),
+  number: __webpack_require__(23),
+  time: __webpack_require__(24)
 };
 
 
 /***/ }),
-/* 23 */
+/* 21 */
 /***/ (function(module, exports) {
 
 /* eslint-disable no-fallthrough */
@@ -4568,7 +4249,7 @@ module.exports = function() {
 
 
 /***/ }),
-/* 24 */
+/* 22 */
 /***/ (function(module, exports) {
 
 /**
@@ -4630,7 +4311,7 @@ module.exports = function() {
 
 
 /***/ }),
-/* 25 */
+/* 23 */
 /***/ (function(module, exports) {
 
 /* global CURRENCY, Intl */
@@ -4688,7 +4369,7 @@ module.exports = function(mf) {
 
 
 /***/ }),
-/* 26 */
+/* 24 */
 /***/ (function(module, exports) {
 
 /** Represent a time as a short/default/long string
@@ -4733,7 +4414,7 @@ module.exports = function() {
 
 
 /***/ }),
-/* 27 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4744,9 +4425,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var _messageformatParser = __webpack_require__(28);
+var _messageformatParser = __webpack_require__(26);
 
-var _utils = __webpack_require__(29);
+var _utils = __webpack_require__(27);
 
 /** @private */
 class Compiler {
@@ -4887,7 +4568,7 @@ class Compiler {
 exports.default = Compiler;
 
 /***/ }),
-/* 28 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6885,7 +6566,7 @@ module.exports = {
 
 
 /***/ }),
-/* 29 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6998,7 +6679,7 @@ function biDiMarkText(text, locale) {
 }
 
 /***/ }),
-/* 30 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7010,9 +6691,9 @@ Object.defineProperty(exports, "__esModule", {
 exports.getPlural = getPlural;
 exports.getAllPlurals = getAllPlurals;
 
-var _pluralCategories = _interopRequireDefault(__webpack_require__(31));
+var _pluralCategories = _interopRequireDefault(__webpack_require__(29));
 
-var _plurals = _interopRequireDefault(__webpack_require__(32));
+var _plurals = _interopRequireDefault(__webpack_require__(30));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -7068,7 +6749,7 @@ function getAllPlurals({
 }
 
 /***/ }),
-/* 31 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;var _cc = [
@@ -7298,7 +6979,7 @@ zu: _cc[1]
 
 
 /***/ }),
-/* 32 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;var _cp = [
@@ -8929,7 +8610,7 @@ zu: function(n, ord
 
 
 /***/ }),
-/* 33 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8940,7 +8621,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var _utils = __webpack_require__(29);
+var _utils = __webpack_require__(27);
 
 /** A set of utility functions that are called by the compiled Javascript
  *  functions, these are included locally in the output of {@link
@@ -9080,7 +8761,7 @@ Runtime.strictNumber = function (value, name, offset) {
 };
 
 /***/ }),
-/* 34 */
+/* 32 */
 /***/ (function(__webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -10046,7 +9727,7 @@ function zu(n, ord) {
 
 
 /***/ }),
-/* 35 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10118,7 +9799,7 @@ exports.default = entry;
 
 
 /***/ }),
-/* 36 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10127,15 +9808,15 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(37));
+__export(__webpack_require__(35));
+__export(__webpack_require__(36));
 __export(__webpack_require__(38));
+__export(__webpack_require__(37));
 __export(__webpack_require__(40));
-__export(__webpack_require__(39));
-__export(__webpack_require__(42));
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-/* 37 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10174,16 +9855,16 @@ exports.Funcao = Funcao;
 //# sourceMappingURL=fonte.js.map
 
 /***/ }),
-/* 38 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const include_1 = __webpack_require__(39);
-const Erro_1 = __webpack_require__(40);
-const fonte_1 = __webpack_require__(37);
-const package_json_1 = __webpack_require__(41);
+const include_1 = __webpack_require__(37);
+const Erro_1 = __webpack_require__(38);
+const fonte_1 = __webpack_require__(35);
+const package_json_1 = __webpack_require__(39);
 class ValidaAdvpl {
     constructor(comentFontePad, local, log = true) {
         this.log = log;
@@ -10648,13 +10329,13 @@ function traduz(key, local) {
 //# sourceMappingURL=validaAdvpl.js.map
 
 /***/ }),
-/* 39 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const Erro_1 = __webpack_require__(40);
+const Erro_1 = __webpack_require__(38);
 class Include {
     constructor(local) {
         this.local = local;
@@ -11189,7 +10870,7 @@ function traduz(key, local) {
 //# sourceMappingURL=include.js.map
 
 /***/ }),
-/* 40 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11214,13 +10895,13 @@ exports.Erro = Erro;
 //# sourceMappingURL=Erro.js.map
 
 /***/ }),
-/* 41 */
+/* 39 */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"name\":\"analise-advpl\",\"version\":\"5.0.6\",\"description\":\"Extension of ADVPL code analysis.\",\"types\":\"lib/index.d.ts\",\"main\":\"lib/index.js\",\"scripts\":{\"compile\":\"tsc -p ./\",\"prepare\":\"npm run compile\",\"test\":\"npm run compile && mocha \\\"./test/validaadvpl.js\\\"\"},\"keywords\":[],\"author\":\"Robson Rogério Silva\",\"license\":\"ISC\",\"dependencies\":{\"@types/node\":\"^10.14.14\",\"asserts\":\"^4.0.2\",\"chai\":\"^4.2.0\",\"file-system\":\"^2.2.2\",\"globby\":\"^10.0.1\",\"i18n\":\"^0.8.3\",\"mocha\":\"^5.2.0\"},\"devDependencies\":{\"typescript\":\"^3.5.3\",\"vscode\":\"^1.1.36\"}}");
+module.exports = JSON.parse("{\"name\":\"analise-advpl\",\"version\":\"5.0.7\",\"description\":\"Extension of ADVPL code analysis.\",\"types\":\"lib/index.d.ts\",\"main\":\"lib/index.js\",\"scripts\":{\"compile\":\"tsc -p ./\",\"prepare\":\"npm run compile\",\"test\":\"npm run compile && mocha \\\"./test/validaadvpl.js\\\"\"},\"keywords\":[],\"author\":\"Robson Rogério Silva\",\"license\":\"ISC\",\"dependencies\":{\"@types/node\":\"^10.14.14\",\"asserts\":\"^4.0.2\",\"chai\":\"^4.2.0\",\"file-system\":\"^2.2.2\",\"globby\":\"^10.0.1\",\"i18n\":\"^0.8.3\",\"mocha\":\"^5.2.0\"},\"devDependencies\":{\"typescript\":\"^3.5.3\",\"vscode\":\"^1.1.36\"}}");
 
 /***/ }),
-/* 42 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11241,13 +10922,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const Erro_1 = __webpack_require__(40);
-const fonte_1 = __webpack_require__(37);
-const ItemProject_1 = __webpack_require__(43);
-const globby = __importStar(__webpack_require__(44));
+const Erro_1 = __webpack_require__(38);
+const fonte_1 = __webpack_require__(35);
+const ItemProject_1 = __webpack_require__(41);
+const globby = __importStar(__webpack_require__(42));
 const fileSystem = __importStar(__webpack_require__(6));
-const validaAdvpl_1 = __webpack_require__(38);
-const package_json_1 = __webpack_require__(41);
+const validaAdvpl_1 = __webpack_require__(36);
+const package_json_1 = __webpack_require__(39);
 class ValidaProjeto {
     constructor(comentFontePad, local, log = true) {
         this.log = log;
@@ -11480,7 +11161,7 @@ function traduz(key, local) {
 //# sourceMappingURL=validaProjeto.js.map
 
 /***/ }),
-/* 43 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11492,19 +11173,19 @@ exports.ItemModel = ItemModel;
 //# sourceMappingURL=ItemProject.js.map
 
 /***/ }),
-/* 44 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 const fs = __webpack_require__(6);
-const arrayUnion = __webpack_require__(45);
-const merge2 = __webpack_require__(46);
-const glob = __webpack_require__(48);
-const fastGlob = __webpack_require__(65);
-const dirGlob = __webpack_require__(131);
-const gitignore = __webpack_require__(133);
-const {FilterStream, UniqueStream} = __webpack_require__(136);
+const arrayUnion = __webpack_require__(43);
+const merge2 = __webpack_require__(44);
+const glob = __webpack_require__(46);
+const fastGlob = __webpack_require__(63);
+const dirGlob = __webpack_require__(130);
+const gitignore = __webpack_require__(132);
+const {FilterStream, UniqueStream} = __webpack_require__(135);
 
 const DEFAULT_FILTER = () => false;
 
@@ -11677,7 +11358,7 @@ module.exports.gitignore = gitignore;
 
 
 /***/ }),
-/* 45 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11689,7 +11370,7 @@ module.exports = (...arguments_) => {
 
 
 /***/ }),
-/* 46 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11701,7 +11382,7 @@ module.exports = (...arguments_) => {
  * Copyright (c) 2014-2016 Teambition
  * Licensed under the MIT license.
  */
-const Stream = __webpack_require__(47)
+const Stream = __webpack_require__(45)
 const PassThrough = Stream.PassThrough
 const slice = Array.prototype.slice
 
@@ -11803,13 +11484,13 @@ function pauseStreams (streams, options) {
 
 
 /***/ }),
-/* 47 */
+/* 45 */
 /***/ (function(module, exports) {
 
 module.exports = require("stream");
 
 /***/ }),
-/* 48 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Approach:
@@ -11855,26 +11536,26 @@ module.exports = require("stream");
 module.exports = glob
 
 var fs = __webpack_require__(6)
-var rp = __webpack_require__(49)
-var minimatch = __webpack_require__(51)
+var rp = __webpack_require__(47)
+var minimatch = __webpack_require__(49)
 var Minimatch = minimatch.Minimatch
-var inherits = __webpack_require__(55)
-var EE = __webpack_require__(57).EventEmitter
+var inherits = __webpack_require__(53)
+var EE = __webpack_require__(55).EventEmitter
 var path = __webpack_require__(8)
-var assert = __webpack_require__(58)
-var isAbsolute = __webpack_require__(59)
-var globSync = __webpack_require__(60)
-var common = __webpack_require__(61)
+var assert = __webpack_require__(56)
+var isAbsolute = __webpack_require__(57)
+var globSync = __webpack_require__(58)
+var common = __webpack_require__(59)
 var alphasort = common.alphasort
 var alphasorti = common.alphasorti
 var setopts = common.setopts
 var ownProp = common.ownProp
-var inflight = __webpack_require__(62)
+var inflight = __webpack_require__(60)
 var util = __webpack_require__(15)
 var childrenIgnored = common.childrenIgnored
 var isIgnored = common.isIgnored
 
-var once = __webpack_require__(64)
+var once = __webpack_require__(62)
 
 function glob (pattern, options, cb) {
   if (typeof options === 'function') cb = options, options = {}
@@ -12605,7 +12286,7 @@ Glob.prototype._stat2 = function (f, abs, er, stat, cb) {
 
 
 /***/ }),
-/* 49 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = realpath
@@ -12621,7 +12302,7 @@ var origRealpathSync = fs.realpathSync
 
 var version = process.version
 var ok = /^v[0-5]\./.test(version)
-var old = __webpack_require__(50)
+var old = __webpack_require__(48)
 
 function newError (er) {
   return er && er.syscall === 'realpath' && (
@@ -12677,7 +12358,7 @@ function unmonkeypatch () {
 
 
 /***/ }),
-/* 50 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Copyright Joyent, Inc. and other Node contributors.
@@ -12986,7 +12667,7 @@ exports.realpath = function realpath(p, cache, cb) {
 
 
 /***/ }),
-/* 51 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = minimatch
@@ -12998,7 +12679,7 @@ try {
 } catch (er) {}
 
 var GLOBSTAR = minimatch.GLOBSTAR = Minimatch.GLOBSTAR = {}
-var expand = __webpack_require__(52)
+var expand = __webpack_require__(50)
 
 var plTypes = {
   '!': { open: '(?:(?!(?:', close: '))[^/]*?)'},
@@ -13915,11 +13596,11 @@ function regExpEscape (s) {
 
 
 /***/ }),
-/* 52 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var concatMap = __webpack_require__(53);
-var balanced = __webpack_require__(54);
+var concatMap = __webpack_require__(51);
+var balanced = __webpack_require__(52);
 
 module.exports = expandTop;
 
@@ -14122,7 +13803,7 @@ function expand(str, isTop) {
 
 
 /***/ }),
-/* 53 */
+/* 51 */
 /***/ (function(module, exports) {
 
 module.exports = function (xs, fn) {
@@ -14141,7 +13822,7 @@ var isArray = Array.isArray || function (xs) {
 
 
 /***/ }),
-/* 54 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14207,7 +13888,7 @@ function range(a, b, str) {
 
 
 /***/ }),
-/* 55 */
+/* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
 try {
@@ -14217,12 +13898,12 @@ try {
   module.exports = util.inherits;
 } catch (e) {
   /* istanbul ignore next */
-  module.exports = __webpack_require__(56);
+  module.exports = __webpack_require__(54);
 }
 
 
 /***/ }),
-/* 56 */
+/* 54 */
 /***/ (function(module, exports) {
 
 if (typeof Object.create === 'function') {
@@ -14255,19 +13936,19 @@ if (typeof Object.create === 'function') {
 
 
 /***/ }),
-/* 57 */
+/* 55 */
 /***/ (function(module, exports) {
 
 module.exports = require("events");
 
 /***/ }),
-/* 58 */
+/* 56 */
 /***/ (function(module, exports) {
 
 module.exports = require("assert");
 
 /***/ }),
-/* 59 */
+/* 57 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14294,22 +13975,22 @@ module.exports.win32 = win32;
 
 
 /***/ }),
-/* 60 */
+/* 58 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = globSync
 globSync.GlobSync = GlobSync
 
 var fs = __webpack_require__(6)
-var rp = __webpack_require__(49)
-var minimatch = __webpack_require__(51)
+var rp = __webpack_require__(47)
+var minimatch = __webpack_require__(49)
 var Minimatch = minimatch.Minimatch
-var Glob = __webpack_require__(48).Glob
+var Glob = __webpack_require__(46).Glob
 var util = __webpack_require__(15)
 var path = __webpack_require__(8)
-var assert = __webpack_require__(58)
-var isAbsolute = __webpack_require__(59)
-var common = __webpack_require__(61)
+var assert = __webpack_require__(56)
+var isAbsolute = __webpack_require__(57)
+var common = __webpack_require__(59)
 var alphasort = common.alphasort
 var alphasorti = common.alphasorti
 var setopts = common.setopts
@@ -14786,7 +14467,7 @@ GlobSync.prototype._makeAbs = function (f) {
 
 
 /***/ }),
-/* 61 */
+/* 59 */
 /***/ (function(module, exports, __webpack_require__) {
 
 exports.alphasort = alphasort
@@ -14804,8 +14485,8 @@ function ownProp (obj, field) {
 }
 
 var path = __webpack_require__(8)
-var minimatch = __webpack_require__(51)
-var isAbsolute = __webpack_require__(59)
+var minimatch = __webpack_require__(49)
+var isAbsolute = __webpack_require__(57)
 var Minimatch = minimatch.Minimatch
 
 function alphasorti (a, b) {
@@ -15032,12 +14713,12 @@ function childrenIgnored (self, path) {
 
 
 /***/ }),
-/* 62 */
+/* 60 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var wrappy = __webpack_require__(63)
+var wrappy = __webpack_require__(61)
 var reqs = Object.create(null)
-var once = __webpack_require__(64)
+var once = __webpack_require__(62)
 
 module.exports = wrappy(inflight)
 
@@ -15092,7 +14773,7 @@ function slice (args) {
 
 
 /***/ }),
-/* 63 */
+/* 61 */
 /***/ (function(module, exports) {
 
 // Returns a wrapper function that returns a wrapped callback
@@ -15131,10 +14812,10 @@ function wrappy (fn, cb) {
 
 
 /***/ }),
-/* 64 */
+/* 62 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var wrappy = __webpack_require__(63)
+var wrappy = __webpack_require__(61)
 module.exports = wrappy(once)
 module.exports.strict = wrappy(onceStrict)
 
@@ -15179,17 +14860,17 @@ function onceStrict (fn) {
 
 
 /***/ }),
-/* 65 */
+/* 63 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-const taskManager = __webpack_require__(66);
-const async_1 = __webpack_require__(94);
-const stream_1 = __webpack_require__(127);
-const sync_1 = __webpack_require__(128);
-const settings_1 = __webpack_require__(130);
-const utils = __webpack_require__(67);
+const taskManager = __webpack_require__(64);
+const async_1 = __webpack_require__(93);
+const stream_1 = __webpack_require__(126);
+const sync_1 = __webpack_require__(127);
+const settings_1 = __webpack_require__(129);
+const utils = __webpack_require__(65);
 function FastGlob(source, options) {
     try {
         assertPatternsInput(source);
@@ -15259,13 +14940,13 @@ module.exports = FastGlob;
 
 
 /***/ }),
-/* 66 */
+/* 64 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const utils = __webpack_require__(67);
+const utils = __webpack_require__(65);
 function generate(patterns, settings) {
     const positivePatterns = getPositivePatterns(patterns);
     const negativePatterns = getNegativePatternsAsPositive(patterns, settings.ignore);
@@ -15330,28 +15011,28 @@ exports.convertPatternGroupToTask = convertPatternGroupToTask;
 
 
 /***/ }),
-/* 67 */
+/* 65 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const array = __webpack_require__(68);
+const array = __webpack_require__(66);
 exports.array = array;
-const errno = __webpack_require__(69);
+const errno = __webpack_require__(67);
 exports.errno = errno;
-const fs = __webpack_require__(70);
+const fs = __webpack_require__(68);
 exports.fs = fs;
-const path = __webpack_require__(71);
+const path = __webpack_require__(69);
 exports.path = path;
-const pattern = __webpack_require__(72);
+const pattern = __webpack_require__(70);
 exports.pattern = pattern;
-const stream = __webpack_require__(93);
+const stream = __webpack_require__(92);
 exports.stream = stream;
 
 
 /***/ }),
-/* 68 */
+/* 66 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15364,7 +15045,7 @@ exports.flatten = flatten;
 
 
 /***/ }),
-/* 69 */
+/* 67 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15377,7 +15058,7 @@ exports.isEnoentCodeError = isEnoentCodeError;
 
 
 /***/ }),
-/* 70 */
+/* 68 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15402,7 +15083,7 @@ exports.createDirentFromStats = createDirentFromStats;
 
 
 /***/ }),
-/* 71 */
+/* 69 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15428,15 +15109,15 @@ exports.escape = escape;
 
 
 /***/ }),
-/* 72 */
+/* 70 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = __webpack_require__(8);
-const globParent = __webpack_require__(73);
-const micromatch = __webpack_require__(76);
+const globParent = __webpack_require__(71);
+const micromatch = __webpack_require__(75);
 const GLOBSTAR = '**';
 const ESCAPE_SYMBOL = '\\';
 const COMMON_GLOB_SYMBOLS_RE = /[*?]|^!/;
@@ -15547,15 +15228,15 @@ exports.matchAny = matchAny;
 
 
 /***/ }),
-/* 73 */
+/* 71 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var isGlob = __webpack_require__(74);
+var isGlob = __webpack_require__(72);
 var pathPosixDirname = __webpack_require__(8).posix.dirname;
-var isWin32 = __webpack_require__(17).platform() === 'win32';
+var isWin32 = __webpack_require__(74).platform() === 'win32';
 
 var slash = '/';
 var backslash = /\\/g;
@@ -15595,7 +15276,7 @@ module.exports = function globParent(str, opts) {
 
 
 /***/ }),
-/* 74 */
+/* 72 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -15605,7 +15286,7 @@ module.exports = function globParent(str, opts) {
  * Released under the MIT License.
  */
 
-var isExtglob = __webpack_require__(75);
+var isExtglob = __webpack_require__(73);
 var chars = { '{': '}', '(': ')', '[': ']'};
 var strictRegex = /\\(.)|(^!|\*|[\].+)]\?|\[[^\\\]]+\]|\{[^\\}]+\}|\(\?[:!=][^\\)]+\)|\([^|]+\|[^\\)]+\))/;
 var relaxedRegex = /\\(.)|(^!|[*?{}()[\]]|\(\?)/;
@@ -15649,7 +15330,7 @@ module.exports = function isGlob(str, options) {
 
 
 /***/ }),
-/* 75 */
+/* 73 */
 /***/ (function(module, exports) {
 
 /*!
@@ -15675,16 +15356,22 @@ module.exports = function isExtglob(str) {
 
 
 /***/ }),
-/* 76 */
+/* 74 */
+/***/ (function(module, exports) {
+
+module.exports = require("os");
+
+/***/ }),
+/* 75 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 const util = __webpack_require__(15);
-const braces = __webpack_require__(77);
-const picomatch = __webpack_require__(87);
-const utils = __webpack_require__(90);
+const braces = __webpack_require__(76);
+const picomatch = __webpack_require__(86);
+const utils = __webpack_require__(89);
 const isEmptyString = val => typeof val === 'string' && (val === '' || val === './');
 
 /**
@@ -16149,16 +15836,16 @@ module.exports = micromatch;
 
 
 /***/ }),
-/* 77 */
+/* 76 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-const stringify = __webpack_require__(78);
-const compile = __webpack_require__(80);
-const expand = __webpack_require__(84);
-const parse = __webpack_require__(85);
+const stringify = __webpack_require__(77);
+const compile = __webpack_require__(79);
+const expand = __webpack_require__(83);
+const parse = __webpack_require__(84);
 
 /**
  * Expand the given pattern or create a regex-compatible string.
@@ -16326,13 +16013,13 @@ module.exports = braces;
 
 
 /***/ }),
-/* 78 */
+/* 77 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-const utils = __webpack_require__(79);
+const utils = __webpack_require__(78);
 
 module.exports = (ast, options = {}) => {
   let stringify = (node, parent = {}) => {
@@ -16365,7 +16052,7 @@ module.exports = (ast, options = {}) => {
 
 
 /***/ }),
-/* 79 */
+/* 78 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -16484,14 +16171,14 @@ exports.flatten = (...args) => {
 
 
 /***/ }),
-/* 80 */
+/* 79 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-const fill = __webpack_require__(81);
-const utils = __webpack_require__(79);
+const fill = __webpack_require__(80);
+const utils = __webpack_require__(78);
 
 const compile = (ast, options = {}) => {
   let walk = (node, parent = {}) => {
@@ -16548,7 +16235,7 @@ module.exports = compile;
 
 
 /***/ }),
-/* 81 */
+/* 80 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -16562,7 +16249,7 @@ module.exports = compile;
 
 
 const util = __webpack_require__(15);
-const toRegexRange = __webpack_require__(82);
+const toRegexRange = __webpack_require__(81);
 
 const isObject = val => val !== null && typeof val === 'object' && !Array.isArray(val);
 
@@ -16804,7 +16491,7 @@ module.exports = fill;
 
 
 /***/ }),
-/* 82 */
+/* 81 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -16817,7 +16504,7 @@ module.exports = fill;
 
 
 
-const isNumber = __webpack_require__(83);
+const isNumber = __webpack_require__(82);
 
 const toRegexRange = (min, max, options) => {
   if (isNumber(min) === false) {
@@ -17099,7 +16786,7 @@ module.exports = toRegexRange;
 
 
 /***/ }),
-/* 83 */
+/* 82 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17124,15 +16811,15 @@ module.exports = function(num) {
 
 
 /***/ }),
-/* 84 */
+/* 83 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-const fill = __webpack_require__(81);
-const stringify = __webpack_require__(78);
-const utils = __webpack_require__(79);
+const fill = __webpack_require__(80);
+const stringify = __webpack_require__(77);
+const utils = __webpack_require__(78);
 
 const append = (queue = '', stash = '', enclose = false) => {
   let result = [];
@@ -17244,13 +16931,13 @@ module.exports = expand;
 
 
 /***/ }),
-/* 85 */
+/* 84 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-const stringify = __webpack_require__(78);
+const stringify = __webpack_require__(77);
 
 /**
  * Constants
@@ -17272,7 +16959,7 @@ const {
   CHAR_SINGLE_QUOTE, /* ' */
   CHAR_NO_BREAK_SPACE,
   CHAR_ZERO_WIDTH_NOBREAK_SPACE
-} = __webpack_require__(86);
+} = __webpack_require__(85);
 
 /**
  * parse
@@ -17584,7 +17271,7 @@ module.exports = parse;
 
 
 /***/ }),
-/* 86 */
+/* 85 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17648,28 +17335,27 @@ module.exports = {
 
 
 /***/ }),
+/* 86 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = __webpack_require__(87);
+
+
+/***/ }),
 /* 87 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-module.exports = __webpack_require__(88);
-
-
-/***/ }),
-/* 88 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
 const path = __webpack_require__(8);
-const scan = __webpack_require__(89);
-const parse = __webpack_require__(92);
-const utils = __webpack_require__(90);
-const constants = __webpack_require__(91);
-const isObject = val => val && typeof val === 'object' && !Array.isArray(val);
+const scan = __webpack_require__(88);
+const parse = __webpack_require__(91);
+const utils = __webpack_require__(89);
+const constants = __webpack_require__(90);
 
 /**
  * Creates a matcher function from one or more glob patterns. The
@@ -17696,28 +17382,22 @@ const isObject = val => val && typeof val === 'object' && !Array.isArray(val);
 const picomatch = (glob, options, returnState = false) => {
   if (Array.isArray(glob)) {
     const fns = glob.map(input => picomatch(input, options, returnState));
-    const arrayMatcher = str => {
+    return str => {
       for (const isMatch of fns) {
         const state = isMatch(str);
         if (state) return state;
       }
       return false;
     };
-    return arrayMatcher;
   }
 
-  const isState = isObject(glob) && glob.tokens && glob.input;
-
-  if (glob === '' || (typeof glob !== 'string' && !isState)) {
+  if (typeof glob !== 'string' || glob === '') {
     throw new TypeError('Expected pattern to be a non-empty string');
   }
 
   const opts = options || {};
   const posix = utils.isWindows(options);
-  const regex = isState
-    ? picomatch.compileRe(glob, options)
-    : picomatch.makeRe(glob, options, false, true);
-
+  const regex = picomatch.makeRe(glob, options, false, true);
   const state = regex.state;
   delete regex.state;
 
@@ -17805,7 +17485,7 @@ picomatch.test = (input, regex, options, { glob, posix } = {}) => {
     }
   }
 
-  return { isMatch: Boolean(match), match, output };
+  return { isMatch: !!match, match, output };
 };
 
 /**
@@ -17852,18 +17532,15 @@ picomatch.isMatch = (str, patterns, options) => picomatch(patterns, options)(str
  *
  * ```js
  * const picomatch = require('picomatch');
- * const result = picomatch.parse(pattern[, options]);
+ * const result = picomatch.parse(glob[, options]);
  * ```
- * @param {String} `pattern`
+ * @param {String} `glob`
  * @param {Object} `options`
  * @return {Object} Returns an object with useful properties and output to be used as a regex source string.
  * @api public
  */
 
-picomatch.parse = (pattern, options) => {
-  if (Array.isArray(pattern)) return pattern.map(p => picomatch.parse(p, options));
-  return parse(pattern, { ...options, fastpaths: false });
-};
+picomatch.parse = (glob, options) => parse(glob, options);
 
 /**
  * Scan a glob pattern to separate the pattern into segments.
@@ -17874,17 +17551,12 @@ picomatch.parse = (pattern, options) => {
  *
  * const result = picomatch.scan('!./foo/*.js');
  * console.log(result);
- * { prefix: '!./',
- *   input: '!./foo/*.js',
- *   start: 3,
- *   base: 'foo',
- *   glob: '*.js',
- *   isBrace: false,
- *   isBracket: false,
- *   isGlob: true,
- *   isExtglob: false,
- *   isGlobstar: false,
- *   negated: true }
+ * // { prefix: '!./',
+ * //   input: '!./foo/*.js',
+ * //   base: 'foo',
+ * //   glob: '*.js',
+ * //   negated: true,
+ * //   isGlob: true }
  * ```
  * @param {String} `input` Glob pattern to scan.
  * @param {Object} `options`
@@ -17910,55 +17582,48 @@ picomatch.scan = (input, options) => scan(input, options);
  * @api public
  */
 
-picomatch.compileRe = (parsed, options, returnOutput = false, returnState = false) => {
-  if (returnOutput === true) {
-    return parsed.output;
-  }
-
-  const opts = options || {};
-  const prepend = opts.contains ? '' : '^';
-  const append = opts.contains ? '' : '$';
-
-  let source = `${prepend}(?:${parsed.output})${append}`;
-  if (parsed && parsed.negated === true) {
-    source = `^(?!${source}).*$`;
-  }
-
-  const regex = picomatch.toRegex(source, options);
-  if (returnState === true) {
-    regex.state = parsed;
-  }
-
-  return regex;
-};
-
 picomatch.makeRe = (input, options, returnOutput = false, returnState = false) => {
   if (!input || typeof input !== 'string') {
     throw new TypeError('Expected a non-empty string');
   }
 
   const opts = options || {};
-  let parsed = { negated: false, fastpaths: true };
+  const prepend = opts.contains ? '' : '^';
+  const append = opts.contains ? '' : '$';
+  let state = { negated: false, fastpaths: true };
   let prefix = '';
   let output;
 
   if (input.startsWith('./')) {
     input = input.slice(2);
-    prefix = parsed.prefix = './';
+    prefix = state.prefix = './';
   }
 
   if (opts.fastpaths !== false && (input[0] === '.' || input[0] === '*')) {
     output = parse.fastpaths(input, options);
   }
 
-  if (output === undefined) {
-    parsed = parse(input, options);
-    parsed.prefix = prefix + (parsed.prefix || '');
-  } else {
-    parsed.output = output;
+  if (output === void 0) {
+    state = picomatch.parse(input, options);
+    state.prefix = prefix + (state.prefix || '');
+    output = state.output;
   }
 
-  return picomatch.compileRe(parsed, options, returnOutput, returnState);
+  if (returnOutput === true) {
+    return output;
+  }
+
+  let source = `${prepend}(?:${output})${append}`;
+  if (state && state.negated === true) {
+    source = `^(?!${source}).*$`;
+  }
+
+  const regex = picomatch.toRegex(source, options);
+  if (returnState === true) {
+    regex.state = state;
+  }
+
+  return regex;
 };
 
 /**
@@ -18003,13 +17668,13 @@ module.exports = picomatch;
 
 
 /***/ }),
-/* 89 */
+/* 88 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-const utils = __webpack_require__(90);
+const utils = __webpack_require__(89);
 const {
   CHAR_ASTERISK,             /* * */
   CHAR_AT,                   /* @ */
@@ -18026,16 +17691,10 @@ const {
   CHAR_RIGHT_CURLY_BRACE,    /* } */
   CHAR_RIGHT_PARENTHESES,    /* ) */
   CHAR_RIGHT_SQUARE_BRACKET  /* ] */
-} = __webpack_require__(91);
+} = __webpack_require__(90);
 
 const isPathSeparator = code => {
   return code === CHAR_FORWARD_SLASH || code === CHAR_BACKWARD_SLASH;
-};
-
-const depth = token => {
-  if (token.isPrefix !== true) {
-    token.depth = token.isGlobstar ? Infinity : 1;
-  }
 };
 
 /**
@@ -18054,38 +17713,25 @@ const depth = token => {
  * @api public
  */
 
-const scan = (input, options) => {
+module.exports = (input, options) => {
   const opts = options || {};
-
   const length = input.length - 1;
-  const scanToEnd = opts.parts === true || opts.scanToEnd === true;
-  const slashes = [];
-  const tokens = [];
-  const parts = [];
-
-  let str = input;
   let index = -1;
   let start = 0;
   let lastIndex = 0;
-  let isBrace = false;
-  let isBracket = false;
   let isGlob = false;
-  let isExtglob = false;
-  let isGlobstar = false;
-  let braceEscaped = false;
   let backslashes = false;
   let negated = false;
-  let finished = false;
   let braces = 0;
   let prev;
   let code;
-  let token = { value: '', depth: 0, isGlob: false };
+
+  let braceEscaped = false;
 
   const eos = () => index >= length;
-  const peek = () => str.charCodeAt(index + 1);
   const advance = () => {
     prev = code;
-    return str.charCodeAt(++index);
+    return input.charCodeAt(++index);
   };
 
   while (index < length) {
@@ -18093,10 +17739,10 @@ const scan = (input, options) => {
     let next;
 
     if (code === CHAR_BACKWARD_SLASH) {
-      backslashes = token.backslashes = true;
-      code = advance();
+      backslashes = true;
+      next = advance();
 
-      if (code === CHAR_LEFT_CURLY_BRACE) {
+      if (next === CHAR_LEFT_CURLY_BRACE) {
         braceEscaped = true;
       }
       continue;
@@ -18105,67 +17751,39 @@ const scan = (input, options) => {
     if (braceEscaped === true || code === CHAR_LEFT_CURLY_BRACE) {
       braces++;
 
-      while (eos() !== true && (code = advance())) {
-        if (code === CHAR_BACKWARD_SLASH) {
-          backslashes = token.backslashes = true;
-          advance();
+      while (!eos() && (next = advance())) {
+        if (next === CHAR_BACKWARD_SLASH) {
+          backslashes = true;
+          next = advance();
           continue;
         }
 
-        if (code === CHAR_LEFT_CURLY_BRACE) {
+        if (next === CHAR_LEFT_CURLY_BRACE) {
           braces++;
           continue;
         }
 
-        if (braceEscaped !== true && code === CHAR_DOT && (code = advance()) === CHAR_DOT) {
-          isBrace = token.isBrace = true;
-          isGlob = token.isGlob = true;
-          finished = true;
-
-          if (scanToEnd === true) {
-            continue;
-          }
-
+        if (!braceEscaped && next === CHAR_DOT && (next = advance()) === CHAR_DOT) {
+          isGlob = true;
           break;
         }
 
-        if (braceEscaped !== true && code === CHAR_COMMA) {
-          isBrace = token.isBrace = true;
-          isGlob = token.isGlob = true;
-          finished = true;
-
-          if (scanToEnd === true) {
-            continue;
-          }
-
+        if (!braceEscaped && next === CHAR_COMMA) {
+          isGlob = true;
           break;
         }
 
-        if (code === CHAR_RIGHT_CURLY_BRACE) {
+        if (next === CHAR_RIGHT_CURLY_BRACE) {
           braces--;
-
           if (braces === 0) {
             braceEscaped = false;
-            isBrace = token.isBrace = true;
-            finished = true;
             break;
           }
         }
       }
-
-      if (scanToEnd === true) {
-        continue;
-      }
-
-      break;
     }
 
     if (code === CHAR_FORWARD_SLASH) {
-      slashes.push(index);
-      tokens.push(token);
-      token = { value: '', depth: 0, isGlob: false };
-
-      if (finished === true) continue;
       if (prev === CHAR_DOT && index === (start + 1)) {
         start += 2;
         continue;
@@ -18175,143 +17793,92 @@ const scan = (input, options) => {
       continue;
     }
 
-    if (opts.noext !== true) {
-      const isExtglobChar = code === CHAR_PLUS
-        || code === CHAR_AT
-        || code === CHAR_ASTERISK
-        || code === CHAR_QUESTION_MARK
-        || code === CHAR_EXCLAMATION_MARK;
-
-      if (isExtglobChar === true && peek() === CHAR_LEFT_PARENTHESES) {
-        isGlob = token.isGlob = true;
-        isExtglob = token.isExtglob = true;
-        finished = true;
-
-        if (scanToEnd === true) {
-          while (eos() !== true && (code = advance())) {
-            if (code === CHAR_BACKWARD_SLASH) {
-              backslashes = token.backslashes = true;
-              code = advance();
-              continue;
-            }
-
-            if (code === CHAR_RIGHT_PARENTHESES) {
-              isGlob = token.isGlob = true;
-              finished = true;
-              break;
-            }
-          }
-          continue;
-        }
-        break;
-      }
-    }
-
     if (code === CHAR_ASTERISK) {
-      if (prev === CHAR_ASTERISK) isGlobstar = token.isGlobstar = true;
-      isGlob = token.isGlob = true;
-      finished = true;
-
-      if (scanToEnd === true) {
-        continue;
-      }
+      isGlob = true;
       break;
     }
 
-    if (code === CHAR_QUESTION_MARK) {
-      isGlob = token.isGlob = true;
-      finished = true;
-
-      if (scanToEnd === true) {
-        continue;
-      }
+    if (code === CHAR_ASTERISK || code === CHAR_QUESTION_MARK) {
+      isGlob = true;
       break;
     }
 
     if (code === CHAR_LEFT_SQUARE_BRACKET) {
-      while (eos() !== true && (next = advance())) {
+      while (!eos() && (next = advance())) {
         if (next === CHAR_BACKWARD_SLASH) {
-          backslashes = token.backslashes = true;
-          advance();
+          backslashes = true;
+          next = advance();
           continue;
         }
 
         if (next === CHAR_RIGHT_SQUARE_BRACKET) {
-          isBracket = token.isBracket = true;
-          isGlob = token.isGlob = true;
-          finished = true;
-
-          if (scanToEnd === true) {
-            continue;
-          }
+          isGlob = true;
           break;
         }
       }
     }
 
-    if (opts.nonegate !== true && code === CHAR_EXCLAMATION_MARK && index === start) {
-      negated = token.negated = true;
+    const isExtglobChar = code === CHAR_PLUS
+      || code === CHAR_AT
+      || code === CHAR_EXCLAMATION_MARK;
+
+    if (isExtglobChar && input.charCodeAt(index + 1) === CHAR_LEFT_PARENTHESES) {
+      isGlob = true;
+      break;
+    }
+
+    if (!opts.nonegate && code === CHAR_EXCLAMATION_MARK && index === start) {
+      negated = true;
       start++;
       continue;
     }
 
     if (opts.noparen !== true && code === CHAR_LEFT_PARENTHESES) {
-      while (eos() !== true && (code = advance())) {
+      while (!eos() && (code = advance())) {
         if (code === CHAR_BACKWARD_SLASH) {
-          backslashes = token.backslashes = true;
+          backslashes = true;
           code = advance();
           continue;
         }
 
         if (code === CHAR_RIGHT_PARENTHESES) {
-          isGlob = token.isGlob = true;
-          finished = true;
-
-          if (scanToEnd === true) {
-            continue;
-          }
+          isGlob = true;
           break;
         }
       }
     }
 
-    if (isGlob === true) {
-      finished = true;
-
-      if (scanToEnd === true) {
-        continue;
-      }
-
+    if (isGlob) {
       break;
     }
   }
 
   if (opts.noext === true) {
-    isExtglob = false;
     isGlob = false;
   }
 
-  let base = str;
   let prefix = '';
+  const orig = input;
+  let base = input;
   let glob = '';
 
   if (start > 0) {
-    prefix = str.slice(0, start);
-    str = str.slice(start);
+    prefix = input.slice(0, start);
+    input = input.slice(start);
     lastIndex -= start;
   }
 
   if (base && isGlob === true && lastIndex > 0) {
-    base = str.slice(0, lastIndex);
-    glob = str.slice(lastIndex);
+    base = input.slice(0, lastIndex);
+    glob = input.slice(lastIndex);
   } else if (isGlob === true) {
     base = '';
-    glob = str;
+    glob = input;
   } else {
-    base = str;
+    base = input;
   }
 
-  if (base && base !== '' && base !== '/' && base !== str) {
+  if (base && base !== '' && base !== '/' && base !== input) {
     if (isPathSeparator(base.charCodeAt(base.length - 1))) {
       base = base.slice(0, -1);
     }
@@ -18325,74 +17892,12 @@ const scan = (input, options) => {
     }
   }
 
-  const state = {
-    prefix,
-    input,
-    start,
-    base,
-    glob,
-    isBrace,
-    isBracket,
-    isGlob,
-    isExtglob,
-    isGlobstar,
-    negated
-  };
-
-  if (opts.tokens === true) {
-    state.maxDepth = 0;
-    if (!isPathSeparator(code)) {
-      tokens.push(token);
-    }
-    state.tokens = tokens;
-  }
-
-  if (opts.parts === true || opts.tokens === true) {
-    let prevIndex;
-
-    for (let idx = 0; idx < slashes.length; idx++) {
-      const n = prevIndex ? prevIndex + 1 : start;
-      const i = slashes[idx];
-      const value = input.slice(n, i);
-      if (opts.tokens) {
-        if (idx === 0 && start !== 0) {
-          tokens[idx].isPrefix = true;
-          tokens[idx].value = prefix;
-        } else {
-          tokens[idx].value = value;
-        }
-        depth(tokens[idx]);
-        state.maxDepth += tokens[idx].depth;
-      }
-      if (idx !== 0 || value !== '') {
-        parts.push(value);
-      }
-      prevIndex = i;
-    }
-
-    if (prevIndex && prevIndex + 1 < input.length) {
-      const value = input.slice(prevIndex + 1);
-      parts.push(value);
-
-      if (opts.tokens) {
-        tokens[tokens.length - 1].value = value;
-        depth(tokens[tokens.length - 1]);
-        state.maxDepth += tokens[tokens.length - 1].depth;
-      }
-    }
-
-    state.slashes = slashes;
-    state.parts = parts;
-  }
-
-  return state;
+  return { prefix, input: orig, base, glob, negated, isGlob };
 };
-
-module.exports = scan;
 
 
 /***/ }),
-/* 90 */
+/* 89 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -18405,7 +17910,7 @@ const {
   REGEX_REMOVE_BACKSLASH,
   REGEX_SPECIAL_CHARS,
   REGEX_SPECIAL_CHARS_GLOBAL
-} = __webpack_require__(91);
+} = __webpack_require__(90);
 
 exports.isObject = val => val !== null && typeof val === 'object' && !Array.isArray(val);
 exports.hasRegexChars = str => REGEX_SPECIAL_CHARS.test(str);
@@ -18438,7 +17943,7 @@ exports.escapeLast = (input, char, lastIdx) => {
   const idx = input.lastIndexOf(char, lastIdx);
   if (idx === -1) return input;
   if (input[idx - 1] === '\\') return exports.escapeLast(input, char, idx - 1);
-  return `${input.slice(0, idx)}\\${input.slice(idx)}`;
+  return input.slice(0, idx) + '\\' + input.slice(idx);
 };
 
 exports.removePrefix = (input, state = {}) => {
@@ -18463,7 +17968,7 @@ exports.wrapOutput = (input, state = {}, options = {}) => {
 
 
 /***/ }),
-/* 91 */
+/* 90 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -18649,14 +18154,14 @@ module.exports = {
 
 
 /***/ }),
-/* 92 */
+/* 91 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-const constants = __webpack_require__(91);
-const utils = __webpack_require__(90);
+const constants = __webpack_require__(90);
+const utils = __webpack_require__(89);
 
 /**
  * Constants
@@ -18778,7 +18283,6 @@ const parse = (input, options) => {
     braces: 0,
     parens: 0,
     quotes: 0,
-    globstar: false,
     tokens
   };
 
@@ -18786,7 +18290,6 @@ const parse = (input, options) => {
   len = input.length;
 
   const extglobs = [];
-  const braces = [];
   const stack = [];
   let prev = bos;
   let value;
@@ -18865,7 +18368,6 @@ const parse = (input, options) => {
     if (tok.value || tok.output) append(tok);
     if (prev && prev.type === 'text' && tok.type === 'text') {
       prev.value += tok.value;
-      prev.output = (prev.output || '') + tok.value;
       return;
     }
 
@@ -18883,8 +18385,6 @@ const parse = (input, options) => {
     const output = (opts.capture ? '(' : '') + token.open;
 
     increment('parens');
-
-
     push({ type, value, output: state.output ? '' : ONE_CHAR });
     push({ type: 'paren', extglob: true, value: advance(), output });
     extglobs.push(token);
@@ -18901,7 +18401,7 @@ const parse = (input, options) => {
       }
 
       if (extglobStar !== star || eos() || /^\)+$/.test(remaining())) {
-        output = token.close = `)$))${extglobStar}`;
+        output = token.close = ')$))' + extglobStar;
       }
 
       if (token.prev.type === 'bos' && eos()) {
@@ -18946,7 +18446,7 @@ const parse = (input, options) => {
         }
         return star;
       }
-      return esc ? m : `\\${m}`;
+      return esc ? m : '\\' + m;
     });
 
     if (backslashes === true) {
@@ -19055,11 +18555,11 @@ const parse = (input, options) => {
       }
 
       if ((value === '[' && peek() !== ':') || (value === '-' && peek() === ']')) {
-        value = `\\${value}`;
+        value = '\\' + value;
       }
 
       if (value === ']' && (prev.value === '[' || prev.value === '[^')) {
-        value = `\\${value}`;
+        value = '\\' + value;
       }
 
       if (opts.posix === true && value === '!' && prev.value === '[') {
@@ -19131,7 +18631,7 @@ const parse = (input, options) => {
           throw new SyntaxError(syntaxError('closing', ']'));
         }
 
-        value = `\\${value}`;
+        value = '\\' + value;
       } else {
         increment('brackets');
       }
@@ -19142,7 +18642,7 @@ const parse = (input, options) => {
 
     if (value === ']') {
       if (opts.nobracket === true || (prev && prev.type === 'bracket' && prev.value.length === 1)) {
-        push({ type: 'text', value, output: `\\${value}` });
+        push({ type: 'text', value, output: '\\' + value });
         continue;
       }
 
@@ -19151,7 +18651,7 @@ const parse = (input, options) => {
           throw new SyntaxError(syntaxError('opening', '['));
         }
 
-        push({ type: 'text', value, output: `\\${value}` });
+        push({ type: 'text', value, output: '\\' + value });
         continue;
       }
 
@@ -19159,7 +18659,7 @@ const parse = (input, options) => {
 
       const prevValue = prev.value.slice(1);
       if (prev.posix !== true && prevValue[0] === '^' && !prevValue.includes('/')) {
-        value = `/${value}`;
+        value = '/' + value;
       }
 
       prev.value += value;
@@ -19194,31 +18694,19 @@ const parse = (input, options) => {
 
     if (value === '{' && opts.nobrace !== true) {
       increment('braces');
-
-      const open = {
-        type: 'brace',
-        value,
-        output: '(',
-        outputIndex: state.output.length,
-        tokensIndex: state.tokens.length
-      };
-
-      braces.push(open);
-      push(open);
+      push({ type: 'brace', value, output: '(' });
       continue;
     }
 
     if (value === '}') {
-      const brace = braces[braces.length - 1];
-
-      if (opts.nobrace === true || !brace) {
+      if (opts.nobrace === true || state.braces === 0) {
         push({ type: 'text', value, output: value });
         continue;
       }
 
       let output = ')';
 
-      if (brace.dots === true) {
+      if (state.dots === true) {
         const arr = tokens.slice();
         const range = [];
 
@@ -19236,20 +18724,8 @@ const parse = (input, options) => {
         state.backtrack = true;
       }
 
-      if (brace.comma !== true && brace.dots !== true) {
-        const out = state.output.slice(0, brace.outputIndex);
-        const toks = state.tokens.slice(brace.tokensIndex);
-        brace.value = brace.output = '\\{';
-        value = output = `\\}`;
-        state.output = out;
-        for (const t of toks) {
-          state.output += (t.output || t.value);
-        }
-      }
-
       push({ type: 'brace', value, output });
       decrement('braces');
-      braces.pop();
       continue;
     }
 
@@ -19272,9 +18748,7 @@ const parse = (input, options) => {
     if (value === ',') {
       let output = value;
 
-      const brace = braces[braces.length - 1];
-      if (brace && stack[stack.length - 1] === 'braces') {
-        brace.comma = true;
+      if (state.braces > 0 && stack[stack.length - 1] === 'braces') {
         output = '|';
       }
 
@@ -19311,11 +18785,10 @@ const parse = (input, options) => {
     if (value === '.') {
       if (state.braces > 0 && prev.type === 'dot') {
         if (prev.value === '.') prev.output = DOT_LITERAL;
-        const brace = braces[braces.length - 1];
         prev.type = 'dots';
         prev.output += value;
         prev.value += value;
-        brace.dots = true;
+        state.dots = true;
         continue;
       }
 
@@ -19348,7 +18821,7 @@ const parse = (input, options) => {
         }
 
         if ((prev.value === '(' && !/[!=<:]/.test(next)) || (next === '<' && !/<([!=]|\w+>)/.test(remaining()))) {
-          output = `\\${value}`;
+          output = '\\' + value;
         }
 
         push({ type: 'text', value, output });
@@ -19377,7 +18850,7 @@ const parse = (input, options) => {
       }
 
       if (opts.nonegate !== true && state.index === 0) {
-        negate();
+        negate(state);
         continue;
       }
     }
@@ -19426,7 +18899,7 @@ const parse = (input, options) => {
 
     if (value !== '*') {
       if (value === '$' || value === '^') {
-        value = `\\${value}`;
+        value = '\\' + value;
       }
 
       const match = REGEX_NON_SPECIAL_CHARS.exec(remaining());
@@ -19449,7 +18922,6 @@ const parse = (input, options) => {
       prev.value += value;
       prev.output = star;
       state.backtrack = true;
-      state.globstar = true;
       consume(value);
       continue;
     }
@@ -19498,19 +18970,18 @@ const parse = (input, options) => {
         prev.value += value;
         prev.output = globstar(opts);
         state.output = prev.output;
-        state.globstar = true;
         consume(value);
         continue;
       }
 
       if (prior.type === 'slash' && prior.prev.type !== 'bos' && !afterStar && eos()) {
         state.output = state.output.slice(0, -(prior.output + prev.output).length);
-        prior.output = `(?:${prior.output}`;
+        prior.output = '(?:' + prior.output;
 
         prev.type = 'globstar';
         prev.output = globstar(opts) + (opts.strictSlashes ? ')' : '|$)');
         prev.value += value;
-        state.globstar = true;
+
         state.output += prior.output + prev.output;
         consume(value);
         continue;
@@ -19520,18 +18991,16 @@ const parse = (input, options) => {
         const end = rest[1] !== void 0 ? '|$' : '';
 
         state.output = state.output.slice(0, -(prior.output + prev.output).length);
-        prior.output = `(?:${prior.output}`;
+        prior.output = '(?:' + prior.output;
 
         prev.type = 'globstar';
         prev.output = `${globstar(opts)}${SLASH_LITERAL}|${SLASH_LITERAL}${end})`;
         prev.value += value;
 
         state.output += prior.output + prev.output;
-        state.globstar = true;
-
         consume(value + advance());
 
-        push({ type: 'slash', value: '/', output: '' });
+        push({ type: 'slash', value, output: '' });
         continue;
       }
 
@@ -19540,9 +19009,8 @@ const parse = (input, options) => {
         prev.value += value;
         prev.output = `(?:^|${SLASH_LITERAL}|${globstar(opts)}${SLASH_LITERAL})`;
         state.output = prev.output;
-        state.globstar = true;
         consume(value + advance());
-        push({ type: 'slash', value: '/', output: '' });
+        push({ type: 'slash', value, output: '' });
         continue;
       }
 
@@ -19556,7 +19024,6 @@ const parse = (input, options) => {
 
       // reset output with globstar
       state.output += prev.output;
-      state.globstar = true;
       consume(value);
       continue;
     }
@@ -19714,7 +19181,7 @@ parse.fastpaths = (input, options) => {
         const match = /^(.*?)\.(\w+)$/.exec(str);
         if (!match) return;
 
-        const source = create(match[1]);
+        const source = create(match[1], options);
         if (!source) return;
 
         return source + DOT_LITERAL + match[2];
@@ -19736,13 +19203,13 @@ module.exports = parse;
 
 
 /***/ }),
-/* 93 */
+/* 92 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const merge2 = __webpack_require__(46);
+const merge2 = __webpack_require__(44);
 function merge(streams) {
     const mergedStream = merge2(streams);
     streams.forEach((stream) => {
@@ -19759,14 +19226,14 @@ function propagateCloseEventToSources(streams) {
 
 
 /***/ }),
-/* 94 */
+/* 93 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const stream_1 = __webpack_require__(95);
-const provider_1 = __webpack_require__(122);
+const stream_1 = __webpack_require__(94);
+const provider_1 = __webpack_require__(121);
 class ProviderAsync extends provider_1.default {
     constructor() {
         super(...arguments);
@@ -19794,16 +19261,16 @@ exports.default = ProviderAsync;
 
 
 /***/ }),
-/* 95 */
+/* 94 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const stream_1 = __webpack_require__(47);
-const fsStat = __webpack_require__(96);
-const fsWalk = __webpack_require__(101);
-const reader_1 = __webpack_require__(121);
+const stream_1 = __webpack_require__(45);
+const fsStat = __webpack_require__(95);
+const fsWalk = __webpack_require__(100);
+const reader_1 = __webpack_require__(120);
 class ReaderStream extends reader_1.default {
     constructor() {
         super(...arguments);
@@ -19856,15 +19323,15 @@ exports.default = ReaderStream;
 
 
 /***/ }),
-/* 96 */
+/* 95 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const async = __webpack_require__(97);
-const sync = __webpack_require__(98);
-const settings_1 = __webpack_require__(99);
+const async = __webpack_require__(96);
+const sync = __webpack_require__(97);
+const settings_1 = __webpack_require__(98);
 exports.Settings = settings_1.default;
 function stat(path, optionsOrSettingsOrCallback, callback) {
     if (typeof optionsOrSettingsOrCallback === 'function') {
@@ -19887,7 +19354,7 @@ function getSettings(settingsOrOptions = {}) {
 
 
 /***/ }),
-/* 97 */
+/* 96 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -19925,7 +19392,7 @@ function callSuccessCallback(callback, result) {
 
 
 /***/ }),
-/* 98 */
+/* 97 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -19954,13 +19421,13 @@ exports.read = read;
 
 
 /***/ }),
-/* 99 */
+/* 98 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const fs = __webpack_require__(100);
+const fs = __webpack_require__(99);
 class Settings {
     constructor(_options = {}) {
         this._options = _options;
@@ -19977,7 +19444,7 @@ exports.default = Settings;
 
 
 /***/ }),
-/* 100 */
+/* 99 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20000,16 +19467,16 @@ exports.createFileSystemAdapter = createFileSystemAdapter;
 
 
 /***/ }),
-/* 101 */
+/* 100 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const async_1 = __webpack_require__(102);
-const stream_1 = __webpack_require__(117);
-const sync_1 = __webpack_require__(118);
-const settings_1 = __webpack_require__(120);
+const async_1 = __webpack_require__(101);
+const stream_1 = __webpack_require__(116);
+const sync_1 = __webpack_require__(117);
+const settings_1 = __webpack_require__(119);
 exports.Settings = settings_1.default;
 function walk(directory, optionsOrSettingsOrCallback, callback) {
     if (typeof optionsOrSettingsOrCallback === 'function') {
@@ -20039,13 +19506,13 @@ function getSettings(settingsOrOptions = {}) {
 
 
 /***/ }),
-/* 102 */
+/* 101 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const async_1 = __webpack_require__(103);
+const async_1 = __webpack_require__(102);
 class AsyncProvider {
     constructor(_root, _settings) {
         this._root = _root;
@@ -20076,17 +19543,17 @@ function callSuccessCallback(callback, entries) {
 
 
 /***/ }),
-/* 103 */
+/* 102 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const events_1 = __webpack_require__(57);
-const fsScandir = __webpack_require__(104);
-const fastq = __webpack_require__(113);
-const common = __webpack_require__(115);
-const reader_1 = __webpack_require__(116);
+const events_1 = __webpack_require__(55);
+const fsScandir = __webpack_require__(103);
+const fastq = __webpack_require__(112);
+const common = __webpack_require__(114);
+const reader_1 = __webpack_require__(115);
 class AsyncReader extends reader_1.default {
     constructor(_root, _settings) {
         super(_root, _settings);
@@ -20176,15 +19643,15 @@ exports.default = AsyncReader;
 
 
 /***/ }),
-/* 104 */
+/* 103 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const async = __webpack_require__(105);
-const sync = __webpack_require__(110);
-const settings_1 = __webpack_require__(111);
+const async = __webpack_require__(104);
+const sync = __webpack_require__(109);
+const settings_1 = __webpack_require__(110);
 exports.Settings = settings_1.default;
 function scandir(path, optionsOrSettingsOrCallback, callback) {
     if (typeof optionsOrSettingsOrCallback === 'function') {
@@ -20207,16 +19674,16 @@ function getSettings(settingsOrOptions = {}) {
 
 
 /***/ }),
-/* 105 */
+/* 104 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const fsStat = __webpack_require__(96);
-const rpl = __webpack_require__(106);
-const constants_1 = __webpack_require__(107);
-const utils = __webpack_require__(108);
+const fsStat = __webpack_require__(95);
+const rpl = __webpack_require__(105);
+const constants_1 = __webpack_require__(106);
+const utils = __webpack_require__(107);
 function read(directory, settings, callback) {
     if (!settings.stats && constants_1.IS_SUPPORT_READDIR_WITH_FILE_TYPES) {
         return readdirWithFileTypes(directory, settings, callback);
@@ -20304,7 +19771,7 @@ function callSuccessCallback(callback, result) {
 
 
 /***/ }),
-/* 106 */
+/* 105 */
 /***/ (function(module, exports) {
 
 module.exports = runParallel
@@ -20358,7 +19825,7 @@ function runParallel (tasks, cb) {
 
 
 /***/ }),
-/* 107 */
+/* 106 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20378,18 +19845,18 @@ exports.IS_SUPPORT_READDIR_WITH_FILE_TYPES = IS_MATCHED_BY_MAJOR || IS_MATCHED_B
 
 
 /***/ }),
-/* 108 */
+/* 107 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const fs = __webpack_require__(109);
+const fs = __webpack_require__(108);
 exports.fs = fs;
 
 
 /***/ }),
-/* 109 */
+/* 108 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20414,15 +19881,15 @@ exports.createDirentFromStats = createDirentFromStats;
 
 
 /***/ }),
-/* 110 */
+/* 109 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const fsStat = __webpack_require__(96);
-const constants_1 = __webpack_require__(107);
-const utils = __webpack_require__(108);
+const fsStat = __webpack_require__(95);
+const constants_1 = __webpack_require__(106);
+const utils = __webpack_require__(107);
 function read(directory, settings) {
     if (!settings.stats && constants_1.IS_SUPPORT_READDIR_WITH_FILE_TYPES) {
         return readdirWithFileTypes(directory, settings);
@@ -20473,15 +19940,15 @@ exports.readdir = readdir;
 
 
 /***/ }),
-/* 111 */
+/* 110 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = __webpack_require__(8);
-const fsStat = __webpack_require__(96);
-const fs = __webpack_require__(112);
+const fsStat = __webpack_require__(95);
+const fs = __webpack_require__(111);
 class Settings {
     constructor(_options = {}) {
         this._options = _options;
@@ -20504,7 +19971,7 @@ exports.default = Settings;
 
 
 /***/ }),
-/* 112 */
+/* 111 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20529,13 +19996,13 @@ exports.createFileSystemAdapter = createFileSystemAdapter;
 
 
 /***/ }),
-/* 113 */
+/* 112 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var reusify = __webpack_require__(114)
+var reusify = __webpack_require__(113)
 
 function fastqueue (context, worker, concurrency) {
   if (typeof context === 'function') {
@@ -20709,7 +20176,7 @@ module.exports = fastqueue
 
 
 /***/ }),
-/* 114 */
+/* 113 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20749,7 +20216,7 @@ module.exports = reusify
 
 
 /***/ }),
-/* 115 */
+/* 114 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20780,13 +20247,13 @@ exports.joinPathSegments = joinPathSegments;
 
 
 /***/ }),
-/* 116 */
+/* 115 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const common = __webpack_require__(115);
+const common = __webpack_require__(114);
 class Reader {
     constructor(_root, _settings) {
         this._root = _root;
@@ -20798,14 +20265,14 @@ exports.default = Reader;
 
 
 /***/ }),
-/* 117 */
+/* 116 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const stream_1 = __webpack_require__(47);
-const async_1 = __webpack_require__(103);
+const stream_1 = __webpack_require__(45);
+const async_1 = __webpack_require__(102);
 class StreamProvider {
     constructor(_root, _settings) {
         this._root = _root;
@@ -20835,13 +20302,13 @@ exports.default = StreamProvider;
 
 
 /***/ }),
-/* 118 */
+/* 117 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const sync_1 = __webpack_require__(119);
+const sync_1 = __webpack_require__(118);
 class SyncProvider {
     constructor(_root, _settings) {
         this._root = _root;
@@ -20856,15 +20323,15 @@ exports.default = SyncProvider;
 
 
 /***/ }),
-/* 119 */
+/* 118 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const fsScandir = __webpack_require__(104);
-const common = __webpack_require__(115);
-const reader_1 = __webpack_require__(116);
+const fsScandir = __webpack_require__(103);
+const common = __webpack_require__(114);
+const reader_1 = __webpack_require__(115);
 class SyncReader extends reader_1.default {
     constructor() {
         super(...arguments);
@@ -20922,14 +20389,14 @@ exports.default = SyncReader;
 
 
 /***/ }),
-/* 120 */
+/* 119 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = __webpack_require__(8);
-const fsScandir = __webpack_require__(104);
+const fsScandir = __webpack_require__(103);
 class Settings {
     constructor(_options = {}) {
         this._options = _options;
@@ -20955,15 +20422,15 @@ exports.default = Settings;
 
 
 /***/ }),
-/* 121 */
+/* 120 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = __webpack_require__(8);
-const fsStat = __webpack_require__(96);
-const utils = __webpack_require__(67);
+const fsStat = __webpack_require__(95);
+const utils = __webpack_require__(65);
 class Reader {
     constructor(_settings) {
         this._settings = _settings;
@@ -20995,17 +20462,17 @@ exports.default = Reader;
 
 
 /***/ }),
-/* 122 */
+/* 121 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = __webpack_require__(8);
-const deep_1 = __webpack_require__(123);
-const entry_1 = __webpack_require__(124);
-const error_1 = __webpack_require__(125);
-const entry_2 = __webpack_require__(126);
+const deep_1 = __webpack_require__(122);
+const entry_1 = __webpack_require__(123);
+const error_1 = __webpack_require__(124);
+const entry_2 = __webpack_require__(125);
 class Provider {
     constructor(_settings) {
         this._settings = _settings;
@@ -21050,13 +20517,13 @@ exports.default = Provider;
 
 
 /***/ }),
-/* 123 */
+/* 122 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const utils = __webpack_require__(67);
+const utils = __webpack_require__(65);
 class DeepFilter {
     constructor(_settings, _micromatchOptions) {
         this._settings = _settings;
@@ -21110,13 +20577,13 @@ exports.default = DeepFilter;
 
 
 /***/ }),
-/* 124 */
+/* 123 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const utils = __webpack_require__(67);
+const utils = __webpack_require__(65);
 class EntryFilter {
     constructor(_settings, _micromatchOptions) {
         this._settings = _settings;
@@ -21171,13 +20638,13 @@ exports.default = EntryFilter;
 
 
 /***/ }),
-/* 125 */
+/* 124 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const utils = __webpack_require__(67);
+const utils = __webpack_require__(65);
 class ErrorFilter {
     constructor(_settings) {
         this._settings = _settings;
@@ -21193,13 +20660,13 @@ exports.default = ErrorFilter;
 
 
 /***/ }),
-/* 126 */
+/* 125 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const utils = __webpack_require__(67);
+const utils = __webpack_require__(65);
 class EntryTransformer {
     constructor(_settings) {
         this._settings = _settings;
@@ -21226,15 +20693,15 @@ exports.default = EntryTransformer;
 
 
 /***/ }),
-/* 127 */
+/* 126 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const stream_1 = __webpack_require__(47);
-const stream_2 = __webpack_require__(95);
-const provider_1 = __webpack_require__(122);
+const stream_1 = __webpack_require__(45);
+const stream_2 = __webpack_require__(94);
+const provider_1 = __webpack_require__(121);
 class ProviderStream extends provider_1.default {
     constructor() {
         super(...arguments);
@@ -21264,14 +20731,14 @@ exports.default = ProviderStream;
 
 
 /***/ }),
-/* 128 */
+/* 127 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const sync_1 = __webpack_require__(129);
-const provider_1 = __webpack_require__(122);
+const sync_1 = __webpack_require__(128);
+const provider_1 = __webpack_require__(121);
 class ProviderSync extends provider_1.default {
     constructor() {
         super(...arguments);
@@ -21294,15 +20761,15 @@ exports.default = ProviderSync;
 
 
 /***/ }),
-/* 129 */
+/* 128 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const fsStat = __webpack_require__(96);
-const fsWalk = __webpack_require__(101);
-const reader_1 = __webpack_require__(121);
+const fsStat = __webpack_require__(95);
+const fsWalk = __webpack_require__(100);
+const reader_1 = __webpack_require__(120);
 class ReaderSync extends reader_1.default {
     constructor() {
         super(...arguments);
@@ -21344,14 +20811,14 @@ exports.default = ReaderSync;
 
 
 /***/ }),
-/* 130 */
+/* 129 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __webpack_require__(6);
-const os = __webpack_require__(17);
+const os = __webpack_require__(74);
 const CPU_COUNT = os.cpus().length;
 exports.DEFAULT_FILE_SYSTEM_ADAPTER = {
     lstat: fs.lstat,
@@ -21403,13 +20870,13 @@ exports.default = Settings;
 
 
 /***/ }),
-/* 131 */
+/* 130 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 const path = __webpack_require__(8);
-const pathType = __webpack_require__(132);
+const pathType = __webpack_require__(131);
 
 const getExtensions = extensions => extensions.length > 1 ? `{${extensions.join(',')}}` : extensions[0];
 
@@ -21485,7 +20952,7 @@ module.exports.sync = (input, options) => {
 
 
 /***/ }),
-/* 132 */
+/* 131 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21535,7 +21002,7 @@ exports.isSymlinkSync = isTypeSync.bind(null, 'lstatSync', 'isSymbolicLink');
 
 
 /***/ }),
-/* 133 */
+/* 132 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21543,9 +21010,9 @@ exports.isSymlinkSync = isTypeSync.bind(null, 'lstatSync', 'isSymbolicLink');
 const {promisify} = __webpack_require__(15);
 const fs = __webpack_require__(6);
 const path = __webpack_require__(8);
-const fastGlob = __webpack_require__(65);
-const gitIgnore = __webpack_require__(134);
-const slash = __webpack_require__(135);
+const fastGlob = __webpack_require__(63);
+const gitIgnore = __webpack_require__(133);
+const slash = __webpack_require__(134);
 
 const DEFAULT_IGNORE = [
 	'**/node_modules/**',
@@ -21624,7 +21091,7 @@ const getFileSync = (file, cwd) => {
 
 const normalizeOptions = ({
 	ignore = [],
-	cwd = slash(process.cwd())
+	cwd = process.cwd()
 } = {}) => {
 	return {ignore, cwd};
 };
@@ -21659,7 +21126,7 @@ module.exports.sync = options => {
 
 
 /***/ }),
-/* 134 */
+/* 133 */
 /***/ (function(module, exports) {
 
 // A simple implementation of make-array
@@ -22233,7 +21700,7 @@ if (
 
 
 /***/ }),
-/* 135 */
+/* 134 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22251,12 +21718,12 @@ module.exports = path => {
 
 
 /***/ }),
-/* 136 */
+/* 135 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-const {Transform} = __webpack_require__(47);
+const {Transform} = __webpack_require__(45);
 
 class ObjectTransform extends Transform {
 	constructor() {
@@ -22304,14 +21771,14 @@ module.exports = {
 
 
 /***/ }),
-/* 137 */
+/* 136 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const vscode_1 = __webpack_require__(1);
-const formmatingRules_1 = __webpack_require__(138);
+const formmatingRules_1 = __webpack_require__(137);
 class Formatting {
     constructor() {
         this.lineContinue = false;
@@ -22384,7 +21851,7 @@ exports.rangeFormattingEditProvider = rangeFormattingEditProvider;
 
 
 /***/ }),
-/* 138 */
+/* 137 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
