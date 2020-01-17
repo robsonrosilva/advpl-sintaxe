@@ -53,7 +53,7 @@ export class FormattingRules {
         if (
           rule.id === "if" &&
           line.match(rule.begin) &&
-          line.match(/^(\s*)(if)(\t|\ |\()+.+(\))/i)
+          line.match(/^(\s*)(if)?(\t*)?(\ *)(\()+.+(\))/i)
         ) {
           // extrai o contepudo de dentro do IF
           line = line.replace(/^(\s*)(if)(\t|\ |\()/i, "").slice(0, -1);
