@@ -4,7 +4,7 @@ import { FormattingRules, RuleMatch } from './formmatingRules';
 class Formatting implements DocumentFormattingEditProvider {
 	lineContinue: boolean = false;
 	// Regras de estruturas que não sofrem identação interna
-	structsNoIdent: string[] = ['beginsql (alias)?', 'Comentários'];
+	structsNoIdent: string[] = ['beginsql (alias)?', 'Comentários','Protheus Doc'];
 
 	provideDocumentFormattingEdits(document: TextDocument,
 		options: FormattingOptions, token: CancellationToken): ProviderResult<TextEdit[]> {
@@ -38,9 +38,9 @@ class Formatting implements DocumentFormattingEditProvider {
 						}
 					}
 
-					const newLine: string = line.text.replace(/(\s*)?/, identBlock ).trimRight();
+					const newLine: string = line.text.replace(/(\s*)?/, identBlock).trimRight();
 					result.push(TextEdit.replace(line.range, newLine));
-					this.lineContinue = newLine.endsWith(';');
+					this.lineContinue = newLine.endsWith(';') && ['Comentários', 'Protheus Doc'].indexOf(ruleMatch.rule.id) === -1;
 
 					if (ruleMatch) {
 						if (ruleMatch.increment) {

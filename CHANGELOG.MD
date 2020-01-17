@@ -6,6 +6,7 @@
 
 - Tratamento de identificação de if com espaços ou tabulações.
 - Tratamento de identificação de case terminado com enddo.
+- Correção de análise de Estrutura em protheusDoc.
 
 ### 1.1.6
 
