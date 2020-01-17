@@ -2,6 +2,11 @@
 
 ## Release Notes
 
+### 1.1.7
+
+- Tratamento de identificação de if com espaços ou tabulações.
+- Tratamento de identificação de case terminado com enddo.
+
 ### 1.1.6
 
 - Tratamento para correção de identação de if inline.

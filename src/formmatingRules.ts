@@ -153,7 +153,7 @@ export class FormattingRules {
         id: "do case",
         begin: /^(\s*)(do)(\s+)(case)/i,
         middle: /^(\s*)(case|otherwise)/i,
-        end: /^(\s*)(end)(\s*)(case)$/i
+        end: /^(\s*)(end)(do)?(\s*)(case)?$/i
       },
       {
         id: "try..catch",
