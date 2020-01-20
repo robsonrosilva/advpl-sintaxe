@@ -22,13 +22,14 @@ class Formatting implements DocumentFormattingEditProvider {
 
 		for (let nl = 0; nl < lc; nl++) {
 			const line = document.lineAt(nl);
+			// console.log(nl);
 			let lastRule: string = formattingRules.openStructures[formattingRules.openStructures.length - 1];
 			let foundIgnore: any[] = rulesIgnored.filter((rule) => { return rule.id === lastRule; });
 			// dentro do BeginSql não mexe na identação
 			if ((foundIgnore.length > 0 && !line.text.match(foundIgnore[0].end))) {
 				result.push(TextEdit.replace(line.range, line.text.trimRight()));
 			} else {
-				if ((!line.isEmptyOrWhitespace) && (formattingRules.match(line.text)) && (!this.lineContinue)) {
+				if ((!line.isEmptyOrWhitespace) && (!this.lineContinue) && (formattingRules.match(line.text))) {
 					let ruleMatch: RuleMatch | null = formattingRules.getLastMatch();
 
 					if (ruleMatch) {
@@ -40,7 +41,7 @@ class Formatting implements DocumentFormattingEditProvider {
 
 					const newLine: string = line.text.replace(/(\s*)?/, identBlock).trimRight();
 					result.push(TextEdit.replace(line.range, newLine));
-					this.lineContinue = newLine.endsWith(';') && ['Comentários', 'Protheus Doc'].indexOf(ruleMatch.rule.id) === -1;
+					this.lineContinue = newLine.split('//')[0].endsWith(';') && ['Comentários', 'Protheus Doc'].indexOf(ruleMatch.rule.id) === -1;
 
 					if (ruleMatch) {
 						if (ruleMatch.increment) {
@@ -54,7 +55,7 @@ class Formatting implements DocumentFormattingEditProvider {
 						newLine = line.text.replace(/(\s*)?/, identBlock + (this.lineContinue ? tab : "")).trimRight();
 					}
 					result.push(TextEdit.replace(line.range, newLine));
-					this.lineContinue = newLine.endsWith(';');
+					this.lineContinue = newLine.split('//')[0].endsWith(';');
 				}
 			}
 		}

@@ -53,10 +53,10 @@ export class FormattingRules {
         if (
           rule.id === "if" &&
           line.match(rule.begin) &&
-          line.match(/^(\s*)(if)?(\t*)?(\ *)(\()+.+(\))/i)
+          line.match(/^(\s*)(if)(\t|\ |\!)*(\()+.+(\))/i)
         ) {
           // extrai o contepudo de dentro do IF
-          line = line.replace(/^(\s*)(if)(\t|\ |\()/i, "").slice(0, -1);
+          line = line.replace(/^(\s*)(if)(\t|\ |\!)*(\()/i, "").slice(0, -1);
           let parts: string[] = line.split(")");
           line = "";
           parts.forEach(linepart => {
@@ -66,15 +66,18 @@ export class FormattingRules {
         }
 
         if (line.match(rule.end) && lastRule === rule.id) {
+          // console.log('fechou ' + rule.id);
           finddedRule = { rule: rule, increment: false, decrement: true };
           this.openStructures.pop();
         } else if (
           line.match(rule.begin) &&
           (!rule.noBegin || !line.match(rule.noBegin))
-        ) {
+          ) {
+          // console.log('abriu ' + rule.id);
           finddedRule = { rule: rule, increment: true, decrement: false };
           this.openStructures.push(rule.id);
         } else if (rule.middle && line.match(rule.middle)) {
+          // console.log('meio ' + rule.id);
           finddedRule = { rule: rule, increment: true, decrement: true };
         }
       }
@@ -174,12 +177,12 @@ export class FormattingRules {
       {
         id: "for",
         begin: /^(\s*)(for)(\s+)(\w+)/i,
-        end: /^(\s*)(next)(\s*)/i
+        end: /^(\s*)(next|end)(\s*)/i
       },
       {
         id: "if",
-        begin: /^(\s*)(if)(\t|\ |\(|;|\/\*|$)/i,
-        noBegin: /^(\s*)(if)(\t|\ |)+(\()+.+(\,)+.+(\,)+.+(\))/i,
+        begin: /^(\s*)(if)(\t|\ |\!|\()+/i,
+        noBegin: /^(\s*)(if)(\t|\ |\!)+(\()+.+(\,)+.+(\,)+.+(\))/i,
         middle: /^(\s*)((else)|(elseif))(\t|\ |\(|;|\/\*|$)/i,
         end: /^(\s*)(end)(if)?$/i
       },

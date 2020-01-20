@@ -6,9 +6,10 @@
 
 Esta extensão adiciona no visual code [VsCode MarketPlace](https://marketplace.visualstudio.com/items?itemName=robsonrosilva.advpl-sintaxe):
 
+- Análise de qualidade e sintaxe de programas ADVPL.
+- Identação de códigos ADVPL.
 - Snippets da linguagem.
 - Funcionalidades para promover os desenvolvimentos utilizando git de forma a enviar para homologação e produção de forma simples, gerando TAGS ao mergear para a branch de produção.
-- Análise de qualidade e sintaxe de programas ADVPL.
 
 Caso você encontre algum problema ou queira dar alguma sugestão de melhoria, por favor abra uma issue no [GitHub](https://github.com/robsonrosilva/advpl-sintaxe/issues).
 

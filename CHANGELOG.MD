@@ -4,8 +4,9 @@
 
 ### 1.1.7
 
-- Tratamento de identificação de if com espaços ou tabulações.
+- Tratamento de identificação de if com espaços, negação ou tabulações.
 - Tratamento de identificação de case terminado com enddo.
+- Tratamento de identificação de for terminado com end.
 - Correção de análise de Estrutura em protheusDoc.
 
 ### 1.1.6
