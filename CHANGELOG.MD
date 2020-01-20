@@ -8,6 +8,9 @@
 - Tratamento de identificação de case terminado com enddo.
 - Tratamento de identificação de for terminado com end.
 - Correção de análise de Estrutura em protheusDoc.
+- Tratamento de comentários após a quebra de linha(;).
+- Tratamento de if que termina com "END IF".
+- Ajuste de identificação de functions.
 
 ### 1.1.6
 

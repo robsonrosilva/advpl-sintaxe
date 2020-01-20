@@ -41,7 +41,7 @@ class Formatting implements DocumentFormattingEditProvider {
 
 					const newLine: string = line.text.replace(/(\s*)?/, identBlock).trimRight();
 					result.push(TextEdit.replace(line.range, newLine));
-					this.lineContinue = newLine.split('//')[0].endsWith(';') && ['Comentários', 'Protheus Doc'].indexOf(ruleMatch.rule.id) === -1;
+					this.lineContinue = newLine.split('//')[0].trim().endsWith(';') && ['Comentários', 'Protheus Doc'].indexOf(ruleMatch.rule.id) === -1;
 
 					if (ruleMatch) {
 						if (ruleMatch.increment) {
@@ -55,7 +55,7 @@ class Formatting implements DocumentFormattingEditProvider {
 						newLine = line.text.replace(/(\s*)?/, identBlock + (this.lineContinue ? tab : "")).trimRight();
 					}
 					result.push(TextEdit.replace(line.range, newLine));
-					this.lineContinue = newLine.split('//')[0].endsWith(';');
+					this.lineContinue = newLine.split('//')[0].trim().endsWith(';');
 				}
 			}
 		}

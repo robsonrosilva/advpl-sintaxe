@@ -118,7 +118,7 @@ export class FormattingRules {
     return [
       {
         id: "function",
-        begin: /^(\s*)((\w+)(\s+))?(function)(\s+)(\w+)/i,
+        begin: /^(\s*)((user|static)(\ |\t)*)?(function)(\s+)(\w+)/i,
         end: /^(\s*)(return)/i
       },
       {
@@ -184,7 +184,7 @@ export class FormattingRules {
         begin: /^(\s*)(if)(\t|\ |\!|\()+/i,
         noBegin: /^(\s*)(if)(\t|\ |\!)+(\()+.+(\,)+.+(\,)+.+(\))/i,
         middle: /^(\s*)((else)|(elseif))(\t|\ |\(|;|\/\*|$)/i,
-        end: /^(\s*)(end)(if)?$/i
+        end: /^(\s*)(end)(\ |\t)*(if)?$/i
       },
       {
         id: "structure",
