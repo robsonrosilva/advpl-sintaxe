@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.1.8
+
+- Correção de publicação, foi publicada uma versão parcialmente pronta.
+
 ### 1.1.7
 
 - Tratamento de identificação de if com espaços, negação ou tabulações.
