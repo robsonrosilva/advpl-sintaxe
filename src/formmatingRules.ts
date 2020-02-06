@@ -182,7 +182,7 @@ export class FormattingRules {
       {
         id: "if",
         begin: /^(\s*)(if)(\t|\ |\!|\()+/i,
-        noBegin: /^(\s*)(if)(\t|\ |\!)+(\()+.+(\,)+.+(\,)+.+(\))/i,
+        noBegin: /^(\s*)(if)(\t|\ |\!)*(\()+(.)*(\,)+(.)*(\,)+(.)*(\))/i,
         middle: /^(\s*)((else)|(elseif))(\t|\ |\(|;|\/\*|$)/i,
         end: /^(\s*)(end)(\ |\t)*(if)?$/i
       },

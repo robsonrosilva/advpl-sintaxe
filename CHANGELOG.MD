@@ -2,6 +2,12 @@
 
 ## Release Notes
 
+### 1.1.9
+
+- Remoção de tabulações e espaços antes da identação.
+- Correção de If inline sem dados nos parâmetros.
+- Alteração de validação para processamento de forma assíncrona.
+
 ### 1.1.8
 
 - Correção de publicação, foi publicada uma versão parcialmente pronta.
@@ -19,7 +25,7 @@
 ### 1.1.6
 
 - Tratamento para correção de identação de if inline.
-- Tratamento para correção de /*/ que fecha comnentário multiline.
+- Tratamento para correção de /\*/ que fecha comnentário multiline.
 
 ### 1.1.5
 
