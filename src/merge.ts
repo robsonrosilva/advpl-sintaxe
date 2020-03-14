@@ -57,18 +57,18 @@ export class MergeAdvpl {
             (resolve: Function, reject: Function) => {
                 // Verifica se a branch que mandou é uma das controladas
                 if (objeto.branchesControladas.includes(this.branchOrigem.toUpperCase())) {
-                    reject(localize('merge.noBranchMerge'));
+                    return reject(localize('merge.noBranchMerge'));
                 }
 
                 // Atualiza branch Corrente com a Release
                 objeto.atualiza().catch((erro: string) => {
-                    reject(erro);
+                    return reject(erro);
                 }).then(() => {
                     // efetua o push da branche
                     this.run(
                         ['push', '--set-upstream', 'origin', this.repository.headLabel]
                     ).catch((erro) => {
-                        reject(localize('merge.pushError') + '\n' + erro.stderr);
+                        return reject(localize('merge.pushError') + '\n' + erro.stderr);
                     }
                     ).then(() => {
                         // efetua os merges
@@ -84,7 +84,7 @@ export class MergeAdvpl {
                                             );
                                             resolve();
                                         }).catch((erro) => {
-                                            reject(localize('merge.mergeError') + '\n' + erro.stderr);
+                                            return reject(localize('merge.mergeError') + '\n' + erro.stderr);
                                         }
                                         );
                                     } else {
@@ -97,7 +97,7 @@ export class MergeAdvpl {
                                         resolve();
                                     }
                                 }).catch((erro) => {
-                                    reject(localize('merge.mergeError') + '\n' + erro.stderr);
+                                    return reject(localize('merge.mergeError') + '\n' + erro.stderr);
                                 }
                                 );
                             } else {
@@ -110,7 +110,7 @@ export class MergeAdvpl {
                                 resolve();
                             }
                         }).catch((erro) => {
-                            reject(localize('merge.mergeError') + '\n' + erro.stderr);
+                            return reject(localize('merge.mergeError') + '\n' + erro.stderr);
                         }
                         );
                     });
@@ -133,18 +133,18 @@ export class MergeAdvpl {
                     this.repository.checkout(this.branchOrigem).then(() => {
                         // efetua o merge
                         this.run(['merge', '--no-ff', this.branchHomol]).then(() => {
-                            resolve(localize('merge.atualizacaoFinish'));
+                            return resolve(localize('merge.atualizacaoFinish'));
                         }).catch((erro) => {
-                            reject(localize('merge.mergeError') + '\n' + erro.stderr);
+                            return reject(localize('merge.mergeError') + '\n' + erro.stderr);
                         });
                     }).catch((erro) => {
-                        reject(localize('merge.checkoutError') + '\n' + erro.stderr);
+                        return reject(localize('merge.checkoutError') + '\n' + erro.stderr);
                     });
                 }).catch((erro) => {
-                    reject(localize('merge.pullError') + '\n' + erro.stderr);
+                    return reject(localize('merge.pullError') + '\n' + erro.stderr);
                 });
             }).catch((erro) => {
-                reject(localize('merge.checkoutError') + '\n' + erro.stderr);
+                return reject(localize('merge.checkoutError') + '\n' + erro.stderr);
             });
         });
     }
@@ -173,16 +173,16 @@ export class MergeAdvpl {
                             });
                             resolve(localize('merge.cleanFinish'));
                         }).catch((erro) => {
-                            reject(localize('merge.mergedError') + '\n' + erro.stderr);
+                            return reject(localize('merge.mergedError') + '\n' + erro.stderr);
                         });
                     }).catch((erro) => {
-                        reject(localize('merge.remotePruneError') + '\n' + erro.stderr);
+                        return reject(localize('merge.remotePruneError') + '\n' + erro.stderr);
                     });
                 }).catch((erro) => {
-                    reject(localize('merge.pullError') + '\n' + erro.stderr);
+                    return reject(localize('merge.pullError') + '\n' + erro.stderr);
                 });
             }).catch((erro) => {
-                reject(localize('merge.pullError') + '\n' + erro.stderr);
+                return reject(localize('merge.pullError') + '\n' + erro.stderr);
             });
         });
     }
@@ -251,26 +251,26 @@ export class MergeAdvpl {
                                 this.pushAll().then(() => {
                                     resolve(tag);
                                 }).catch((erro) => {
-                                    reject(localize('merge.pushError') + '\n' + erro.stderr);
+                                    return reject(localize('merge.pushError') + '\n' + erro.stderr);
                                 });
                             }).catch((erro) => {
-                                reject(localize('merge.checkoutError') + '\n' + erro.stderr);
+                                return reject(localize('merge.checkoutError') + '\n' + erro.stderr);
                             });
                         } else {
                             this.repository.push().then(() => {
                                 resolve();
                             }).catch((erro) => {
-                                reject(localize('merge.pushError') + '\n' + erro.stderr);
+                                return reject(localize('merge.pushError') + '\n' + erro.stderr);
                             });
                         }
                     }).catch((erro) => {
-                        reject(localize('merge.mergeError') + '\n' + erro.stderr);
+                        return reject(localize('merge.mergeError') + '\n' + erro.stderr);
                     });
                 }).catch((erro) => {
-                    reject(localize('merge.pullError') + '\n' + erro.stderr);
+                    return reject(localize('merge.pullError') + '\n' + erro.stderr);
                 });
             }).catch((erro) => {
-                reject(localize('merge.checkoutError') + '\n' + erro.stderr);
+                return reject(localize('merge.checkoutError') + '\n' + erro.stderr);
             });
         });
     }

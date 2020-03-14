@@ -12,7 +12,7 @@ export interface Rule {
 
 export interface ClosedStructureRule extends Rule {
   begin: RegExp;
-  noBegin?: RegExp;
+  noBegin?: RegExp[];
   middle?: RegExp;
   end: RegExp;
 }
@@ -71,8 +71,11 @@ export class FormattingRules {
           this.openStructures.pop();
         } else if (
           line.match(rule.begin) &&
-          (!rule.noBegin || !line.match(rule.noBegin))
-          ) {
+          (!rule.noBegin || !rule.noBegin.filter((exp) => {
+            return line.match(exp);
+          }).length
+          )
+        ) {
           // console.log('abriu ' + rule.id);
           finddedRule = { rule: rule, increment: true, decrement: false };
           this.openStructures.push(rule.id);
@@ -118,7 +121,8 @@ export class FormattingRules {
     return [
       {
         id: "function",
-        begin: /^(\s*)((user|static)(\ |\t)*)?(function)(\s+)(\w+)/i,
+        begin: /^(\s*)((user|static)(\s*))?(function)(\s+)(\w+)/i,
+        noBegin: [/^(\s*)((user|static)(\s*))?(function)(\s+)(\w+)(\s*)(\;)(\s*)(return)/i],
         end: /^(\s*)(return)/i
       },
       {
@@ -127,8 +131,8 @@ export class FormattingRules {
         end: /^(\s*)(return)/i
       },
       {
-        id: "method rest",
-        begin: /^(\s*)(wsmethod)(\s+)(\w+)(\s*)(.*)(\s+)(wsservice)(\s+)(\w+)/i,
+        id: "method rest e client",
+        begin: /^(\s*)(wsmethod)(\s+)(\w+)(\s*)(.*)(\s+)(wsservice|wsclient)(\s+)(\w+)/i,
         end: /^(\s*)(return)/i
       },
       {
@@ -182,9 +186,10 @@ export class FormattingRules {
       {
         id: "if",
         begin: /^(\s*)(if)(\t|\ |\!|\()+/i,
-        noBegin: /^(\s*)(if)(\t|\ |\!)*(\()+(.)*(\,)+(.)*(\,)+(.)*(\))/i,
+        noBegin: [/^(\s*)(if)(\t|\ |\!)*(\()+(.)*(\,)+(.)*(\,)+(.)*(\))/i,
+          /^(\s*)(if)(\t|\ |\!)*(.)*(\;)+(.)*(\;)+(.)*(endif)/i],
         middle: /^(\s*)((else)|(elseif))(\t|\ |\(|;|\/\*|$)/i,
-        end: /^(\s*)(end)(\ |\t)*(if)?$/i
+        end: /^(\s*)(end)(w*)(if)?$/i
       },
       {
         id: "structure",
@@ -225,7 +230,7 @@ export class FormattingRules {
       {
         id: "Comentários",
         begin: /^(\s*)(\/\*)/i,
-        noBegin: /^\s*(\/\*.*\*\/)/i,
+        noBegin: [/^\s*(\/\*.*\*\/)/i],
         end: /(\*\/)/i
       }
     ];

@@ -77,7 +77,7 @@ export function activate(context: ExtensionContext) {
         .catch((erro: string) => {
           window.showErrorMessage(erro);
           mergeAdvpl.repository.checkout(branchAtual);
-          validaProjeto();
+          // validaProjeto();
         });
     })
   );
@@ -96,7 +96,7 @@ export function activate(context: ExtensionContext) {
         .catch((erro: string) => {
           window.showErrorMessage(erro);
           mergeAdvpl.repository.checkout(branchAtual);
-          validaProjeto();
+          // validaProjeto();
         });
     })
   );
@@ -115,11 +115,11 @@ export function activate(context: ExtensionContext) {
         .catch((erro: string) => {
           window.showErrorMessage(erro);
           mergeAdvpl.repository.checkout(branchAtual);
-          validaProjeto();
+          // validaProjeto();
         });
     })
   );
-  //Adiciona comando de envia para master
+  //Adiciona comando de análise de projeto
   context.subscriptions.push(
     commands.registerCommand('advpl-sintaxe.validaProjeto', () => {
       try {
@@ -145,7 +145,7 @@ export function activate(context: ExtensionContext) {
         .catch((erro: string) => {
           window.showErrorMessage(erro);
           mergeAdvpl.repository.checkout(branchAtual);
-          validaProjeto();
+          // validaProjeto();
         });
     })
   );

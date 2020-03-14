@@ -2,6 +2,13 @@
 
 ## Release Notes
 
+### 1.1.10
+
+- Correção de identificação de funções.
+- Correção de identificação de nomes de WEBSERVICES, WSSTRUCT e WSRESTFUL.
+- Identaçao de WSMETHOD.
+- Tratamentos para function ; return e if ; ; endif.
+
 ### 1.1.9
 
 - Remoção de tabulações e espaços antes da identação.
