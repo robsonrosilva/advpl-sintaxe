@@ -2,6 +2,13 @@
 
 ## Release Notes
 
+### 1.2.0
+
+- Implementação de formatação parcial de código.
+- Implementação de formatação de begin content.
+- Criação de tag para não formatar dentro da expressão. `/*{*/ ...... /*}*/`
+- Correção de Identação de DoCase.
+
 ### 1.1.10
 
 - Correção de identificação de funções.
