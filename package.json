@@ -2,7 +2,7 @@
   "name": "advpl-sintaxe",
   "displayName": "ADVPL Análise, Snippets e GIT",
   "description": "Extensão de análise de qualidade e sintaxe e snippets ADVPL e que facilita a utilização do GIT.",
-  "version": "1.2.0",
+  "version": "1.2.2",
   "publisher": "robsonrosilva",
   "icon": "images/icone.png",
   "engines": {
@@ -20,6 +20,9 @@
     "theme": "light"
   },
   "categories": [
+    "Formatters",
+    "Linters",
+    "Snippets",
     "Other"
   ],
   "capabilities": {
@@ -105,6 +108,19 @@
   ],
   "main": "./dist/extension",
   "contributes": {
+    "languages": [
+      {
+        "id": "advpl",
+        "aliases": [
+          "advpl",
+          "prw"
+        ],
+        "filenamePatterns": [
+          "*.tlpp",
+          "*.prw"
+        ]
+      }
+    ],
     "commands": [
       {
         "command": "advpl-sintaxe.gitValidacao",
@@ -135,6 +151,13 @@
       "type": "object",
       "title": "%advpl-sintaxe.configuration.title%",
       "properties": {
+        "advplformat.effectLanguages": {
+          "type": "array",
+          "default": [
+            "advpl"
+          ],
+          "description": "the trigger effect  on the language"
+        },
         "advpl-sintaxe": {
           "type": "object",
           "default": {},

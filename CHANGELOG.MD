@@ -2,7 +2,7 @@
 
 ## Release Notes
 
-### 1.2.0
+### 1.2.2
 
 - Implementação de formatação parcial de código.
 - Implementação de formatação de begin content.
