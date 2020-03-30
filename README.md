@@ -6,7 +6,7 @@
 
 Esta extensão adiciona no visual code [VsCode MarketPlace](https://marketplace.visualstudio.com/items?itemName=robsonrosilva.advpl-sintaxe):
 
-- Análise de qualidade e sintaxe de programas ADVPL.
+- Análise de qualidade e sintaxe de programas ADVPL (LINT).
 - Identação de códigos ADVPL.
 - Snippets da linguagem.
 - Funcionalidades para promover os desenvolvimentos utilizando git de forma a enviar para homologação e produção de forma simples, gerando TAGS ao mergear para a branch de produção.
@@ -23,16 +23,17 @@ Caso você encontre algum problema ou queira dar alguma sugestão de melhoria, p
 6. Escolha a extensão
 7. Recarregue Visual Studio Code
 
-# Análise de Qualidade e Sintaxe
+# Análise de qualidade e sintaxe de programas ADVPL (LINT)
 
 ## ITENS ANALISADOS
 
 Verifica se estão sendo utilizados padrões básicos de qualidade como:
 
 - EmbededSql em vez de TcQuery.
-- Include TOTVS.CH.
+- Include `TOTVS.CH`.
 - Includes desnecessários.
 - Includes que faltam.
+- Include Obsoleto.
 - Comentários desnecessários.
 - Padrões de comentários.(Necessário configurar o settings)
 - Comentários de todas as funções, métodos, webservices e classes.
@@ -41,6 +42,14 @@ Verifica se estão sendo utilizados padrões básicos de qualidade como:
 - Utilização de CHR(13) + CHR(10) em vez da variável CRLF.
 - Tabelas fixas nas queries.(Necessário configurar o settings)
 - Schema (banco de dados) fixo na query.(Necessário configurar o settings)
+- Função duplicada no projeto.
+- Arquivo com nome duplicado no projeto.
+- Utilização de DETELE FROM.
+- Uso de MV_FOLMES.
+- Uso de Select \*.
+- Uso de ISAM(DbUSeArea).
+- Uso de PutSX1.
+- Uso de Dicionário de Dados.
 
 ![Análise de Fontes](images/analiseFontes.png?raw=true 'Análise de Fontes')
 
