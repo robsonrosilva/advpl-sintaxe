@@ -10,8 +10,8 @@ import {
   TextDocument
 } from 'vscode';
 import { MergeAdvpl } from './merge';
-import { ValidaAdvpl, Fonte, ValidaProjeto } from 'analise-advpl/lib';
-import { ItemModel } from 'analise-advpl/lib/models/ItemProject';
+import { ValidaAdvpl, Fonte, ValidaProjeto } from 'analise-advpl/lib/src';
+import { ItemModel } from 'analise-advpl/lib/src/models/ItemProject';
 import {
   formattingEditProvider,
   rangeFormattingEditProvider

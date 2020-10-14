@@ -77,7 +77,6 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
       });
 
     for (let nl = range.start.line; nl <= lc; nl++) {
-      console.log(nl);
       const line = document.lineAt(nl);
       const text = line.text.trimRight();
       let lastRule: RuleMatch =

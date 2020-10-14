@@ -2,6 +2,13 @@
 
 ## Release Notes
 
+### 1.2.3
+
+- Correção de identação indevida de textos de conflito do GIT.
+- Correção de identação de if encerrado com "end if".
+- Correção de críticas indevidas de "COPY TO ". [Issue 26](https://github.com/robsonrosilva/advpl-sintaxe/issues/26)
+- Correção de críticas indevidas de DBUSEAREA com TOPCONN. [Issue 25](https://github.com/robsonrosilva/advpl-sintaxe/issues/25)
+
 ### 1.2.2
 
 - Implementação de formatação parcial de código.

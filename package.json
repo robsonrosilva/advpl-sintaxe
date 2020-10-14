@@ -1,289 +1,285 @@
 {
-  "name": "advpl-sintaxe",
-  "displayName": "ADVPL Análise, Snippets e GIT",
-  "description": "Extensão de análise de qualidade e sintaxe e snippets ADVPL e que facilita a utilização do GIT.",
-  "version": "1.2.2",
-  "publisher": "robsonrosilva",
-  "icon": "images/icone.png",
-  "engines": {
-    "vscode": "^1.9.1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/robsonrosilva/advpl-sintaxe.git"
-  },
-  "bugs": {
-    "url": "https://github.com/robsonrosilva/advpl-sintaxe/issues"
-  },
-  "galleryBanner": {
-    "color": "#1E81C1",
-    "theme": "light"
-  },
-  "categories": [
-    "Formatters",
-    "Linters",
-    "Snippets",
-    "Other"
-  ],
-  "capabilities": {
-    "documentFormattingProvider": "true"
-  },
-  "activationEvents": [
-    "onLanguage:advpl",
-    "onLanguage:4gl",
-    "onCommand:advpl.startSmartClient",
-    "onCommand:advpl.menucompile",
-    "onCommand:advpl.menucompileProjet",
-    "onCommand:advpl.menucompilemulti",
-    "onCommand:advpl.menucompiletextfile",
-    "onCommand:advpl.compile",
-    "onCommand:advpl.getProgramName",
-    "onCommand:advpl.getDebugInfos",
-    "onCommand:advpl.getAuthorizationId",
-    "onCommand:advpl.CipherPassword",
-    "onCommand:advpl.patch.apply",
-    "onCommand:advpl.patch.build",
-    "onCommand:advpl.patch.info",
-    "onCommand:advpl.monitor.getThreads",
-    "onCommand:advpl.monitor.getRpoInfos",
-    "onCommand:advpl.monitor.getRpoFunctions",
-    "onCommand:advpl.monitor.deleteSource",
-    "onCommand:advpl.monitor.defragRpo",
-    "onCommand:advpl.buildWSClient",
-    "onCommand:advpl.selectEnvironment",
-    "onCommand:totvs-developer-studio.getProgramArguments",
-    "onCommand:totvs-developer-studio.getProgramName",
-    "onCommand:totvs-developer-studio.build.file",
-    "onCommand:totvs-developer-studio.rebuild.file",
-    "onCommand:totvs-developer-studio.build.workspace",
-    "onCommand:totvs-developer-studio.rebuild.workspace",
-    "onCommand:totvs-developer-studio.build.openEditors",
-    "onCommand:totvs-developer-studio.rebuild.openEditors",
-    "onCommand:totvs-developer-studio.delete.file.fromRPO",
-    "onCommand:totvs-developer-studio.configure.launcher",
-    "onCommand:totvs-developer-studio.inspectorFunctions",
-    "onCommand:totvs-developer-studio.inspectorObjects",
-    "onCommand:totvs-developer-studio.defragRPO",
-    "onCommand:totvs-developer-studio.delete.file.fromRPO",
-    "onCommand:totvs-developer-studio.getDAP",
-    "onCommand:totvs-developer-studio.connect",
-    "onCommand:totvs-developer-studio.serverAuthentication",
-    "onCommand:totvs-developer-studio.disconnect",
-    "onCommand:totvs-developer-studio.add",
-    "onCommand:totvs-developer-studio.config",
-    "onCommand:totvs-developer-studio.selectenv",
-    "onCommand:totvs-developer-studio.delete",
-    "onCommand:totvs-developer-studio.patchGenerate.fromRPO",
-    "onCommand:totvs-developer-studio.patchGenerate.fromFolder",
-    "onCommand:totvs-developer-studio.patchApply",
-    "onCommand:totvs-developer-studio.patchApply.fromFile",
-    "onCommand:totvs-developer-studio.patchInfos",
-    "onCommand:totvs-developer-studio.patchInfos.fromFile",
-    "onCommand:totvs-developer-studio.welcomePage",
-    "onCommand:totvs-developer-studio.include",
-    "onCommand:totvs-developer-studio.ws.show",
-    "onCommand:totvs-developer-studio.logger.on",
-    "onCommand:totvs-developer-studio.logger.off",
-    "onCommand:totvs-developer-studio.compile.key",
-    "onView:totvs_server",
-    "workspaceContains:.tds",
-    "workspaceContains:*.prw",
-    "workspaceContains:*.ppo",
-    "workspaceContains:*.prx",
-    "workspaceContains:*.aph",
-    "workspaceContains:*.ppx",
-    "workspaceContains:*.ppp",
-    "workspaceContains:*.tlpp",
-    "workspaceContains:*.ch",
-    "workspaceContains:*.ptm",
-    "workspaceContains:*.upd",
-    "workspaceContains:*.pak",
-    "workspaceContains:servers.json",
-    "onCommand:advpl-sintaxe.gitValidacao",
-    "onCommand:advpl-sintaxe.gitRelease",
-    "onCommand:advpl-sintaxe.gitMaster",
-    "onCommand:advpl-sintaxe.validaProjeto",
-    "onCommand:advpl-sintaxe.cleanBranches",
-    "onCommand:advpl-sintaxe.atualizaBranch"
-  ],
-  "main": "./dist/extension",
-  "contributes": {
-    "languages": [
-      {
-        "id": "advpl",
-        "aliases": [
-          "advpl",
-          "prw"
-        ],
-        "filenamePatterns": [
-          "*.tlpp",
-          "*.prw"
-        ]
-      }
-    ],
-    "commands": [
-      {
-        "command": "advpl-sintaxe.gitValidacao",
-        "title": "%advpl-sintaxe.commands.git.teste%"
-      },
-      {
-        "command": "advpl-sintaxe.gitRelease",
-        "title": "%advpl-sintaxe.commands.git.homologacao%"
-      },
-      {
-        "command": "advpl-sintaxe.gitMaster",
-        "title": "%advpl-sintaxe.commands.git.producao%"
-      },
-      {
-        "command": "advpl-sintaxe.validaProjeto",
-        "title": "%advpl-sintaxe.commands.validacao.projeto%"
-      },
-      {
-        "command": "advpl-sintaxe.atualizaBranch",
-        "title": "%advpl-sintaxe.commands.git.atualizaBranch%"
-      },
-      {
-        "command": "advpl-sintaxe.cleanBranches",
-        "title": "%advpl-sintaxe.commands.git.cleanBranches%"
-      }
-    ],
-    "configuration": {
-      "type": "object",
-      "title": "%advpl-sintaxe.configuration.title%",
-      "properties": {
-        "advplformat.effectLanguages": {
-          "type": "array",
-          "default": [
-            "advpl"
-          ],
-          "description": "the trigger effect  on the language"
-        },
-        "advpl-sintaxe": {
-          "type": "object",
-          "default": {},
-          "description": "%advpl-sintaxe.configuration.properties.description%",
-          "properties": {
-            "branchTeste": {
-              "type": "string",
-              "default": "",
-              "description": "%advpl-sintaxe.configuration.properties.branchTeste%"
-            },
-            "branchHomologacao": {
-              "type": "string",
-              "default": "",
-              "description": "%advpl-sintaxe.configuration.properties.branchHomologacao%"
-            },
-            "branchProducao": {
-              "type": "string",
-              "default": "master",
-              "description": "%advpl-sintaxe.configuration.properties.branchProducao%"
-            },
-            "ownerDb": {
-              "type": "array",
-              "default": [],
-              "description": "%advpl-sintaxe.configuration.properties.ownerDb%",
-              "items": {
-                "type": "string",
-                "default": "PROTHEUS",
-                "description": "%advpl-sintaxe.configuration.properties.ownerDb.items%"
-              }
-            },
-            "empresas": {
-              "type": "array",
-              "default": [],
-              "description": "%advpl-sintaxe.configuration.properties.empresas%",
-              "items": {
-                "type": "string",
-                "default": "01",
-                "description": "%advpl-sintaxe.configuration.properties.empresas.items%"
-              }
-            },
-            "comentFontPad": {
-              "type": "array",
-              "default": [],
-              "description": "%advpl-sintaxe.configuration.properties.comentFontPad%",
-              "items": {
-                "type": "string",
-                "default": "",
-                "description": "%advpl-sintaxe.configuration.properties.comentFontPad.items%"
-              }
-            },
-            "validaProjeto": {
-              "type": "boolean",
-              "default": true,
-              "description": "%advpl-sintaxe.configuration.properties.validaProjeto%"
-            },
-            "tempoValidacao": {
-              "type": "number",
-              "default": 5000,
-              "description": "%advpl-sintaxe.configuration.properties.tempoValidacao%"
-            }
-          }
-        }
-      }
+    "name": "advpl-sintaxe",
+    "displayName": "ADVPL Análise, Snippets e GIT",
+    "description": "Extensão de análise de qualidade e sintaxe e snippets ADVPL e que facilita a utilização do GIT.",
+    "version": "1.2.3",
+    "publisher": "robsonrosilva",
+    "icon": "images/icone.png",
+    "engines": {
+        "vscode": "^1.9.1"
     },
-    "snippets": [
-      {
-        "language": "advpl",
-        "path": "%advpl-sintaxe.configuration.snippets.advpl.mvc%"
-      },
-      {
-        "language": "advpl",
-        "path": "%advpl-sintaxe.configuration.snippets.advpl.treport%"
-      },
-      {
-        "language": "advpl",
-        "path": "%advpl-sintaxe.configuration.snippets.advpl.webservices%"
-      },
-      {
-        "language": "advpl",
-        "path": "%advpl-sintaxe.configuration.snippets.advpl.webservicesrest%"
-      },
-      {
-        "language": "advpl",
-        "path": "%advpl-sintaxe.configuration.snippets.advpl.comentarios%"
-      },
-      {
-        "language": "advpl",
-        "path": ".\\snippets\\advpl.language.json"
-      }
-    ]
-  },
-  "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "resources": "gulp build",
-    "clean": "gulp clean",
-    "compile": "gulp build && webpack --mode none && robocopy \".\\locales\" \".\\dist\\locales\" & exit 0",
-    "watch": "gulp build && robocopy \".\\locales\" \".\\out\\locales\" & exit 0 && webpack --mode none --watch",
-    "postinstall": "node ./node_modules/vscode/bin/install",
-    "watchWebPack": "webpack --mode none --watch",
-    "test": "tsc -p ./ && node ./node_modules/vscode/bin/test"
-  },
-  "devDependencies": {
-    "@types/mocha": "^5.2.7",
-    "@types/node": "^13.1.8",
-    "@types/webpack": "^4.41.2",
-    "@types/webpack-dev-server": "^3.9.0",
-    "analise-advpl": "^5.0.11",
-    "del": "^5.1.0",
-    "event-stream": "^4.0.1",
-    "git": "^0.1.5",
-    "globby": "^11.0.0",
-    "gulp": "^4.0.2",
-    "gulp-filter": "^6.0.0",
-    "gulp-sourcemaps": "^2.6.5",
-    "gulp-typescript": "^6.0.0-alpha.1",
-    "run-sequence": "^2.2.1",
-    "ts-loader": "^6.2.1",
-    "ts-node": "^8.6.2",
-    "tslint": "^5.20.1",
-    "typescript": "^3.7.5",
-    "vsce": "^1.71.0",
-    "vscode": "^1.1.36",
-    "vscode-debugadapter-testsupport": "^1.40.0",
-    "vscode-nls": "^4.1.1",
-    "vscode-nls-dev": "^3.3.1",
-    "webpack": "^4.41.5",
-    "webpack-cli": "^3.3.10"
-  }
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/robsonrosilva/advpl-sintaxe.git"
+    },
+    "bugs": {
+        "url": "https://github.com/robsonrosilva/advpl-sintaxe/issues"
+    },
+    "galleryBanner": {
+        "color": "#1E81C1",
+        "theme": "light"
+    },
+    "categories": [
+        "Formatters",
+        "Linters",
+        "Snippets",
+        "Other"
+    ],
+    "capabilities": {
+        "documentFormattingProvider": "true"
+    },
+    "activationEvents": [
+        "onLanguage:advpl",
+        "onLanguage:4gl",
+        "onCommand:advpl.startSmartClient",
+        "onCommand:advpl.menucompile",
+        "onCommand:advpl.menucompileProjet",
+        "onCommand:advpl.menucompilemulti",
+        "onCommand:advpl.menucompiletextfile",
+        "onCommand:advpl.compile",
+        "onCommand:advpl.getProgramName",
+        "onCommand:advpl.getDebugInfos",
+        "onCommand:advpl.getAuthorizationId",
+        "onCommand:advpl.CipherPassword",
+        "onCommand:advpl.patch.apply",
+        "onCommand:advpl.patch.build",
+        "onCommand:advpl.patch.info",
+        "onCommand:advpl.monitor.getThreads",
+        "onCommand:advpl.monitor.getRpoInfos",
+        "onCommand:advpl.monitor.getRpoFunctions",
+        "onCommand:advpl.monitor.deleteSource",
+        "onCommand:advpl.monitor.defragRpo",
+        "onCommand:advpl.buildWSClient",
+        "onCommand:advpl.selectEnvironment",
+        "onCommand:totvs-developer-studio.getProgramArguments",
+        "onCommand:totvs-developer-studio.getProgramName",
+        "onCommand:totvs-developer-studio.build.file",
+        "onCommand:totvs-developer-studio.rebuild.file",
+        "onCommand:totvs-developer-studio.build.workspace",
+        "onCommand:totvs-developer-studio.rebuild.workspace",
+        "onCommand:totvs-developer-studio.build.openEditors",
+        "onCommand:totvs-developer-studio.rebuild.openEditors",
+        "onCommand:totvs-developer-studio.delete.file.fromRPO",
+        "onCommand:totvs-developer-studio.configure.launcher",
+        "onCommand:totvs-developer-studio.inspectorFunctions",
+        "onCommand:totvs-developer-studio.inspectorObjects",
+        "onCommand:totvs-developer-studio.defragRPO",
+        "onCommand:totvs-developer-studio.delete.file.fromRPO",
+        "onCommand:totvs-developer-studio.getDAP",
+        "onCommand:totvs-developer-studio.connect",
+        "onCommand:totvs-developer-studio.serverAuthentication",
+        "onCommand:totvs-developer-studio.disconnect",
+        "onCommand:totvs-developer-studio.add",
+        "onCommand:totvs-developer-studio.config",
+        "onCommand:totvs-developer-studio.selectenv",
+        "onCommand:totvs-developer-studio.delete",
+        "onCommand:totvs-developer-studio.patchGenerate.fromRPO",
+        "onCommand:totvs-developer-studio.patchGenerate.fromFolder",
+        "onCommand:totvs-developer-studio.patchApply",
+        "onCommand:totvs-developer-studio.patchApply.fromFile",
+        "onCommand:totvs-developer-studio.patchInfos",
+        "onCommand:totvs-developer-studio.patchInfos.fromFile",
+        "onCommand:totvs-developer-studio.welcomePage",
+        "onCommand:totvs-developer-studio.include",
+        "onCommand:totvs-developer-studio.ws.show",
+        "onCommand:totvs-developer-studio.logger.on",
+        "onCommand:totvs-developer-studio.logger.off",
+        "onCommand:totvs-developer-studio.compile.key",
+        "onView:totvs_server",
+        "workspaceContains:.tds",
+        "workspaceContains:*.prw",
+        "workspaceContains:*.ppo",
+        "workspaceContains:*.prx",
+        "workspaceContains:*.aph",
+        "workspaceContains:*.ppx",
+        "workspaceContains:*.ppp",
+        "workspaceContains:*.tlpp",
+        "workspaceContains:*.ch",
+        "workspaceContains:*.ptm",
+        "workspaceContains:*.upd",
+        "workspaceContains:*.pak",
+        "workspaceContains:servers.json",
+        "onCommand:advpl-sintaxe.gitValidacao",
+        "onCommand:advpl-sintaxe.gitRelease",
+        "onCommand:advpl-sintaxe.gitMaster",
+        "onCommand:advpl-sintaxe.validaProjeto",
+        "onCommand:advpl-sintaxe.cleanBranches",
+        "onCommand:advpl-sintaxe.atualizaBranch"
+    ],
+    "main": "./dist/extension",
+    "contributes": {
+        "languages": [{
+            "id": "advpl",
+            "aliases": [
+                "advpl",
+                "prw"
+            ],
+            "filenamePatterns": [
+                "*.tlpp",
+                "*.prw"
+            ]
+        }],
+        "commands": [{
+                "command": "advpl-sintaxe.gitValidacao",
+                "title": "%advpl-sintaxe.commands.git.teste%"
+            },
+            {
+                "command": "advpl-sintaxe.gitRelease",
+                "title": "%advpl-sintaxe.commands.git.homologacao%"
+            },
+            {
+                "command": "advpl-sintaxe.gitMaster",
+                "title": "%advpl-sintaxe.commands.git.producao%"
+            },
+            {
+                "command": "advpl-sintaxe.validaProjeto",
+                "title": "%advpl-sintaxe.commands.validacao.projeto%"
+            },
+            {
+                "command": "advpl-sintaxe.atualizaBranch",
+                "title": "%advpl-sintaxe.commands.git.atualizaBranch%"
+            },
+            {
+                "command": "advpl-sintaxe.cleanBranches",
+                "title": "%advpl-sintaxe.commands.git.cleanBranches%"
+            }
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "%advpl-sintaxe.configuration.title%",
+            "properties": {
+                "advplformat.effectLanguages": {
+                    "type": "array",
+                    "default": [
+                        "advpl"
+                    ],
+                    "description": "the trigger effect  on the language"
+                },
+                "advpl-sintaxe": {
+                    "type": "object",
+                    "default": {},
+                    "description": "%advpl-sintaxe.configuration.properties.description%",
+                    "properties": {
+                        "branchTeste": {
+                            "type": "string",
+                            "default": "",
+                            "description": "%advpl-sintaxe.configuration.properties.branchTeste%"
+                        },
+                        "branchHomologacao": {
+                            "type": "string",
+                            "default": "",
+                            "description": "%advpl-sintaxe.configuration.properties.branchHomologacao%"
+                        },
+                        "branchProducao": {
+                            "type": "string",
+                            "default": "master",
+                            "description": "%advpl-sintaxe.configuration.properties.branchProducao%"
+                        },
+                        "ownerDb": {
+                            "type": "array",
+                            "default": [],
+                            "description": "%advpl-sintaxe.configuration.properties.ownerDb%",
+                            "items": {
+                                "type": "string",
+                                "default": "PROTHEUS",
+                                "description": "%advpl-sintaxe.configuration.properties.ownerDb.items%"
+                            }
+                        },
+                        "empresas": {
+                            "type": "array",
+                            "default": [],
+                            "description": "%advpl-sintaxe.configuration.properties.empresas%",
+                            "items": {
+                                "type": "string",
+                                "default": "01",
+                                "description": "%advpl-sintaxe.configuration.properties.empresas.items%"
+                            }
+                        },
+                        "comentFontPad": {
+                            "type": "array",
+                            "default": [],
+                            "description": "%advpl-sintaxe.configuration.properties.comentFontPad%",
+                            "items": {
+                                "type": "string",
+                                "default": "",
+                                "description": "%advpl-sintaxe.configuration.properties.comentFontPad.items%"
+                            }
+                        },
+                        "validaProjeto": {
+                            "type": "boolean",
+                            "default": true,
+                            "description": "%advpl-sintaxe.configuration.properties.validaProjeto%"
+                        },
+                        "tempoValidacao": {
+                            "type": "number",
+                            "default": 5000,
+                            "description": "%advpl-sintaxe.configuration.properties.tempoValidacao%"
+                        }
+                    }
+                }
+            }
+        },
+        "snippets": [{
+                "language": "advpl",
+                "path": "%advpl-sintaxe.configuration.snippets.advpl.mvc%"
+            },
+            {
+                "language": "advpl",
+                "path": "%advpl-sintaxe.configuration.snippets.advpl.treport%"
+            },
+            {
+                "language": "advpl",
+                "path": "%advpl-sintaxe.configuration.snippets.advpl.webservices%"
+            },
+            {
+                "language": "advpl",
+                "path": "%advpl-sintaxe.configuration.snippets.advpl.webservicesrest%"
+            },
+            {
+                "language": "advpl",
+                "path": "%advpl-sintaxe.configuration.snippets.advpl.comentarios%"
+            },
+            {
+                "language": "advpl",
+                "path": ".\\snippets\\advpl.language.json"
+            }
+        ]
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "resources": "gulp build",
+        "clean": "gulp clean",
+        "compile": "gulp build && webpack --mode none && robocopy \".\\locales\" \".\\dist\\locales\" & exit 0",
+        "watch": "gulp build && robocopy \".\\locales\" \".\\out\\locales\" & exit 0 && webpack --mode none --watch",
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "watchWebPack": "webpack --mode none --watch",
+        "test": "tsc -p ./ && node ./node_modules/vscode/bin/test"
+    },
+    "devDependencies": {
+        "@types/mocha": "^5.2.7",
+        "@types/node": "^13.13.24",
+        "@types/webpack": "^4.41.22",
+        "@types/webpack-dev-server": "^3.11.0",
+        "analise-advpl": "file:../../NPM/analise-advpl/analise-advpl-5.1.1.tgz",
+        "del": "^5.1.0",
+        "event-stream": "^4.0.1",
+        "git": "^0.1.5",
+        "globby": "^11.0.1",
+        "gulp": "^4.0.2",
+        "gulp-filter": "^6.0.0",
+        "gulp-sourcemaps": "^2.6.5",
+        "gulp-typescript": "^6.0.0-alpha.1",
+        "run-sequence": "^2.2.1",
+        "ts-loader": "^6.2.2",
+        "ts-node": "^8.10.2",
+        "tslint": "^5.20.1",
+        "typescript": "^3.9.7",
+        "vsce": "^1.81.1",
+        "vscode": "^1.1.37",
+        "vscode-debugadapter-testsupport": "^1.42.0",
+        "vscode-nls": "^4.1.2",
+        "vscode-nls-dev": "^3.3.2",
+        "webpack": "^4.44.2",
+        "webpack-cli": "^3.3.12"
+    }
 }

@@ -76,7 +76,6 @@ export class FormattingRules {
           lastRule.rule &&
           lastRule.rule.id === rule.id
         ) {
-          // console.log('fechou ' + rule.id);
           finddedRule = {
             rule: rule,
             decrement: true,
@@ -90,11 +89,9 @@ export class FormattingRules {
               return line.match(exp);
             }).length)
         ) {
-          // console.log('abriu ' + rule.id);
           finddedRule = { rule: rule, increment: true };
           this.openStructures.push(finddedRule);
         } else if (rule.middleDouble && line.match(rule.middleDouble)) {
-          // console.log('meio double ' + rule.id);
           finddedRule = {
             rule: rule,
             decrement: true,
@@ -103,7 +100,6 @@ export class FormattingRules {
           };
           this.openStructures[this.openStructures.length - 1] = finddedRule;
         } else if (rule.middle && line.match(rule.middle)) {
-          // console.log('meio ' + rule.id);
           finddedRule = { rule: rule, increment: true, decrement: true };
         }
       }
