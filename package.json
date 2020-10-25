@@ -2,7 +2,7 @@
     "name": "advpl-sintaxe",
     "displayName": "ADVPL Análise, Snippets e GIT",
     "description": "Extensão de análise de qualidade e sintaxe e snippets ADVPL e que facilita a utilização do GIT.",
-    "version": "1.2.3",
+    "version": "1.3.0",
     "publisher": "robsonrosilva",
     "icon": "images/icone.png",
     "engines": {
@@ -108,18 +108,21 @@
     ],
     "main": "./dist/extension",
     "contributes": {
-        "languages": [{
-            "id": "advpl",
-            "aliases": [
-                "advpl",
-                "prw"
-            ],
-            "filenamePatterns": [
-                "*.tlpp",
-                "*.prw"
-            ]
-        }],
-        "commands": [{
+        "languages": [
+            {
+                "id": "advpl",
+                "aliases": [
+                    "advpl",
+                    "prw"
+                ],
+                "filenamePatterns": [
+                    "*.tlpp",
+                    "*.prw"
+                ]
+            }
+        ],
+        "commands": [
+            {
                 "command": "advpl-sintaxe.gitValidacao",
                 "title": "%advpl-sintaxe.commands.git.teste%"
             },
@@ -219,7 +222,8 @@
                 }
             }
         },
-        "snippets": [{
+        "snippets": [
+            {
                 "language": "advpl",
                 "path": "%advpl-sintaxe.configuration.snippets.advpl.mvc%"
             },
@@ -260,7 +264,7 @@
         "@types/node": "^13.13.24",
         "@types/webpack": "^4.41.22",
         "@types/webpack-dev-server": "^3.11.0",
-        "analise-advpl": "file:../../NPM/analise-advpl/analise-advpl-5.1.1.tgz",
+        "analise-advpl": "^5.2.2",
         "del": "^5.1.0",
         "event-stream": "^4.0.1",
         "git": "^0.1.5",

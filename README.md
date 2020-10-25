@@ -50,6 +50,7 @@ Verifica se estão sendo utilizados padrões básicos de qualidade como:
 - Uso de ISAM(DbUSeArea).
 - Uso de PutSX1.
 - Uso de Dicionário de Dados.
+- Validação de FreeObj(self), conforme binário 12.1.27 de outubro/2020.
 
 ![Análise de Fontes](images/analiseFontes.png?raw=true 'Análise de Fontes')
 

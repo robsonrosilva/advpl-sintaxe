@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.3.0
+
+- Validação de FreeObj(self), conforme binário 12.1.27 de outubro/2020.
+
 ### 1.2.3
 
 - Correção de identação indevida de textos de conflito do GIT.
