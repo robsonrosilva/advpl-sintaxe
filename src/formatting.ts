@@ -66,22 +66,27 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
       }
     }
     const formattingRules = new FormattingRules();
-    let identBlock: string = tab.repeat(cont);
 
     let result: TextEdit[] = [];
     const lc = range.end.line;
     const rulesIgnored: any[] = formattingRules
-      .getClosedStructures()
+      .getStructures()
       .filter(rule => {
         return structsNoIdent.indexOf(rule.id) !== -1;
       });
 
     for (let nl = range.start.line; nl <= lc; nl++) {
+      // check operation Cancel
+      if (token.isCancellationRequested){
+        console.log('cancelado');
+        return [];
+      }
+
       const line = document.lineAt(nl);
       const text = line.text.trimRight();
       let lastRule: RuleMatch =
         formattingRules.openStructures[
-          formattingRules.openStructures.length - 1
+        formattingRules.openStructures.length - 1
         ];
       let foundIgnore: any[] = rulesIgnored.filter(rule => {
         return lastRule && lastRule.rule && rule.id === lastRule.rule.id;
@@ -93,27 +98,21 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
         if (
           !line.isEmptyOrWhitespace &&
           !this.lineContinue &&
-          formattingRules.match(text)
+          formattingRules.match(text, cont)
         ) {
           let ruleMatch: RuleMatch | null = formattingRules.getLastMatch();
 
           if (ruleMatch) {
             if (ruleMatch.decrement) {
-              if (ruleMatch.decrementDouble) {
-                cont = cont < 2 ? 0 : cont - 2;
-              } else {
-                cont = cont < 1 ? 0 : cont - 1;
-              }
-              identBlock = tab.repeat(cont);
+              cont = ruleMatch.initialPosition;
             }
           }
 
           if (ruleMatch.incrementDouble) {
             cont += 1;
-            identBlock = tab.repeat(cont);
           }
 
-          const newLine: string = text.replace(/(\s*)?/, identBlock);
+          const newLine: string = text.replace(/(\s*)?/, tab.repeat(cont));
           result.push(TextEdit.replace(line.range, newLine));
           this.lineContinue =
             newLine
@@ -124,14 +123,13 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
           if (ruleMatch) {
             if (ruleMatch.increment || ruleMatch.incrementDouble) {
               cont++;
-              identBlock = tab.repeat(cont);
             }
           }
         } else {
           let newLine: string = '';
           if (!line.isEmptyOrWhitespace) {
             newLine = text
-              .replace(/(\s*)?/, identBlock + (this.lineContinue ? tab : ''))
+              .replace(/(\s*)?/, tab.repeat(cont) + (this.lineContinue ? tab : ''))
               .trimRight();
           }
           result.push(TextEdit.replace(line.range, newLine));
@@ -142,7 +140,7 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
         }
       }
     }
-
+    console.log('fim');
     return result;
   }
 }

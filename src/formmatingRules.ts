@@ -1,4 +1,3 @@
-import { isNull } from 'util';
 
 export interface Rule {
   id: string;
@@ -10,24 +9,21 @@ export interface Rule {
   };
 }
 
-export interface ClosedStructureRule extends Rule {
+export interface StructureRule extends Rule {
   begin: RegExp; // Expressão do começo
   noBegin?: RegExp[]; // Expressão que ignora quando dá o match no begin
   middle?: RegExp; // expressão de meio da sintaxe
   middleDouble?: RegExp; // expressão de meio da sintaxe que dá um up no meio da expressão
   end: RegExp; // expressão de fim da sintaxe
+  assincStruct?: boolean; // indica que a estrutura é assincrona ou seja pode fechar sem o fechamento de estruturas internas(#if)
 }
 
-export interface OpenStructureRule extends Rule {
-  expression: RegExp;
-}
-
-export interface RuleMatch {
-  rule: Rule;
+export class RuleMatch {
+  rule: StructureRule;
   increment?: boolean;
   incrementDouble?: boolean;
   decrement?: boolean;
-  decrementDouble?: boolean;
+  initialPosition: number; // posição inicial da tabulação para voltar quando a estrutura fechar
 }
 
 export class FormattingRules {
@@ -35,13 +31,7 @@ export class FormattingRules {
   insideOpenStructure: boolean = false;
   openStructures: RuleMatch[] = [];
 
-  private instanceOfClosedStructureRule(
-    object: any
-  ): object is ClosedStructureRule {
-    return 'begin' in object;
-  }
-
-  public match(line: string): boolean {
+  public match(line: string, initialPosition: number): boolean {
     let lastRule: RuleMatch = this.openStructures[
       this.openStructures.length - 1
     ];
@@ -50,64 +40,95 @@ export class FormattingRules {
     }
 
     let finddedRule: RuleMatch = null;
+    // removo comentários que terminam a linha
+    line  = line.split('//')[0];
 
-    this.getRules().every((rule: Rule) => {
-      if (this.instanceOfClosedStructureRule(rule)) {
-        // para facilitar a análise de expressões eu removo as funções internas quando a
-        // linha conmeça com if(
-        if (
-          rule.id === 'if' &&
-          line.match(rule.begin) &&
-          line.match(/^(\s*)(if)(\t|\ |\!)*(\()+.+(\))/i)
-        ) {
-          // extrai o contepudo de dentro do IF
-          line = line.replace(/^(\s*)(if)(\t|\ |\!)*(\()/i, '').slice(0, -1);
-          let parts: string[] = line.split(')');
-          line = '';
-          parts.forEach(linepart => {
-            line += (linepart + ')').replace(/(\()+(.|)+(\))/g, ' ');
-          });
-          line = 'if(' + line;
-        }
+    // para facilitar a análise de expressões eu removo as funções internas quando a
+    // linha conmeça com if(
+    if (
+      line.match(/^(\s*)(if)(\t|\ |\!)*(\()+.+(\))/i)
+    ) {
+      // extrai o conteúdo de dentro do IF
+      line = line.replace(/^(\s*)(if)(\t|\ |\!)*(\()/i, '').slice(0, -1);
+      let parts: string[] = line.split(')');
+      line = '';
+      parts.forEach(linepart => {
+        line += (linepart + ')').replace(/(\()+(.|)+(\))/g, ' ');
+      });
+      line = 'if(' + line;
+    }
+    // remove espaços a direita
+    line = line.trim();
 
+    if (line.length === 0) {
+      return false;
+    }
+
+    // rule a remover pilha pode ser a ultima aberta da pilha ou uma estrutura assincrona aberta
+    let closeseableRules: RuleMatch[] = this.openStructures.filter((x) => x.rule.assincStruct);
+    if
+      (
+      lastRule &&
+      lastRule.rule
+    ) {
+      closeseableRules.push(lastRule);
+    }
+
+    // verifica se está no mid ou close de alguma estrutura fechável
+    closeseableRules.every((rule: RuleMatch) => {
+      if (
+        line.match(rule.rule.end)
+      ) {
+        // Procura o último aberto
+        finddedRule = this.getLastOpenMatch(rule);
+        // para não incrementar para a próxima regra
+        finddedRule.incrementDouble = false;
+
+        // remove a partir do último encontrado se for assincrona
+        let originalStructures = [];
+        this.openStructures.every((structItem: RuleMatch) => {
+          if (structItem !== finddedRule) {
+            originalStructures.push(structItem);
+            return true;
+          }
+          return false;
+        });
+        this.openStructures = originalStructures;
+        return false;
+      } else if (rule.rule.middleDouble && line.match(rule.rule.middleDouble)) {
+        // Procura o último aberto
+        finddedRule = this.getLastOpenMatch(rule);
+        finddedRule.decrement = true;
+        finddedRule.incrementDouble = true;
+        return false;
+      } else if (rule.rule.middle && line.match(rule.rule.middle)) {
+        // Procura o último aberto
+        finddedRule = this.getLastOpenMatch(rule);
+        finddedRule.decrement = true;
+        finddedRule.increment = true;
+        return false;
+      }
+      return true;
+    });
+
+    // verifica se tem estrutura sendo aberta
+    if (finddedRule === null) {
+      this.getRules().every((rule: StructureRule) => {
         if (
-          line.match(rule.end) &&
-          lastRule &&
-          lastRule.rule &&
-          lastRule.rule.id === rule.id
-        ) {
-          finddedRule = {
-            rule: rule,
-            decrement: true,
-            decrementDouble: lastRule.incrementDouble
-          };
-          this.openStructures.pop();
-        } else if (
           line.match(rule.begin) &&
           (!rule.noBegin ||
             !rule.noBegin.filter(exp => {
               return line.match(exp);
             }).length)
         ) {
-          finddedRule = { rule: rule, increment: true };
-          this.openStructures.push(finddedRule);
-        } else if (rule.middleDouble && line.match(rule.middleDouble)) {
-          finddedRule = {
-            rule: rule,
-            decrement: true,
-            incrementDouble: true,
-            decrementDouble: lastRule.incrementDouble
-          };
-          this.openStructures[this.openStructures.length - 1] = finddedRule;
-        } else if (rule.middle && line.match(rule.middle)) {
-          finddedRule = { rule: rule, increment: true, decrement: true };
+          finddedRule = { rule: rule, increment: true, initialPosition };
+          this.openStructures.push({ ...finddedRule });
         }
-      }
+        return finddedRule === null;
+      });
+    }
 
-      return isNull(finddedRule);
-    });
-
-    if (!isNull(finddedRule)) {
+    if (finddedRule !== null) {
       this.lastMatch = finddedRule;
       return true;
     }
@@ -120,7 +141,22 @@ export class FormattingRules {
   }
 
   public getRules(): Rule[] {
-    return [...this.getClosedStructures(), ...this.getCustomStructures()];
+    return [...this.getStructures(), ...this.getCustomStructures()];
+  }
+
+  public getLastOpenMatch(rule: RuleMatch): RuleMatch {
+    let finddedRule: RuleMatch = null;
+
+    let i;
+    for (i = this.openStructures.length - 1; i >= 0; i--) {
+      if (rule.rule.id === this.openStructures[i].rule.id) {
+        finddedRule = this.openStructures[i];
+        finddedRule.decrement = true;
+        finddedRule.increment = false;
+        break;
+      }
+    }
+    return finddedRule;
   }
 
   private getCustomStructures(): Rule[] {
@@ -136,7 +172,7 @@ export class FormattingRules {
   // ^ = inicio da linha
   // /i = ignorar caixa
 
-  public getClosedStructures(): ClosedStructureRule[] {
+  public getStructures(): StructureRule[] {
     return [
       {
         id: 'function',
@@ -160,7 +196,8 @@ export class FormattingRules {
         id: '#ifdef/#ifndef',
         begin: /^(\s*)(#)(\s*)(ifdef|ifndef)/i,
         middle: /^(\s*)(#)(\s*)(else)/i,
-        end: /^(\s*)(#)(\s*)(endif)/i
+        end: /^(\s*)(#)(\s*)(endif)/i,
+        assincStruct: true
       },
       {
         id: 'begin report query',
@@ -217,7 +254,7 @@ export class FormattingRules {
           /^(\s*)(if)(\t|\ |\!)*(.)*(\;)+(.)*(\;)+(.)*(endif)/i
         ],
         middle: /^(\s*)((else)|(elseif))(\t|\ |\(|;|\/\*|$)/i,
-        end: /^(\s*)(end)(w*)(if)?$/i
+        end: /^(\s*)(end)(\s*)(if)?$/i
       },
       {
         id: 'structure',

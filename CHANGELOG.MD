@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.4.0
+
+- Implementação de novo identador, mais rápido e tratando as estruturas assíncronas.
+
 ### 1.3.0
 
 - Validação de FreeObj(self), conforme binário 12.1.27 de outubro/2020.
