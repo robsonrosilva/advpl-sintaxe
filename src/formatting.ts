@@ -9,16 +9,10 @@ import {
   Range,
   Position
 } from 'vscode';
-import { FormattingRules, RuleMatch } from './formmatingRules';
+import { FormattingRules, RuleMatch, getStructsNoIdent } from './formmatingRules';
 
 // Regras de estruturas que não sofrem identação interna
-let structsNoIdent: string[] = [
-  'beginsql (alias)?',
-  'comment',
-  'protheus doc',
-  'begin content',
-  'no format'
-];
+let structsNoIdent: string[] = getStructsNoIdent();
 
 class Formatting implements DocumentFormattingEditProvider {
   lineContinue: boolean = false;

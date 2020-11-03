@@ -26,12 +26,23 @@ export class RuleMatch {
   initialPosition: number; // posição inicial da tabulação para voltar quando a estrutura fechar
 }
 
+export function getStructsNoIdent(): string[] {
+  return [
+    'beginsql (alias)?',
+    'comment',
+    'protheus doc',
+    'begin content',
+    'no format'
+  ];
+}
+
 export class FormattingRules {
   lastMatch: RuleMatch | null = null;
   insideOpenStructure: boolean = false;
   openStructures: RuleMatch[] = [];
 
-  public match(line: string, initialPosition: number): boolean {
+  public match(lineGet: string, initialPosition: number): boolean {
+    let line : string = lineGet.toString();
     let lastRule: RuleMatch = this.openStructures[
       this.openStructures.length - 1
     ];
@@ -40,27 +51,31 @@ export class FormattingRules {
     }
 
     let finddedRule: RuleMatch = null;
-    // removo comentários que terminam a linha
-    line  = line.split('//')[0];
+    
+    // se não estiver em estrutura não identável
+    if (!lastRule || !(getStructsNoIdent().find((x) => x === lastRule.rule.id))) {
+      // removo comentários que terminam a linha
+      line = line.split('//')[0];
 
-    // para facilitar a análise de expressões eu removo as funções internas quando a
-    // linha conmeça com if(
-    if (
-      line.match(/^(\s*)(if)(\t|\ |\!)*(\()+.+(\))/i)
-    ) {
-      // extrai o conteúdo de dentro do IF
-      line = line.replace(/^(\s*)(if)(\t|\ |\!)*(\()/i, '').slice(0, -1);
-      let parts: string[] = line.split(')');
-      line = '';
-      parts.forEach(linepart => {
-        line += (linepart + ')').replace(/(\()+(.|)+(\))/g, ' ');
-      });
-      line = 'if(' + line;
+      // para facilitar a análise de expressões eu removo as funções internas quando a
+      // linha conmeça com if(
+      if (
+        line.match(/^(\s*)(if)(\t|\ |\!)*(\()+.+(\))/i)
+      ) {
+        // extrai o conteúdo de dentro do IF
+        line = line.replace(/^(\s*)(if)(\t|\ |\!)*(\()/i, '').slice(0, -1);
+        let parts: string[] = line.split(')');
+        line = '';
+        parts.forEach(linepart => {
+          line += (linepart + ')').replace(/(\()+(.|)+(\))/g, ' ');
+        });
+        line = 'if(' + line;
+      }
+      // remove espaços a direita
+      line = line.trim();
     }
-    // remove espaços a direita
-    line = line.trim();
 
-    if (line.length === 0) {
+    if (line.trim().length === 0) {
       return false;
     }
 
