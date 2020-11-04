@@ -5,6 +5,7 @@
 ### 1.4.0
 
 - Implementação de novo identador, mais rápido e tratando as estruturas assíncronas.
+- Implementação de identação de queryes em EmbeddedSql usando [sql-formatter-plus](https://www.npmjs.com/package/sql-formatter-plus).
 
 ### 1.3.0
 

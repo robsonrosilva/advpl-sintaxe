@@ -9,7 +9,9 @@ import {
   Range,
   Position
 } from 'vscode';
-import { FormattingRules, RuleMatch, getStructsNoIdent } from './formmatingRules';
+import { FormattingRules, RuleMatch, getStructsNoIdent, StructureRule } from './formmatingRules';
+
+let sqlFormatterPlus = require("sql-formatter-plus");
 
 // Regras de estruturas que não sofrem identação interna
 let structsNoIdent: string[] = getStructsNoIdent();
@@ -46,6 +48,7 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
     token: CancellationToken
   ): ProviderResult<TextEdit[]> {
     let cont: number = 0;
+    let query: { expression: string, range: Range };
     const tab: string = options.insertSpaces
       ? ' '.repeat(options.tabSize)
       : '\t';
@@ -63,7 +66,7 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
 
     let result: TextEdit[] = [];
     const lc = range.end.line;
-    const rulesIgnored: any[] = formattingRules
+    const rulesIgnored: StructureRule[] = formattingRules
       .getStructures()
       .filter(rule => {
         return structsNoIdent.indexOf(rule.id) !== -1;
@@ -71,7 +74,7 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
 
     for (let nl = range.start.line; nl <= lc; nl++) {
       // check operation Cancel
-      if (token.isCancellationRequested){
+      if (token.isCancellationRequested) {
         console.log('cancelado');
         return [];
       }
@@ -82,12 +85,24 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
         formattingRules.openStructures[
         formattingRules.openStructures.length - 1
         ];
-      let foundIgnore: any[] = rulesIgnored.filter(rule => {
+      let foundIgnore: StructureRule[] = rulesIgnored.filter(rule => {
         return lastRule && lastRule.rule && rule.id === lastRule.rule.id;
       });
       // dentro do BeginSql não mexe na identação
       if (foundIgnore.length > 0 && !text.match(foundIgnore[0].end)) {
-        result.push(TextEdit.replace(line.range, text));
+        // verifica se está em query
+        if (foundIgnore[0].id === 'beginsql (alias)?') {
+          if (!query || query.expression.length === 0) {
+            query = { expression: '', range: line.range };
+          }
+          query.expression += ' ' + text.replace('//', '--REPLACE--') + '\n';
+          // define o range que será substituído
+          // usando o range inicial da primeira linha 
+          // e o atual da ultima linha com a query
+          query.range = new Range(query.range.start, line.range.end);
+        } else {
+          result.push(TextEdit.replace(line.range, text));
+        }
       } else {
         if (
           !line.isEmptyOrWhitespace &&
@@ -99,6 +114,27 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
           if (ruleMatch) {
             if (ruleMatch.decrement) {
               cont = ruleMatch.initialPosition;
+              // trata query
+              if (ruleMatch.rule.id === 'beginsql (alias)?') {
+                let queryResult: string = sqlFormatterPlus.format(query.expression, { indent: tab });
+
+                // volta comentários
+                queryResult = queryResult.replace(/\-\-REPLACE\-\-/img, '//');
+                // adiciona tabulações no início de cada linha
+                queryResult = tab.repeat(cont + 1) + queryResult.replace(/\n/img, '\n' + tab.repeat(cont + 1));
+                // Remove os espaçamentos dentro das expressões %%
+                queryResult = queryResult.replace(/(\%)(\s+)(table|temp-table|exp|xfilial|order)(\s)*(:)((\w|\(|\)|\[|\]|\-|\>|\_|\s|\,\n)*)(\s+)(\%)/img,'$1$3$5$6$9');
+                // Como coloca quebras de linhas no orderby por conta da vírgula removo
+                queryResult = queryResult.replace(/(\%order:\w*)(\,\n\s*)(\w\%)/img,'$1,$3');
+                // Ajusta os sem expressões
+                queryResult = queryResult.replace(/(\%)(\s+)(notDel|noparser)(\s+)(\%)/img,'$1$3$5');
+                // remove espaços entre ->
+                queryResult = queryResult.replace(/\s*\-\>\s*/img,'->');
+
+                result.push(TextEdit.replace(query.range, queryResult));
+
+                query = { expression: '', range: undefined };
+              }
             }
           }
 
@@ -112,7 +148,7 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
             newLine
               .split('//')[0]
               .trim()
-              .endsWith(';') && rulesIgnored.indexOf(ruleMatch.rule.id) === -1;
+              .endsWith(';') && rulesIgnored.indexOf(ruleMatch.rule) === -1;
 
           if (ruleMatch) {
             if (ruleMatch.increment || ruleMatch.incrementDouble) {
