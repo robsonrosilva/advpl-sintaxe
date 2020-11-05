@@ -7,7 +7,8 @@ import {
   TextEdit,
   DocumentRangeFormattingEditProvider,
   Range,
-  Position
+  Position,
+  workspace
 } from 'vscode';
 import { FormattingRules, RuleMatch, getStructsNoIdent, StructureRule } from './formmatingRules';
 
@@ -47,6 +48,10 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
     options: FormattingOptions,
     token: CancellationToken
   ): ProviderResult<TextEdit[]> {
+    let noQueryFormatter: boolean = workspace
+    .getConfiguration('advpl-sintaxe')
+    .get('noQueryFormatter');
+
     let cont: number = 0;
     let query: { expression: string, range: Range };
     const tab: string = options.insertSpaces
@@ -91,7 +96,7 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
       // dentro do BeginSql não mexe na identação
       if (foundIgnore.length > 0 && !text.match(foundIgnore[0].end)) {
         // verifica se está em query
-        if (foundIgnore[0].id === 'beginsql (alias)?') {
+        if (! noQueryFormatter && foundIgnore[0].id === 'beginsql (alias)?') {
           if (!query || query.expression.length === 0) {
             query = { expression: '', range: line.range };
           }
@@ -115,7 +120,7 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
             if (ruleMatch.decrement) {
               cont = ruleMatch.initialPosition;
               // trata query
-              if (ruleMatch.rule.id === 'beginsql (alias)?') {
+              if (! noQueryFormatter && ruleMatch.rule.id === 'beginsql (alias)?') {
                 let queryResult: string = sqlFormatterPlus.format(query.expression, { indent: tab });
 
                 // volta comentários

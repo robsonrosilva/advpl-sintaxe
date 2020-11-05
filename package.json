@@ -217,6 +217,11 @@
                             "type": "number",
                             "default": 5000,
                             "description": "%advpl-sintaxe.configuration.properties.tempoValidacao%"
+                        },
+                        "noQueryFormatter": {
+                            "type": "boolean",
+                            "default": false,
+                            "description": "%advpl-sintaxe.configuration.properties.queryFormatter%"
                         }
                     }
                 }

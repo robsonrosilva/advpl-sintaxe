@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.4.2
+
+- Criação de parâmetro para desabilitar formatação de queries.
+
 ### 1.4.1
 
 - Correção de espaçamento de queries para evitar erro de execução.

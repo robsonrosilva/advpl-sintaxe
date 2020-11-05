@@ -21,6 +21,7 @@
 	"advpl-sintaxe.configuration.properties.comentFontPad.items": "Linha do comentário de fonte. (Usar padrão de search TypeScript)",
 	"advpl-sintaxe.configuration.properties.validaProjeto": "Ativa a validação de projeto.",
 	"advpl-sintaxe.configuration.properties.tempoValidacao": "Define o tempo em milesegundos de intervalo na validação de digitação.",
+	"advpl-sintaxe.configuration.properties.noQueryFormatter": "Desabilitar formatação de queries.",
 	"advpl-sintaxe.configuration.snippets.advpl.mvc": "./i18n/ptb/snippets/advpl.mvc.json",
 	"advpl-sintaxe.configuration.snippets.advpl.treport": "./i18n/ptb/snippets/advpl.treport.json",
 	"advpl-sintaxe.configuration.snippets.advpl.webservices": "./i18n/ptb/snippets/advpl.webservices.json",
