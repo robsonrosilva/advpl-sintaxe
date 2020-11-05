@@ -123,13 +123,15 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
                 // adiciona tabulações no início de cada linha
                 queryResult = tab.repeat(cont + 1) + queryResult.replace(/\n/img, '\n' + tab.repeat(cont + 1));
                 // Remove os espaçamentos dentro das expressões %%
-                queryResult = queryResult.replace(/(\%)(\s+)(table|temp-table|exp|xfilial|order)(\s)*(:)((\w|\(|\)|\[|\]|\-|\>|\_|\s|\,\n)*)(\s+)(\%)/img,'$1$3$5$6$9');
+                queryResult = queryResult.replace(/(\%)(\s+)(table|temp-table|exp|xfilial|order)(\s)*(:)((\w|\(|\)|\[|\]|\-|\>|\_|\s|\,\n|\"|\')*)(\s+)(\%)/img, '$1$3$5$6$9');
                 // Como coloca quebras de linhas no orderby por conta da vírgula removo
-                queryResult = queryResult.replace(/(\%order:\w*)(\,\n\s*)(\w\%)/img,'$1,$3');
+                queryResult = queryResult.replace(/(\%order:\w*)(\,\n\s*)(\w\%)/img, '$1,$3');
                 // Ajusta os sem expressões
-                queryResult = queryResult.replace(/(\%)(\s+)(notDel|noparser)(\s+)(\%)/img,'$1$3$5');
+                queryResult = queryResult.replace(/(\%)(\s+)(notDel|noparser)(\s+)(\%)/img, '$1$3$5');
                 // remove espaços entre ->
-                queryResult = queryResult.replace(/\s*\-\>\s*/img,'->');
+                queryResult = queryResult.replace(/\s*\-\>\s*/img, '->');
+                // remove espaços antes de colchetes 
+                queryResult = queryResult.replace(/\s*\[\s*/img, '[');
 
                 result.push(TextEdit.replace(query.range, queryResult));
 
