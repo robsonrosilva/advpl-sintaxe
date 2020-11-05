@@ -49,8 +49,8 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
     token: CancellationToken
   ): ProviderResult<TextEdit[]> {
     let noQueryFormatter: boolean = workspace
-    .getConfiguration('advpl-sintaxe')
-    .get('noQueryFormatter');
+      .getConfiguration('advpl-sintaxe')
+      .get('noQueryFormatter');
 
     let cont: number = 0;
     let query: { expression: string, range: Range };
@@ -96,7 +96,7 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
       // dentro do BeginSql não mexe na identação
       if (foundIgnore.length > 0 && !text.match(foundIgnore[0].end)) {
         // verifica se está em query
-        if (! noQueryFormatter && foundIgnore[0].id === 'beginsql (alias)?') {
+        if (!noQueryFormatter && foundIgnore[0].id === 'beginsql (alias)?') {
           if (!query || query.expression.length === 0) {
             query = { expression: '', range: line.range };
           }
@@ -120,7 +120,7 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
             if (ruleMatch.decrement) {
               cont = ruleMatch.initialPosition;
               // trata query
-              if (! noQueryFormatter && ruleMatch.rule.id === 'beginsql (alias)?') {
+              if (!noQueryFormatter && ruleMatch.rule.id === 'beginsql (alias)?') {
                 let queryResult: string = sqlFormatterPlus.format(query.expression, { indent: tab });
 
                 // volta comentários
@@ -128,7 +128,7 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
                 // adiciona tabulações no início de cada linha
                 queryResult = tab.repeat(cont + 1) + queryResult.replace(/\n/img, '\n' + tab.repeat(cont + 1));
                 // Remove os espaçamentos dentro das expressões %%
-                queryResult = queryResult.replace(/(\%)(\s+)(table|temp-table|exp|xfilial|order)(\s)*(:)((\w|\(|\)|\[|\]|\-|\>|\_|\s|\,\n|\"|\')*)(\s+)(\%)/img, '$1$3$5$6$9');
+                queryResult = queryResult.replace(/(\%)(\s+)(table|temp-table|exp|xfilial|order)(\s)*(:)((\w|\+|\-|\\|\*|\(|\)|\[|\]|\-|\>|\_|\s|\,|\n|\"|\')*)(\s+)(\%)/img, '$1$3$5$6$9');
                 // Como coloca quebras de linhas no orderby por conta da vírgula removo
                 queryResult = queryResult.replace(/(\%order:\w*)(\,\n\s*)(\w\%)/img, '$1,$3');
                 // Ajusta os sem expressões
@@ -137,6 +137,14 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
                 queryResult = queryResult.replace(/\s*\-\>\s*/img, '->');
                 // remove espaços antes de colchetes 
                 queryResult = queryResult.replace(/\s*\[\s*/img, '[');
+                // remove espaços antes de , + - \ * dentro de %
+                while (queryResult.match(/(\%.*)(\s+)(\,|\+|\-|\\|\*)(\s*)(.*\%)/img)) {
+                  queryResult = queryResult.replace(/(\%.*)(\s+)(\,|\+|\-|\\|\*)(\s*)(.*\%)/img, '$1$3$5');
+                }
+                // remove espaços depois de , + - \ * dentro de %
+                while (queryResult.match(/(\%.*)(\s*)(\,|\+|\-|\\|\*)(\s+)(.*\%)/img)) {
+                  queryResult = queryResult.replace(/(\%.*)(\s*)(\,|\+|\-|\\|\*)(\s+)(.*\%)/img, '$1$3$5');
+                }
 
                 result.push(TextEdit.replace(query.range, queryResult));
 
