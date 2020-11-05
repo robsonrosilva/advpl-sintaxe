@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.4.1
+
+- Correção de espaçamento de queries para evitar erro de execução.
+
 ### 1.4.0
 
 - Implementação de novo identador, mais rápido e tratando as estruturas assíncronas.
