@@ -173,7 +173,7 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
                   });
                 }
 
-                result.push(TextEdit.replace(query.range, queryResult.trim()));
+                result.push(TextEdit.replace(query.range, queryResult.trimEnd()));
 
                 query = { expression: '', range: undefined };
               }
