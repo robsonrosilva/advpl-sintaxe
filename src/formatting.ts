@@ -157,7 +157,7 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
                 queryResult = queryResult.replace(/(^\s*.*between\s*.*)\n\s*(and\s.*)/img, '$1 $2');
 
                 // Quebra linha no ON do JOIN
-                queryResult = queryResult.replace(/(^(\s*).*join\s*.*)(on)/img, '$1\n$2$3');
+                queryResult = queryResult.replace(/(^(\s*)(.*join\s*.*|\)\s\w*\s))(on)/img, '$1\n$2$4');
                 // Quebra linha no THEN do CASE
                 queryResult = queryResult.replace(/(^(\s*)when.*)\n*\s*(then.*)/img, '$1\n$2' + tab + '$3');
                 // Remove uma das tabulações dos Join's e ON
