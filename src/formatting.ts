@@ -138,6 +138,8 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
                 queryResult = queryResult.replace(/(\%order:\w*)(\,\n\s*)(\w\%)/img, '$1,$3');
                 // Ajusta os sem expressões
                 queryResult = queryResult.replace(/(\%)(\s+)(notDel|noparser)(\s+)(\%)/img, '$1$3$5');
+                // se houver espaço entre o . e o %NotDel% remove
+                queryResult = queryResult.replace(/\.\s(\%notDel\%)/img, '.$1');
                 //quebra de linha depois do no parser
                 queryResult = queryResult.replace(/((\s*)\%noparser\%)\s/img, '$1\n\n$2');
                 // remove espaços entre ->

@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.4.4
+
+- Remoção de espaço entre definição de tabela e notdel.
+
 ### 1.4.3
 
 - Criação de configuração para definição de linguagem de banco.
