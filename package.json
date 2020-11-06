@@ -2,7 +2,7 @@
     "name": "advpl-sintaxe",
     "displayName": "ADVPL Análise, Snippets e GIT",
     "description": "Extensão de análise de qualidade e sintaxe e snippets ADVPL e que facilita a utilização do GIT.",
-    "version": "1.4.2",
+    "version": "1.4.3",
     "publisher": "robsonrosilva",
     "icon": "images/icone.png",
     "engines": {
@@ -222,6 +222,11 @@
                             "type": "boolean",
                             "default": false,
                             "description": "%advpl-sintaxe.configuration.properties.queryFormatter%"
+                        },
+                        "queryLanguage": {
+                            "type": "string",
+                            "default": "sql",
+                            "description": "%advpl-sintaxe.configuration.properties.queryLanguage%"
                         }
                     }
                 }

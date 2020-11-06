@@ -22,6 +22,7 @@
   "advpl-sintaxe.configuration.properties.validaProjeto": "Ativa a validação de projeto.",
   "advpl-sintaxe.configuration.properties.tempoValidacao": "Define o tempo em milesegundos de intervalo na validação de digitação.",
   "advpl-sintaxe.configuration.properties.noQueryFormatter": "Desabilitar formatação de queries.",
+  "advpl-sintaxe.configuration.properties.queryLanguage": "Definição de linguagem para queryes.\nsql - Standard SQL\nn1ql - Couchbase N1QL\ndb2 - IBM DB2\npl/sql - Oracle PL/SQL",
   "advpl-sintaxe.configuration.snippets.advpl.mvc": "./i18n/ptb/snippets/advpl.mvc.json",
   "advpl-sintaxe.configuration.snippets.advpl.treport": "./i18n/ptb/snippets/advpl.treport.json",
   "advpl-sintaxe.configuration.snippets.advpl.webservices": "./i18n/ptb/snippets/advpl.webservices.json",

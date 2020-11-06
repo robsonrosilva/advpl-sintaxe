@@ -51,6 +51,11 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
     let noQueryFormatter: boolean = workspace
       .getConfiguration('advpl-sintaxe')
       .get('noQueryFormatter');
+    let queryLanguage: string = workspace
+      .getConfiguration('advpl-sintaxe')
+      .get('queryLanguage');
+
+    queryLanguage = queryLanguage ? queryLanguage : 'sql';
 
     let cont: number = 0;
     let query: { expression: string, range: Range };
@@ -121,7 +126,7 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
               cont = ruleMatch.initialPosition;
               // trata query
               if (!noQueryFormatter && ruleMatch.rule.id === 'beginsql (alias)?') {
-                let queryResult: string = sqlFormatterPlus.format(query.expression, { indent: tab });
+                let queryResult: string = sqlFormatterPlus.format(query.expression, { indent: tab, language: queryLanguage });
 
                 // volta comentários
                 queryResult = queryResult.replace(/\-\-REPLACE\-\-/img, '//');
@@ -133,6 +138,8 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
                 queryResult = queryResult.replace(/(\%order:\w*)(\,\n\s*)(\w\%)/img, '$1,$3');
                 // Ajusta os sem expressões
                 queryResult = queryResult.replace(/(\%)(\s+)(notDel|noparser)(\s+)(\%)/img, '$1$3$5');
+                //quebra de linha depois do no parser
+                queryResult = queryResult.replace(/((\s*)\%noparser\%)\s/img, '$1\n\n$2');
                 // remove espaços entre ->
                 queryResult = queryResult.replace(/\s*\-\>\s*/img, '->');
                 // remove espaços antes de colchetes 
@@ -146,7 +153,27 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
                   queryResult = queryResult.replace(/(\%.*)(\s*)(\,|\+|\-|\\|\*)(\s+)(.*\%)/img, '$1$3$5');
                 }
 
-                result.push(TextEdit.replace(query.range, queryResult));
+                // Ajustes visuais de query alinhamento de Between em uma linha
+                queryResult = queryResult.replace(/(^\s*.*between\s*.*)\n\s*(and\s.*)/img, '$1 $2');
+
+                // Quebra linha no ON do JOIN
+                queryResult = queryResult.replace(/(^(\s*).*join\s*.*)(on)/img, '$1\n$2$3');
+                // Quebra linha no THEN do CASE
+                queryResult = queryResult.replace(/(^(\s*)when.*)\n*\s*(then.*)/img, '$1\n$2' + tab + '$3');
+                // Remove uma das tabulações dos Join's e ON
+                if (queryResult.match(/^\s*(\w*\sjoin|on)\s/img)) {
+                  let queryLines: string[] = queryResult.split('\n');
+                  queryResult = '';
+                  queryLines.forEach((line) => {
+                    if (line.match(/^\s*(\w*\sjoin|on)\s/img)) {
+                      queryResult += line.replace(tab, '') + '\n'; // remove uma tabulação
+                    } else {
+                      queryResult += line + '\n';
+                    }
+                  });
+                }
+
+                result.push(TextEdit.replace(query.range, queryResult.trim()));
 
                 query = { expression: '', range: undefined };
               }

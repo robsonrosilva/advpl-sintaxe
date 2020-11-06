@@ -2,6 +2,11 @@
 
 ## Release Notes
 
+### 1.4.3
+
+- Criação de configuração para definição de linguagem de banco.
+- Melhoria de sintaxe de between, join, on, case para melhorar a leitura de queries.
+
 ### 1.4.2
 
 - Criação de parâmetro para desabilitar formatação de queries.
