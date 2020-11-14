@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.4.5
+
+- Linha começa com * dentro da query, nestes cassos foi removida a quebra de linha, pois o compilador ignora a linha.
+
 ### 1.4.4
 
 - Remoção de espaço entre definição de tabela e notdel.

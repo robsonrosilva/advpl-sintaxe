@@ -175,6 +175,9 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
                   });
                 }
 
+                // Existe um erro na compilação quando a linha começa com *
+                queryResult = queryResult.replace(/\n\s*(\*)/img, ' $1');
+
                 result.push(TextEdit.replace(query.range, queryResult.trimEnd()));
 
                 query = { expression: '', range: undefined };
