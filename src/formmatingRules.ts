@@ -3,9 +3,9 @@ export interface Rule {
   id: string;
   options?: {
     ident: boolean;
-    linesBefore: Number;
-    linesAfter: Number;
-    linesSameBlock: Number;
+    linesBefore: number;
+    linesAfter: number;
+    linesSameBlock: number;
   };
 }
 
@@ -38,12 +38,12 @@ export function getStructsNoIdent(): string[] {
 
 export class FormattingRules {
   lastMatch: RuleMatch | null = null;
-  insideOpenStructure: boolean = false;
+  insideOpenStructure = false;
   openStructures: RuleMatch[] = [];
 
   public match(lineGet: string, initialPosition: number): boolean {
-    let line : string = lineGet.toString();
-    let lastRule: RuleMatch = this.openStructures[
+    let line: string = lineGet.toString();
+    const lastRule: RuleMatch = this.openStructures[
       this.openStructures.length - 1
     ];
     if (line.trim().length === 0) {
@@ -51,7 +51,7 @@ export class FormattingRules {
     }
 
     let finddedRule: RuleMatch = null;
-    
+
     // se não estiver em estrutura não identável
     if (!lastRule || !(getStructsNoIdent().find((x) => x === lastRule.rule.id))) {
       // removo comentários que terminam a linha
@@ -60,11 +60,11 @@ export class FormattingRules {
       // para facilitar a análise de expressões eu removo as funções internas quando a
       // linha conmeça com if(
       if (
-        line.match(/^(\s*)(if)(\t|\ |\!)*(\()+.+(\))/i)
+        line.match(/^(\s*)(if)(\t| |!)*(\()+.+(\))/i)
       ) {
         // extrai o conteúdo de dentro do IF
-        line = line.replace(/^(\s*)(if)(\t|\ |\!)*(\()/i, '').slice(0, -1);
-        let parts: string[] = line.split(')');
+        line = line.replace(/^(\s*)(if)(\t| |!)*(\()/i, '').slice(0, -1);
+        const parts: string[] = line.split(')');
         line = '';
         parts.forEach(linepart => {
           line += (linepart + ')').replace(/(\()+(.|)+(\))/g, ' ');
@@ -80,7 +80,7 @@ export class FormattingRules {
     }
 
     // rule a remover pilha pode ser a ultima aberta da pilha ou uma estrutura assincrona aberta
-    let closeseableRules: RuleMatch[] = this.openStructures.filter((x) => x.rule.assincStruct);
+    const closeseableRules: RuleMatch[] = this.openStructures.filter((x) => x.rule.assincStruct);
     if
       (
       lastRule &&
@@ -100,7 +100,7 @@ export class FormattingRules {
         finddedRule.incrementDouble = false;
 
         // remove a partir do último encontrado se for assincrona
-        let originalStructures = [];
+        const originalStructures = [];
         this.openStructures.every((structItem: RuleMatch) => {
           if (structItem !== finddedRule) {
             originalStructures.push(structItem);
@@ -193,7 +193,7 @@ export class FormattingRules {
         id: 'function',
         begin: /^(\s*)((user|static)(\s*))?(function)(\s+)(\w+)/i,
         noBegin: [
-          /^(\s*)((user|static)(\s*))?(function)(\s+)(\w+)(\s*)(\;)(\s*)(return)/i
+          /^(\s*)((user|static)(\s*))?(function)(\s+)(\w+)(\s*)(;)(\s*)(return)/i
         ],
         end: /^(\s*)(return)/i
       },
@@ -263,12 +263,12 @@ export class FormattingRules {
       },
       {
         id: 'if',
-        begin: /^(\s*)(if)(\t|\ |\!|\()+/i,
+        begin: /^(\s*)(if)(\t| |!|\()+/i,
         noBegin: [
-          /^(\s*)(if)(\t|\ |\!)*(\()+(.)*(\,)+(.)*(\,)+(.)*(\))/i,
-          /^(\s*)(if)(\t|\ |\!)*(.)*(\;)+(.)*(\;)+(.)*(endif)/i
+          /^(\s*)(if)(\t| |!)*(\()+(.)*(,)+(.)*(,)+(.)*(\))/i,
+          /^(\s*)(if)(\t| |!)*(.)*(;)+(.)*(;)+(.)*(endif)/i
         ],
-        middle: /^(\s*)((else)|(elseif))(\t|\ |\(|;|\/\*|$)/i,
+        middle: /^(\s*)((else)|(elseif))(\t| |\(|;|\/\*|$)/i,
         end: /^(\s*)(end)(\s*)(if)?$/i
       },
       {

@@ -11,14 +11,13 @@ import {
   workspace
 } from 'vscode';
 import { FormattingRules, RuleMatch, getStructsNoIdent, StructureRule } from './formmatingRules';
-
-let sqlFormatterPlus = require("sql-formatter-plus");
+import * as sqlFormatterPlus from 'sql-formatter-plus';
 
 // Regras de estruturas que não sofrem identação interna
-let structsNoIdent: string[] = getStructsNoIdent();
+const structsNoIdent: string[] = getStructsNoIdent();
 
 class Formatting implements DocumentFormattingEditProvider {
-  lineContinue: boolean = false;
+  lineContinue = false;
 
   provideDocumentFormattingEdits(
     document: TextDocument,
@@ -41,14 +40,14 @@ class Formatting implements DocumentFormattingEditProvider {
 }
 
 class RangeFormatting implements DocumentRangeFormattingEditProvider {
-  lineContinue: boolean = false;
+  lineContinue = false;
   provideDocumentRangeFormattingEdits(
     document: TextDocument,
     range: Range,
     options: FormattingOptions,
     token: CancellationToken
   ): ProviderResult<TextEdit[]> {
-    let noQueryFormatter: boolean = workspace
+    const noQueryFormatter: boolean = workspace
       .getConfiguration('advpl-sintaxe')
       .get('noQueryFormatter');
     let queryLanguage: string = workspace
@@ -57,7 +56,7 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
 
     queryLanguage = queryLanguage ? queryLanguage : 'sql';
 
-    let cont: number = 0;
+    let cont = 0;
     let query: { expression: string, range: Range };
     const tab: string = options.insertSpaces
       ? ' '.repeat(options.tabSize)
@@ -74,7 +73,7 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
     }
     const formattingRules = new FormattingRules();
 
-    let result: TextEdit[] = [];
+    const result: TextEdit[] = [];
     const lc = range.end.line;
     const rulesIgnored: StructureRule[] = formattingRules
       .getStructures()
@@ -91,11 +90,11 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
 
       const line = document.lineAt(nl);
       const text = line.text.trimRight();
-      let lastRule: RuleMatch =
+      const lastRule: RuleMatch =
         formattingRules.openStructures[
         formattingRules.openStructures.length - 1
         ];
-      let foundIgnore: StructureRule[] = rulesIgnored.filter(rule => {
+        const foundIgnore: StructureRule[] = rulesIgnored.filter(rule => {
         return lastRule && lastRule.rule && rule.id === lastRule.rule.id;
       });
       // dentro do BeginSql não mexe na identação
@@ -119,7 +118,7 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
           !this.lineContinue &&
           formattingRules.match(text, cont)
         ) {
-          let ruleMatch: RuleMatch | null = formattingRules.getLastMatch();
+          const ruleMatch: RuleMatch | null = formattingRules.getLastMatch();
 
           if (ruleMatch) {
             if (ruleMatch.decrement) {
@@ -129,30 +128,30 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
                 let queryResult: string = sqlFormatterPlus.format(query.expression, { indent: tab, language: queryLanguage });
 
                 // volta comentários
-                queryResult = queryResult.replace(/\-\-REPLACE\-\-/img, '//');
+                queryResult = queryResult.replace(/--REPLACE--/img, '//');
                 // adiciona tabulações no início de cada linha
                 queryResult = tab.repeat(cont + 1) + queryResult.replace(/\n/img, '\n' + tab.repeat(cont + 1));
                 // Remove os espaçamentos dentro das expressões %%
-                queryResult = queryResult.replace(/(\%)(\s+)(table|temp-table|exp|xfilial|order)(\s)*(:)((\w|\+|\-|\\|\*|\(|\)|\[|\]|\-|\>|\_|\s|\,|\n|\"|\')*)(\s+)(\%)/img, '$1$3$5$6$9');
+                queryResult = queryResult.replace(/(%)(\s+)(table|temp-table|exp|xfilial|order)(\s)*(:)((\w|\+|\\|\*|\(|\)|\[|\]|-|>|_|\s|,|\n|"|')*)(\s+)(%)/img, '$1$3$5$6$9');
                 // Como coloca quebras de linhas no orderby por conta da vírgula removo
-                queryResult = queryResult.replace(/(\%order:\w*)(\,\n\s*)(\w\%)/img, '$1,$3');
+                queryResult = queryResult.replace(/(%order:\w*)(,\n\s*)(\w%)/img, '$1,$3');
                 // Ajusta os sem expressões
-                queryResult = queryResult.replace(/(\%)(\s+)(notDel|noparser)(\s+)(\%)/img, '$1$3$5');
+                queryResult = queryResult.replace(/(%)(\s+)(notDel|noparser)(\s+)(%)/img, '$1$3$5');
                 // se houver espaço entre o . e o %NotDel% remove
-                queryResult = queryResult.replace(/\.\s(\%notDel\%)/img, '.$1');
+                queryResult = queryResult.replace(/\.\s(%notDel%)/img, '.$1');
                 //quebra de linha depois do no parser
-                queryResult = queryResult.replace(/((\s*)\%noparser\%)\s/img, '$1\n\n$2');
+                queryResult = queryResult.replace(/((\s*)%noparser%)\s/img, '$1\n\n$2');
                 // remove espaços entre ->
-                queryResult = queryResult.replace(/\s*\-\>\s*/img, '->');
+                queryResult = queryResult.replace(/\s*->\s*/img, '->');
                 // remove espaços antes de colchetes 
                 queryResult = queryResult.replace(/\s*\[\s*/img, '[');
                 // remove espaços antes de , + - \ * dentro de %
-                while (queryResult.match(/(\%.*)(\s+)(\,|\+|\-|\\|\*)(\s*)(.*\%)/img)) {
-                  queryResult = queryResult.replace(/(\%.*)(\s+)(\,|\+|\-|\\|\*)(\s*)(.*\%)/img, '$1$3$5');
+                while (queryResult.match(/(%.*)(\s+)(,|\+|-|\\|\*)(\s*)(.*%)/img)) {
+                  queryResult = queryResult.replace(/(%.*)(\s+)(,|\+|-|\\|\*)(\s*)(.*%)/img, '$1$3$5');
                 }
                 // remove espaços depois de , + - \ * dentro de %
-                while (queryResult.match(/(\%.*)(\s*)(\,|\+|\-|\\|\*)(\s+)(.*\%)/img)) {
-                  queryResult = queryResult.replace(/(\%.*)(\s*)(\,|\+|\-|\\|\*)(\s+)(.*\%)/img, '$1$3$5');
+                while (queryResult.match(/(%.*)(\s*)(,|\+|-|\\|\*)(\s+)(.*%)/img)) {
+                  queryResult = queryResult.replace(/(%.*)(\s*)(,|\+|-|\\|\*)(\s+)(.*%)/img, '$1$3$5');
                 }
 
                 // Ajustes visuais de query alinhamento de Between em uma linha
@@ -164,7 +163,7 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
                 queryResult = queryResult.replace(/(^(\s*)when.*)\n*\s*(then.*)/img, '$1\n$2' + tab + '$3');
                 // Remove uma das tabulações dos Join's e ON
                 if (queryResult.match(/^\s*(\w*\sjoin|on)\s/img)) {
-                  let queryLines: string[] = queryResult.split('\n');
+                  const queryLines: string[] = queryResult.split('\n');
                   queryResult = '';
                   queryLines.forEach((line) => {
                     if (line.match(/^\s*(\w*\sjoin|on)\s/img)) {
@@ -203,7 +202,7 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
             }
           }
         } else {
-          let newLine: string = '';
+          let newLine = '';
           if (!line.isEmptyOrWhitespace) {
             newLine = text
               .replace(/(\s*)?/, tab.repeat(cont) + (this.lineContinue ? tab : ''))

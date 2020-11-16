@@ -6,7 +6,7 @@
     "publisher": "robsonrosilva",
     "icon": "images/icone.png",
     "engines": {
-        "vscode": "^1.9.1"
+        "vscode": "^1.32.0"
     },
     "repository": {
         "type": "git",
@@ -267,15 +267,21 @@
         "watch": "gulp build && robocopy \".\\locales\" \".\\out\\locales\" & exit 0 && webpack --mode none --watch",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "watchWebPack": "webpack --mode none --watch",
-        "test": "tsc -p ./ && node ./node_modules/vscode/bin/test"
+        "test": "tsc -p ./ && node ./node_modules/vscode/bin/test",
+        "lint": "eslint . --ext .ts,.tsx"
     },
     "devDependencies": {
         "@types/mocha": "^5.2.7",
         "@types/node": "^13.13.24",
+        "@types/vscode": "^1.51.0",
         "@types/webpack": "^4.41.22",
         "@types/webpack-dev-server": "^3.11.0",
+        "@typescript-eslint/eslint-plugin": "^4.7.0",
+        "@typescript-eslint/parser": "^4.7.0",
         "analise-advpl": "^5.2.2",
         "del": "^5.1.0",
+        "eslint": "^7.13.0",
+        "eslint-config-google": "^0.14.0",
         "event-stream": "^4.0.1",
         "git": "^0.1.5",
         "globby": "^11.0.1",
@@ -290,11 +296,10 @@
         "tslint": "^5.20.1",
         "typescript": "^3.9.7",
         "vsce": "^1.81.1",
-        "vscode": "^1.1.37",
-        "vscode-debugadapter-testsupport": "^1.42.0",
         "vscode-nls": "^4.1.2",
         "vscode-nls-dev": "^3.3.2",
         "webpack": "^4.44.2",
         "webpack-cli": "^3.3.12"
-    }
+    },
+    "dependencies": {}
 }

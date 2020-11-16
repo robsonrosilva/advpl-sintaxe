@@ -1,4 +1,5 @@
 import { workspace, window, extensions } from 'vscode';
+import * as i18n from 'i18n';
 
 export interface IExecutionResult<T extends string | Buffer> {
     exitCode: number;
@@ -36,7 +37,7 @@ export class MergeAdvpl {
             window.showErrorMessage(localize('merge.noBranch'));
             return;
         }
-        this.branchesControladas = Array();
+        this.branchesControladas = [];
         this.branchesControladas.push(
             this.branchHomol.toUpperCase()
         );
@@ -52,9 +53,10 @@ export class MergeAdvpl {
     public merge(branchDestino: string) {
         this.branchOrigem = this.repository.headLabel;
         // guarda objeto this
-        let objeto: MergeAdvpl = this;
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        const objeto: MergeAdvpl = this;
         return new Promise(
-            (resolve: Function, reject: Function) => {
+            (resolve, reject) => {
                 // Verifica se a branch que mandou é uma das controladas
                 if (objeto.branchesControladas.includes(this.branchOrigem.toUpperCase())) {
                     return reject(localize('merge.noBranchMerge'));
@@ -124,7 +126,7 @@ export class MergeAdvpl {
     public atualiza() {
         // se não estiver com a branch origem definida define ela
         this.branchOrigem = this.branchOrigem ? this.branchOrigem : this.repository.headLabel;
-        return new Promise((resolve: Function, reject: Function) => {
+        return new Promise((resolve, reject) => {
             // vai para a branche de release
             this.repository.checkout(this.branchHomol).then(() => {
                 // efetua o pull da branch de release
@@ -151,7 +153,7 @@ export class MergeAdvpl {
 
     // limpa as branches mergeadas com a master
     public limpaBranches() {
-        return new Promise((resolve: Function, reject: Function) => {
+        return new Promise((resolve, reject) => {
             // Atualiza todas as branches remotas
             this.run(['fetch', '-v', 'origin']).then(() => {
                 // baixa todas as tags
@@ -160,7 +162,7 @@ export class MergeAdvpl {
                     this.run(['remote', 'prune', 'origin']).then(() => {
                         // lista os branches mergeados com a master
                         this.run(['branch', '--merged', 'master']).then((ret: IExecutionResult<string>) => {
-                            let branches = ret.stdout.split("\n");
+                            const branches = ret.stdout.split("\n");
 
                             branches.forEach((branche: string) => {
                                 // nem tenta excluir se for a branche selecionada ou se for branche controlada
@@ -189,7 +191,7 @@ export class MergeAdvpl {
 
     // Executa um push com tags
     private pushAll() {
-        let promises: Promise<any>[] = [];
+        const promises: Promise<any>[] = [];
         promises.push(this.run(['push', '--tags']));
         promises.push(this.run(['push', '--set-upstream', 'origin', this.repository.headLabel]));
         return Promise.all(promises);
@@ -203,9 +205,9 @@ export class MergeAdvpl {
             //verifica se Ã© TAG
             if (item.type === 2) {
                 //Verifica se Ã© padrÃ£o de numeraÃ§Ã£o
-                let aNiveis = item.name.split('.');
+                const aNiveis = item.name.split('.');
                 if (aNiveis.length === 3) {
-                    let aTag = [
+                    const aTag = [
                         Number(aNiveis[0]),
                         Number(aNiveis[1]),
                         Number(aNiveis[2])
@@ -235,18 +237,18 @@ export class MergeAdvpl {
     }
 
     private mergeGit(destino: string) {
-        return new Promise((resolve: Function, reject: Function) => {
+        return new Promise((resolve, reject) => {
             // vai para a branche de release
             this.repository.checkout(destino).then(() => {
                 // efetua o pull da branch de release
                 this.run(['pull']).then(() => {
                     // se for um merge para a branch de produção sempre envia a release
-                    let branch: string = destino === this.branchProdu ? this.branchHomol : this.branchOrigem;
+                    const branch: string = destino === this.branchProdu ? this.branchHomol : this.branchOrigem;
 
                     // efetua o merge
                     this.run(['merge', '--no-ff', branch]).then(() => {
                         if (destino === this.branchProdu) {
-                            let tag: string = this.getNextTag();
+                            const tag: string = this.getNextTag();
                             this.repository.tag(tag, '').then(() => {
                                 this.pushAll().then(() => {
                                     resolve(tag);
@@ -281,7 +283,7 @@ export class MergeAdvpl {
     }
 
     private getRepository() {
-        let git = extensions.getExtension('vscode.git');
+        const git = extensions.getExtension('vscode.git');
         if (git) {
             if (git.isActive) {
                 let repository;
@@ -324,8 +326,7 @@ function localize(key: string) {
     const vscodeOptions = JSON.parse(
         process.env.VSCODE_NLS_CONFIG
     ).locale.toLowerCase();
-    let i18n = require('i18n');
-    let locales = ['en', 'pt-br'];
+    const locales = ['en', 'pt-br'];
     i18n.configure({
         locales: locales,
         directory: __dirname + '\\locales'

@@ -7,7 +7,8 @@ import {
   commands,
   Diagnostic,
   Range,
-  TextDocument
+  TextDocument,
+  ProgressLocation
 } from 'vscode';
 import { MergeAdvpl } from './merge';
 import { ValidaAdvpl, Fonte, ValidaProjeto } from 'analise-advpl/lib/src';
@@ -16,10 +17,10 @@ import {
   formattingEditProvider,
   rangeFormattingEditProvider
 } from './formatting';
+import * as i18n from 'i18n';
+
 //Cria um colection para os erros ADVPL
 const collection = languages.createDiagnosticCollection('advpl');
-
-let pendingValidation: boolean = false;
 
 let projeto: ValidaProjeto;
 let listaURI: Uri[] = [];
@@ -36,7 +37,7 @@ const vscodeOptions = JSON.parse(
   process.env.VSCODE_NLS_CONFIG
 ).locale.toLowerCase();
 
-let validaAdvpl = new ValidaAdvpl(comentFontPad, vscodeOptions, false);
+const validaAdvpl = new ValidaAdvpl(comentFontPad, vscodeOptions, false);
 validaAdvpl.ownerDb = workspace
   .getConfiguration('advpl-sintaxe')
   .get('ownerDb');
@@ -65,8 +66,8 @@ export function activate(context: ExtensionContext) {
   //Adiciona comando de envia para Validação
   context.subscriptions.push(
     commands.registerCommand('advpl-sintaxe.gitValidacao', () => {
-      let mergeAdvpl = new MergeAdvpl();
-      let branchAtual = mergeAdvpl.repository.headLabel;
+      const mergeAdvpl = new MergeAdvpl();
+      const branchAtual = mergeAdvpl.repository.headLabel;
 
       mergeAdvpl
         .merge(mergeAdvpl.branchTeste)
@@ -84,8 +85,8 @@ export function activate(context: ExtensionContext) {
   //Adiciona comando de envia para Release
   context.subscriptions.push(
     commands.registerCommand('advpl-sintaxe.gitRelease', () => {
-      let mergeAdvpl = new MergeAdvpl();
-      let branchAtual = mergeAdvpl.repository.headLabel;
+      const mergeAdvpl = new MergeAdvpl();
+      const branchAtual = mergeAdvpl.repository.headLabel;
 
       mergeAdvpl
         .merge(mergeAdvpl.branchHomol)
@@ -103,8 +104,8 @@ export function activate(context: ExtensionContext) {
   //Adiciona comando de envia para master
   context.subscriptions.push(
     commands.registerCommand('advpl-sintaxe.gitMaster', () => {
-      let mergeAdvpl = new MergeAdvpl();
-      let branchAtual = mergeAdvpl.repository.headLabel;
+      const mergeAdvpl = new MergeAdvpl();
+      const branchAtual = mergeAdvpl.repository.headLabel;
 
       mergeAdvpl
         .merge(mergeAdvpl.branchProdu)
@@ -133,8 +134,8 @@ export function activate(context: ExtensionContext) {
   //Adiciona comando de Atualiza Branch
   context.subscriptions.push(
     commands.registerCommand('advpl-sintaxe.atualizaBranch', () => {
-      let mergeAdvpl = new MergeAdvpl();
-      let branchAtual = mergeAdvpl.repository.headLabel;
+      const mergeAdvpl = new MergeAdvpl();
+      const branchAtual = mergeAdvpl.repository.headLabel;
       mergeAdvpl
         .atualiza()
         .then((message: string) => {
@@ -163,8 +164,8 @@ export function activate(context: ExtensionContext) {
   //Adiciona comando de limeza de branches
   context.subscriptions.push(
     commands.registerCommand('advpl-sintaxe.cleanBranches', () => {
-      let mergeAdvpl = new MergeAdvpl();
-      let branchAtual = mergeAdvpl.repository.headLabel;
+      const mergeAdvpl = new MergeAdvpl();
+      const branchAtual = mergeAdvpl.repository.headLabel;
       mergeAdvpl
         .limpaBranches()
         .then((message: string) => {
@@ -209,15 +210,15 @@ function validaFonte(editor: any) {
           // se valida projeto faz a validação se não somente atualiza o fonte atual
           if (
             workspace.getConfiguration('advpl-sintaxe').get('validaProjeto') !==
-              false &&
+            false &&
             projeto
           ) {
             //verifica se o fonte já existe no projeto se não adiciona
-            let pos = projeto.projeto.map(function(e) {
+            const pos = projeto.projeto.map(function (e) {
               return getUri(e.fonte.fonte).fsPath;
             });
-            let posicao = pos.indexOf(document.uri.fsPath);
-            let itemProjeto = new ItemModel();
+            const posicao = pos.indexOf(document.uri.fsPath);
+            const itemProjeto = new ItemModel();
             itemProjeto.content = validaAdvpl.conteudoFonte;
             itemProjeto.errors = validaAdvpl.aErros;
             itemProjeto.fonte = validaAdvpl.fonte;
@@ -231,8 +232,8 @@ function validaFonte(editor: any) {
             projeto.verificaDuplicados().then(() => {
               // atualiza os erros
               projeto.projeto.forEach((item: ItemModel) => {
-                let fonte: Fonte = item.fonte;
-                let file = getUri(fonte.fonte);
+                const fonte: Fonte = item.fonte;
+                const file = getUri(fonte.fonte);
 
                 //Atualiza as mensagens do colection
                 collection.delete(file);
@@ -240,7 +241,7 @@ function validaFonte(editor: any) {
               });
             });
           } else {
-            let file = getUri(validaAdvpl.fonte.fonte);
+            const file = getUri(validaAdvpl.fonte.fonte);
 
             //Atualiza as mensagens do colection
             collection.delete(file);
@@ -252,7 +253,7 @@ function validaFonte(editor: any) {
 }
 
 function errorVsCode(aErros: any) {
-  let vsErros: any = [];
+  const vsErros: any = [];
   aErros.forEach(erro => {
     vsErros.push(
       new Diagnostic(
@@ -267,7 +268,7 @@ function errorVsCode(aErros: any) {
 
 function getUri(file: string): Uri {
   let uri: Uri;
-  let fileName: string = file.replace(/\\/g, '/').toUpperCase();
+  const fileName: string = file.replace(/\\/g, '/').toUpperCase();
   let listName: string;
 
   // busca o arquivo
@@ -286,13 +287,10 @@ function getUri(file: string): Uri {
   return uri;
 }
 
-// this method is called when your extension is deactivated
-export function deactivate() {}
-
 function validaProjeto() {
-  return new Promise(() => {
+  const promise = new Promise((resolve) => {
     // prepara o objeto de validação
-    let projeto: ValidaProjeto = new ValidaProjeto(
+    const projeto: ValidaProjeto = new ValidaProjeto(
       validaAdvpl.comentFontPad,
       vscodeOptions
     );
@@ -301,8 +299,8 @@ function validaProjeto() {
     projeto.ownerDb = validaAdvpl.ownerDb;
     projeto.local = vscodeOptions;
 
-    let pastas: string[] = [];
-    let workspaceFolders = workspace['workspaceFolders'];
+    const pastas: string[] = [];
+    const workspaceFolders = workspace['workspaceFolders'];
     workspaceFolders.forEach(path => {
       pastas.push(path.uri.fsPath);
     });
@@ -315,24 +313,72 @@ function validaProjeto() {
 
       listaURI = [];
       projeto.projeto.forEach((item: ItemModel) => {
-        let fonte: Fonte = item.fonte;
-        let file = getUri(fonte.fonte);
+        const fonte: Fonte = item.fonte;
+        const file = getUri(fonte.fonte);
 
         listaURI.push(file);
 
         //Atualiza as mensagens do colection
         collection.set(file, errorVsCode(item.errors));
       });
+      resolve();
     });
   });
+
+  window.withProgress({
+    location: ProgressLocation.Notification,
+    title: "Validando Projeto!",
+    cancellable: false
+  }, (progress, token) => {
+    token.onCancellationRequested(() => {
+      console.log("Validação Cancelada!");
+    });
+
+    progress.report({ increment: 0 });
+    return promise;
+  });
+}
+
+function verifyEncoding() {
+  const workspaceFolders = workspace['workspaceFolders'];
+  // check if there is an open folder
+  if (workspaceFolders === undefined) {
+    window.showErrorMessage("No folder opened.");
+    return;
+  }
+  const textNoAsk = localize('tds.vscode.noAskAgain', "Don't ask again");
+  const textNo = localize('tds.vscode.no', 'No');
+  const textYes = localize('tds.vscode.yes', 'Yes');
+  const textQuestion = localize('tds.vscode.question.change.encoding', 'Do you want to change the encoding to default TOTVS (Windows-1252)?'); // Deseja alterar o encoding para o padrão TOTVS (CP1252)?
+  let questionAgain = true;
+  const configADVPL = workspace.getConfiguration('totvsLanguageServer');
+  const questionEncodingConfig = configADVPL.get("askEncodingChange");
+  const defaultConfig = workspace.getConfiguration();
+  const defaultEncoding = defaultConfig.get("files.encoding");
+  if (defaultEncoding !== "windows1252" && questionEncodingConfig !== false) {
+    window.showWarningMessage(textQuestion, textYes, textNo, textNoAsk).then(clicked => {
+      if (clicked === textYes) {
+        const jsonEncoding = {
+          "files.encoding": "windows1252"
+        };
+        defaultConfig.update("[advpl]", jsonEncoding);
+        defaultConfig.update("[4gl]", jsonEncoding);
+        questionAgain = false;
+      } else if (clicked === textNo) {
+        questionAgain = true;
+      } else if (clicked === textNoAsk) {
+        questionAgain = false;
+      }
+      configADVPL.update("askEncodingChange", questionAgain);
+    });
+  }
 }
 
 function localize(key: string, text?: string) {
   const vscodeOptions = JSON.parse(
     process.env.VSCODE_NLS_CONFIG
   ).locale.toLowerCase();
-  let i18n = require('i18n');
-  let locales = ['en', 'pt-br'];
+  const locales = ['en', 'pt-br'];
   i18n.configure({
     locales: locales,
     directory: __dirname + '\\locales'
