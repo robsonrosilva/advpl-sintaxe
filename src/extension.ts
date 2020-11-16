@@ -333,8 +333,6 @@ function validaProjeto() {
     token.onCancellationRequested(() => {
       console.log("Validação Cancelada!");
     });
-
-    progress.report({ increment: 0 });
     return promise;
   });
 }
