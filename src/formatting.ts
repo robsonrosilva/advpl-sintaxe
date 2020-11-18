@@ -57,7 +57,7 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
     queryLanguage = queryLanguage ? queryLanguage : 'sql';
 
     let cont = 0;
-    let query: { expression: string, range: Range };
+    let query: { expression: string; range: Range; };
     const tab: string = options.insertSpaces
       ? ' '.repeat(options.tabSize)
       : '\t';
@@ -140,7 +140,7 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
                 // se houver espaço entre o . e o %NotDel% remove
                 queryResult = queryResult.replace(/\.\s(%notDel%)/img, '.$1');
                 //quebra de linha depois do no parser
-                queryResult = queryResult.replace(/((\s*)%noparser%)\s/img, '$1\n\n$2');
+                queryResult = queryResult.replace(/((\s*)%noparser%)\s+/img, '$1\n\n$2');
                 // remove espaços entre ->
                 queryResult = queryResult.replace(/\s*->\s*/img, '->');
                 // remove espaços antes de colchetes 
@@ -224,10 +224,10 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
 const formatter = new Formatting();
 const rangeFormatter = new RangeFormatting();
 
-export function formattingEditProvider() {
+export function formattingEditProvider(): any {
   return formatter;
 }
 
-export function rangeFormattingEditProvider() {
+export function rangeFormattingEditProvider(): any {
   return rangeFormatter;
 }

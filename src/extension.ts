@@ -54,7 +54,7 @@ if (!validaAdvpl.empresas) {
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
-export function activate(context: ExtensionContext) {
+export function activate(context: ExtensionContext): any {
   window.showInformationMessage(
     localize('extension.activeMessage', 'Active ADVPL Validation!')
   );
@@ -165,7 +165,6 @@ export function activate(context: ExtensionContext) {
   context.subscriptions.push(
     commands.registerCommand('advpl-sintaxe.cleanBranches', () => {
       const mergeAdvpl = new MergeAdvpl();
-      const branchAtual = mergeAdvpl.repository.headLabel;
       mergeAdvpl
         .limpaBranches()
         .then((message: string) => {
@@ -382,5 +381,5 @@ function localize(key: string, text?: string) {
     directory: __dirname + '\\locales'
   });
   i18n.setLocale(locales.indexOf(vscodeOptions) + 1 ? vscodeOptions : 'en');
-  return i18n.__(key);
+  return i18n.__(key) ? i18n.__(key) : text;
 }

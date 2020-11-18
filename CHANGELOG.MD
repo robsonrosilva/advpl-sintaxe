@@ -2,6 +2,14 @@
 
 ## Release Notes
 
+### 1.4.7
+
+- Correção de identação de Select após %noparser%.
+
+### 1.4.6
+
+- Correção de Espaçamentos em query.
+
 ### 1.4.5
 
 - Linha começa com * dentro da query, nestes cassos foi removida a quebra de linha, pois o compilador ignora a linha.
