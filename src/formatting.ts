@@ -104,7 +104,10 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
           if (!query || query.expression.length === 0) {
             query = { expression: '', range: line.range };
           }
-          query.expression += ' ' + text.replace('//', '--REPLACE--') + '\n';
+          // replace para comentários 
+          query.expression += ' ' + text.replace('//', '--REPLACE--').replace(/^\s*/img,'') + '\n';
+          // replace para correção de problema de '\' que quebra a identação
+          query.expression = query.expression.replace(/'\\'/img,'\'******\\******\'');
           // define o range que será substituído
           // usando o range inicial da primeira linha 
           // e o atual da ultima linha com a query
@@ -161,6 +164,8 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
                 queryResult = queryResult.replace(/(^(\s*)(.*join\s*.*|\)\s\w*\s))(on)/img, '$1\n$2$4');
                 // Quebra linha no THEN do CASE
                 queryResult = queryResult.replace(/(^(\s*)when.*)\n*\s*(then.*)/img, '$1\n$2' + tab + '$3');
+                // remove espaço no fim de linha de cima quando quebra on, join, when ou then
+                queryResult = queryResult.replace(/\s*(\n\s*(on|join|when|then))/img, '$1');
                 // Remove uma das tabulações dos Join's e ON
                 if (queryResult.match(/^\s*(\w*\sjoin|on)\s/img)) {
                   const queryLines: string[] = queryResult.split('\n');
@@ -174,8 +179,13 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
                   });
                 }
 
-                // Existe um erro na compilação quando a linha começa com *
+                // Correção de Problemas externos -----
+                // Existe um erro na compilação quando a linha começa com * (PROBLEMA NO APPSERVER)
                 queryResult = queryResult.replace(/\n\s*(\*)/img, ' $1');
+                // volta replace de '\' (PROBLEMA NA EXTENSÃO sql-formatter-plus)
+                queryResult = queryResult.replace(/'\*\*\*\*\*\*\\\*\*\*\*\*\*'/img, '\'\\\'');
+                // erro na identação de case quando enviada , CASE (PROBLEMA NA EXTENSÃO sql-formatter-plus)
+                queryResult = queryResult.replace(/(^(\s*).*,\n)\s*(case)/img, '$1$2$3');
 
                 result.push(TextEdit.replace(query.range, queryResult.trimEnd()));
 

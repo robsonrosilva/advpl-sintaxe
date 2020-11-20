@@ -5,6 +5,9 @@
 ### 1.4.7
 
 - Correção de identação de Select após %noparser%.
+- Correção de espaço no fim da linha antes quebra de on, join, when ou then.
+- Correção de query que estava quebrando por causa de '\' na query.
+- Correção de identação de case quando enviado para a formatação , case.
 
 ### 1.4.6
 
