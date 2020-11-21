@@ -21,11 +21,11 @@
   "advpl-sintaxe.configuration.properties.comentFontPad.items": "Source comment line. (Use search TypeScript default)",
   "advpl-sintaxe.configuration.properties.validaProjeto": "Enables project validation.",
   "advpl-sintaxe.configuration.properties.tempoValidacao": "Sets the time in milliseconds of the typing validation interval.",
-  "advpl-sintaxe.configuration.properties.noQueryFormatter": "Disable query formatter.",
-  "advpl-sintaxe.configuration.properties.queryLanguage": "Define query language.\nsql - Standard SQL\nn1ql - Couchbase N1QL\ndb2 - IBM DB2\npl/sql - Oracle PL/SQL",
   "advpl-sintaxe.configuration.snippets.advpl.mvc": "./i18n/enu/snippets/advpl.mvc.json",
   "advpl-sintaxe.configuration.snippets.advpl.treport": "./i18n/enu/snippets/advpl.treport.json",
   "advpl-sintaxe.configuration.snippets.advpl.webservices": "./i18n/enu/snippets/advpl.webservices.json",
   "advpl-sintaxe.configuration.snippets.advpl.webservicesrest": "./i18n/enu/snippets/advpl.webservicesrest.json",
-  "advpl-sintaxe.configuration.snippets.advpl.comentarios": "./i18n/enu/snippets/advpl.comentarios.json"
+  "advpl-sintaxe.configuration.snippets.advpl.comentarios": "./i18n/enu/snippets/advpl.comentarios.json",
+  "contributes.configuration.properties.advplformat.noQueryFormatter": "Disable ADVPL Query formatter.",
+  "contributes.configuration.properties.advplformat.queryLanguage": "Define query language.\nsql - Standard SQL\nn1ql - Couchbase N1QL\ndb2 - IBM DB2\npl/sql - Oracle PL/SQL"
 }

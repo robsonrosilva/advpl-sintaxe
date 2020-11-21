@@ -2,6 +2,12 @@
 
 ## Release Notes
 
+### 1.4.8
+
+- Pergunta de linguagem de query que deseja usar na formatação de queries.
+- Parâmetros de query globais para usar em extensões diferentes.
+- Definição de encoding padrão para advpl.
+
 ### 1.4.7
 
 - Correção de identação de Select após %noparser%.
@@ -15,7 +21,7 @@
 
 ### 1.4.5
 
-- Linha começa com * dentro da query, nestes cassos foi removida a quebra de linha, pois o compilador ignora a linha.
+- Linha começa com \* dentro da query, nestes cassos foi removida a quebra de linha, pois o compilador ignora a linha.
 
 ### 1.4.4
 

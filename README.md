@@ -52,7 +52,7 @@ Verifica se estão sendo utilizados padrões básicos de qualidade como:
 - Uso de Dicionário de Dados.
 - Validação de FreeObj(self), conforme binário 12.1.27 de outubro/2020.
 
-![Análise de Fontes](images/analiseFontes.png?raw=true 'Análise de Fontes')
+![Análise de Fontes](images/analiseFontes.png?raw=true "Análise de Fontes")
 
 # GIT
 
@@ -65,13 +65,13 @@ Verifica se estão sendo utilizados padrões básicos de qualidade como:
 
 ## FLUXO
 
-![Fluxo do GIT](images/fluxoGit.png?raw=true 'Fluxo do GIT')
+![Fluxo do GIT](images/fluxoGit.png?raw=true "Fluxo do GIT")
 
 # Snippets
 
 Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVPL.
 
-![Snippets](images/snippets.png?raw=true 'Snippets')
+![Snippets](images/snippets.png?raw=true "Snippets")
 
 1. TReport
 
@@ -127,10 +127,10 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
     "empresas": ["01", "02"],
     "ownerDb": ["PROTHEUS", "PROTHEUS12"],
     "validaProjeto": true,
-    "tempoValidacao": 5000,
-    "noQueryFormatter": false,
-    "queryLanguage": "sql"
-  }
+    "tempoValidacao": 5000
+  },
+  "advplformat.noQueryFormatter": false,
+  "advplformat.queryLanguage": "sql"
 }
 ```
 

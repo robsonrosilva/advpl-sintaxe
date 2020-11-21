@@ -8,42 +8,48 @@ import {
   Diagnostic,
   Range,
   TextDocument,
-  ProgressLocation
-} from 'vscode';
-import { MergeAdvpl } from './merge';
-import { ValidaAdvpl, Fonte, ValidaProjeto } from 'analise-advpl/lib/src';
-import { ItemModel } from 'analise-advpl/lib/src/models/ItemProject';
+  ProgressLocation,
+} from "vscode";
+import { MergeAdvpl } from "./merge";
+import { ValidaAdvpl, Fonte, ValidaProjeto } from "analise-advpl/lib/src";
+import { ItemModel } from "analise-advpl/lib/src/models/ItemProject";
 import {
   formattingEditProvider,
-  rangeFormattingEditProvider
-} from './formatting';
-import * as i18n from 'i18n';
+  rangeFormattingEditProvider,
+} from "./formatting";
+import * as i18n from "i18n";
+
+const vscodeOptions = JSON.parse(
+  process.env.VSCODE_NLS_CONFIG
+).locale.toLowerCase();
+const locales = ["en", "pt-br"];
+i18n.configure({
+  locales: locales,
+  directory: __dirname + "\\locales",
+});
 
 //Cria um colection para os erros ADVPL
-const collection = languages.createDiagnosticCollection('advpl');
+const collection = languages.createDiagnosticCollection("advpl");
 
 let projeto: ValidaProjeto;
 let listaURI: Uri[] = [];
 let comentFontPad: string[] = workspace
-  .getConfiguration('advpl-sintaxe')
-  .get('comentFontPad') as string[];
+  .getConfiguration("advpl-sintaxe")
+  .get("comentFontPad") as string[];
 if (!comentFontPad) {
-  comentFontPad = [''];
+  comentFontPad = [""];
   window.showInformationMessage(
-    localize('extension.noCritizeComment', 'Do not critize coments!')
+    localize("extension.noCritizeComment", "Do not critize coments!")
   );
 }
-const vscodeOptions = JSON.parse(
-  process.env.VSCODE_NLS_CONFIG
-).locale.toLowerCase();
 
 const validaAdvpl = new ValidaAdvpl(comentFontPad, vscodeOptions, false);
 validaAdvpl.ownerDb = workspace
-  .getConfiguration('advpl-sintaxe')
-  .get('ownerDb');
+  .getConfiguration("advpl-sintaxe")
+  .get("ownerDb");
 validaAdvpl.empresas = workspace
-  .getConfiguration('advpl-sintaxe')
-  .get('empresas');
+  .getConfiguration("advpl-sintaxe")
+  .get("empresas");
 
 if (!validaAdvpl.ownerDb) {
   validaAdvpl.ownerDb = [];
@@ -56,7 +62,7 @@ if (!validaAdvpl.empresas) {
 // your extension is activated the very first time the command is executed
 export function activate(context: ExtensionContext): any {
   window.showInformationMessage(
-    localize('extension.activeMessage', 'Active ADVPL Validation!')
+    localize("extension.activeMessage", "Active ADVPL Validation!")
   );
   workspace.onDidChangeTextDocument(validaFonte);
   workspace.onDidOpenTextDocument(validaFonte);
@@ -65,7 +71,7 @@ export function activate(context: ExtensionContext): any {
 
   //Adiciona comando de envia para Validação
   context.subscriptions.push(
-    commands.registerCommand('advpl-sintaxe.gitValidacao', () => {
+    commands.registerCommand("advpl-sintaxe.gitValidacao", () => {
       const mergeAdvpl = new MergeAdvpl();
       const branchAtual = mergeAdvpl.repository.headLabel;
 
@@ -84,7 +90,7 @@ export function activate(context: ExtensionContext): any {
   );
   //Adiciona comando de envia para Release
   context.subscriptions.push(
-    commands.registerCommand('advpl-sintaxe.gitRelease', () => {
+    commands.registerCommand("advpl-sintaxe.gitRelease", () => {
       const mergeAdvpl = new MergeAdvpl();
       const branchAtual = mergeAdvpl.repository.headLabel;
 
@@ -103,7 +109,7 @@ export function activate(context: ExtensionContext): any {
   );
   //Adiciona comando de envia para master
   context.subscriptions.push(
-    commands.registerCommand('advpl-sintaxe.gitMaster', () => {
+    commands.registerCommand("advpl-sintaxe.gitMaster", () => {
       const mergeAdvpl = new MergeAdvpl();
       const branchAtual = mergeAdvpl.repository.headLabel;
 
@@ -122,7 +128,7 @@ export function activate(context: ExtensionContext): any {
   );
   //Adiciona comando de análise de projeto
   context.subscriptions.push(
-    commands.registerCommand('advpl-sintaxe.validaProjeto', () => {
+    commands.registerCommand("advpl-sintaxe.validaProjeto", () => {
       try {
         validaProjeto();
       } catch (e) {
@@ -133,7 +139,7 @@ export function activate(context: ExtensionContext): any {
 
   //Adiciona comando de Atualiza Branch
   context.subscriptions.push(
-    commands.registerCommand('advpl-sintaxe.atualizaBranch', () => {
+    commands.registerCommand("advpl-sintaxe.atualizaBranch", () => {
       const mergeAdvpl = new MergeAdvpl();
       const branchAtual = mergeAdvpl.repository.headLabel;
       mergeAdvpl
@@ -152,18 +158,18 @@ export function activate(context: ExtensionContext): any {
   );
 
   languages.registerDocumentFormattingEditProvider(
-    'advpl',
+    "advpl",
     formattingEditProvider()
   );
 
   languages.registerDocumentRangeFormattingEditProvider(
-    'advpl',
+    "advpl",
     rangeFormattingEditProvider()
   );
 
   //Adiciona comando de limeza de branches
   context.subscriptions.push(
-    commands.registerCommand('advpl-sintaxe.cleanBranches', () => {
+    commands.registerCommand("advpl-sintaxe.cleanBranches", () => {
       const mergeAdvpl = new MergeAdvpl();
       mergeAdvpl
         .limpaBranches()
@@ -177,7 +183,7 @@ export function activate(context: ExtensionContext): any {
   );
 
   if (
-    workspace.getConfiguration('advpl-sintaxe').get('validaProjeto') !== false
+    workspace.getConfiguration("advpl-sintaxe").get("validaProjeto") !== false
   ) {
     validaProjeto();
   } else {
@@ -187,8 +193,8 @@ export function activate(context: ExtensionContext): any {
 function validaFonte(editor: any) {
   return new Promise(() => {
     let time: number = workspace
-      .getConfiguration('advpl-sintaxe')
-      .get('tempoValidacao') as number;
+      .getConfiguration("advpl-sintaxe")
+      .get("tempoValidacao") as number;
     let document: TextDocument;
     if (!time || time === 0) {
       time = 5000;
@@ -202,14 +208,14 @@ function validaFonte(editor: any) {
     }
 
     //verifica se a linguagem é ADVPL
-    if (document && document.languageId === 'advpl' && document.getText()) {
+    if (document && document.languageId === "advpl" && document.getText()) {
       validaAdvpl
         .validacao(document.getText(), document.uri.fsPath)
         .finally(() => {
           // se valida projeto faz a validação se não somente atualiza o fonte atual
           if (
-            workspace.getConfiguration('advpl-sintaxe').get('validaProjeto') !==
-            false &&
+            workspace.getConfiguration("advpl-sintaxe").get("validaProjeto") !==
+              false &&
             projeto
           ) {
             //verifica se o fonte já existe no projeto se não adiciona
@@ -253,7 +259,7 @@ function validaFonte(editor: any) {
 
 function errorVsCode(aErros: any) {
   const vsErros: any = [];
-  aErros.forEach(erro => {
+  aErros.forEach((erro) => {
     vsErros.push(
       new Diagnostic(
         new Range(erro.startLine, 0, erro.endLine, 0),
@@ -267,7 +273,7 @@ function errorVsCode(aErros: any) {
 
 function getUri(file: string): Uri {
   let uri: Uri;
-  const fileName: string = file.replace(/\\/g, '/').toUpperCase();
+  const fileName: string = file.replace(/\\/g, "/").toUpperCase();
   let listName: string;
 
   // busca o arquivo
@@ -276,7 +282,7 @@ function getUri(file: string): Uri {
   // busca na lista de uri
   if (!uri) {
     listaURI.forEach((item: Uri) => {
-      listName = item.path.replace(/\\/g, '/').toUpperCase();
+      listName = item.path.replace(/\\/g, "/").toUpperCase();
       if (listName === fileName) {
         uri = item;
       }
@@ -299,8 +305,8 @@ function validaProjeto() {
     projeto.local = vscodeOptions;
 
     const pastas: string[] = [];
-    const workspaceFolders = workspace['workspaceFolders'];
-    workspaceFolders.forEach(path => {
+    const workspaceFolders = workspace["workspaceFolders"];
+    workspaceFolders.forEach((path) => {
       pastas.push(path.uri.fsPath);
     });
     projeto.validaProjeto(pastas).finally(() => {
@@ -324,62 +330,22 @@ function validaProjeto() {
     });
   });
 
-  window.withProgress({
-    location: ProgressLocation.Notification,
-    title: "Validando Projeto!",
-    cancellable: false
-  }, (progress, token) => {
-    token.onCancellationRequested(() => {
-      console.log("Validação Cancelada!");
-    });
-    return promise;
-  });
+  window.withProgress(
+    {
+      location: ProgressLocation.Notification,
+      title: "Validando Projeto!",
+      cancellable: false,
+    },
+    (progress, token) => {
+      token.onCancellationRequested(() => {
+        console.log("Validação Cancelada!");
+      });
+      return promise;
+    }
+  );
 }
 
-function verifyEncoding() {
-  const workspaceFolders = workspace['workspaceFolders'];
-  // check if there is an open folder
-  if (workspaceFolders === undefined) {
-    window.showErrorMessage("No folder opened.");
-    return;
-  }
-  const textNoAsk = localize('tds.vscode.noAskAgain', "Don't ask again");
-  const textNo = localize('tds.vscode.no', 'No');
-  const textYes = localize('tds.vscode.yes', 'Yes');
-  const textQuestion = localize('tds.vscode.question.change.encoding', 'Do you want to change the encoding to default TOTVS (Windows-1252)?'); // Deseja alterar o encoding para o padrão TOTVS (CP1252)?
-  let questionAgain = true;
-  const configADVPL = workspace.getConfiguration('totvsLanguageServer');
-  const questionEncodingConfig = configADVPL.get("askEncodingChange");
-  const defaultConfig = workspace.getConfiguration();
-  const defaultEncoding = defaultConfig.get("files.encoding");
-  if (defaultEncoding !== "windows1252" && questionEncodingConfig !== false) {
-    window.showWarningMessage(textQuestion, textYes, textNo, textNoAsk).then(clicked => {
-      if (clicked === textYes) {
-        const jsonEncoding = {
-          "files.encoding": "windows1252"
-        };
-        defaultConfig.update("[advpl]", jsonEncoding);
-        defaultConfig.update("[4gl]", jsonEncoding);
-        questionAgain = false;
-      } else if (clicked === textNo) {
-        questionAgain = true;
-      } else if (clicked === textNoAsk) {
-        questionAgain = false;
-      }
-      configADVPL.update("askEncodingChange", questionAgain);
-    });
-  }
-}
-
-function localize(key: string, text?: string) {
-  const vscodeOptions = JSON.parse(
-    process.env.VSCODE_NLS_CONFIG
-  ).locale.toLowerCase();
-  const locales = ['en', 'pt-br'];
-  i18n.configure({
-    locales: locales,
-    directory: __dirname + '\\locales'
-  });
-  i18n.setLocale(locales.indexOf(vscodeOptions) + 1 ? vscodeOptions : 'en');
+export function localize(key: string, text?: string): string {
+  i18n.setLocale(locales.indexOf(vscodeOptions) + 1 ? vscodeOptions : "en");
   return i18n.__(key) ? i18n.__(key) : text;
 }
