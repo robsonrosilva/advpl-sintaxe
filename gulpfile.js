@@ -1,3 +1,5 @@
+/* eslint-disable no-undef */
+/* eslint-disable @typescript-eslint/no-var-requires */
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
@@ -22,13 +24,13 @@ const outDest = 'out';
 
 // If all VS Code langaues are support you can use nls.coreLanguages
 const languages = [{
-    folderName: 'ptb',
-    id: 'pt-br'
-  },
-  {
-    folderName: 'enu',
-    id: 'en'
-  }
+  folderName: 'ptb',
+  id: 'pt-br'
+},
+{
+  folderName: 'enu',
+  id: 'en'
+}
 ];
 
 gulp.task('default',
@@ -105,8 +107,8 @@ function compile(buildNls) {
     .js.pipe(buildNls ? nls.rewriteLocalizeCalls() : es.through())
     .pipe(
       buildNls ?
-      nls.createAdditionalLanguageFiles(languages, 'i18n', 'out') :
-      es.through()
+        nls.createAdditionalLanguageFiles(languages, 'i18n', 'out') :
+        es.through()
     );
 
   if (inlineMap && inlineSource) {

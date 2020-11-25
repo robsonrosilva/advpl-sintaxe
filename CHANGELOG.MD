@@ -2,9 +2,48 @@
 
 ## Release Notes
 
+### 1.4.8
+
+- Pergunta de linguagem de query que deseja usar na formatação de queries.
+- Parâmetros de query globais para usar em extensões diferentes.
+- Definição de encoding padrão para advpl.
+
+### 1.4.7
+
+- Correção de identação de Select após %noparser%.
+- Correção de espaço no fim da linha antes quebra de on, join, when ou then.
+- Correção de query que estava quebrando por causa de '\' na query.
+- Correção de identação de case quando enviado para a formatação , case.
+
+### 1.4.6
+
+- Correção de Espaçamentos em query.
+
+### 1.4.5
+
+- Linha começa com \* dentro da query, nestes cassos foi removida a quebra de linha, pois o compilador ignora a linha.
+
+### 1.4.4
+
+- Remoção de espaço entre definição de tabela e notdel.
+
+### 1.4.3
+
+- Criação de configuração para definição de linguagem de banco.
+- Melhoria de sintaxe de between, join, on, case para melhorar a leitura de queries.
+
+### 1.4.2
+
+- Criação de parâmetro para desabilitar formatação de queries.
+
+### 1.4.1
+
+- Correção de espaçamento de queries para evitar erro de execução.
+
 ### 1.4.0
 
 - Implementação de novo identador, mais rápido e tratando as estruturas assíncronas.
+- Implementação de identação de queryes em EmbeddedSql usando [sql-formatter-plus](https://www.npmjs.com/package/sql-formatter-plus).
 
 ### 1.3.0
 

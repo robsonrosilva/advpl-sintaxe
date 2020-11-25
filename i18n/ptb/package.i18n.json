@@ -5,7 +5,7 @@
   "advpl-sintaxe.commands.git.homologacao": "advpl-sintaxe - Envia os commits para a branche de RELEASE!",
   "advpl-sintaxe.commands.git.producao": "advpl-sintaxe - Envia os commits para a branche de PRODUÇÃO!",
   "advpl-sintaxe.commands.git.atualizaBranch": "advpl-sintaxe - Atualiza Branch Atual!",
-  "advpl-sintaxe.commands.git.cleanBranches": "advpl-sintaxe - Clean all merged branches in PRODUCTION branch!",
+  "advpl-sintaxe.commands.git.cleanBranches": "advpl-sintaxe - Limpa branches mergeadas na branche de PRODUÇÃO!",
   "advpl-sintaxe.commands.validacao.projeto": "advpl-sintaxe - Valida Projeto!",
   "advpl-sintaxe.commands.validacao.tags": "advpl-sintaxe - Análise de TAGS!",
   "advpl-sintaxe.configuration.title": "Configuração de Advpl Sintax",
@@ -25,5 +25,7 @@
   "advpl-sintaxe.configuration.snippets.advpl.treport": "./i18n/ptb/snippets/advpl.treport.json",
   "advpl-sintaxe.configuration.snippets.advpl.webservices": "./i18n/ptb/snippets/advpl.webservices.json",
   "advpl-sintaxe.configuration.snippets.advpl.webservicesrest": "./i18n/ptb/snippets/advpl.webservicesrest.json",
-  "advpl-sintaxe.configuration.snippets.advpl.comentarios": "./i18n/ptb/snippets/advpl.comentarios.json"
+  "advpl-sintaxe.configuration.snippets.advpl.comentarios": "./i18n/ptb/snippets/advpl.comentarios.json",
+  "contributes.configuration.properties.advplformat.noQueryFormatter": "Desabilitar formatação de queries ADVPL.",
+  "contributes.configuration.properties.advplformat.queryLanguage": "Definição de linguagem para queryes.\nsql - Standard SQL\nn1ql - Couchbase N1QL\ndb2 - IBM DB2\npl/sql - Oracle PL/SQL"
 }
