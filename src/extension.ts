@@ -309,25 +309,36 @@ function validaProjeto() {
     workspaceFolders.forEach((path) => {
       pastas.push(path.uri.fsPath);
     });
-    projeto.validaProjeto(pastas).finally(() => {
-      // console.log('foi');
-      // se for validar o projeto limpa todas as críticas dos arquivos
-      listaURI.forEach((uri: Uri) => {
-        collection.delete(uri);
+    projeto
+      .validaProjeto(pastas)
+      .finally(() => {
+        // console.log('foi');
+        // se for validar o projeto limpa todas as críticas dos arquivos
+        listaURI.forEach((uri: Uri) => {
+          collection.delete(uri);
+        });
+
+        listaURI = [];
+        projeto.projeto.forEach((item: ItemModel) => {
+          const fonte: Fonte = item.fonte;
+          const file = getUri(fonte.fonte);
+
+          listaURI.push(file);
+
+          //Atualiza as mensagens do colection
+          collection.set(file, errorVsCode(item.errors));
+        });
+        resolve();
+      })
+      .catch((erro) => {
+        window.showErrorMessage(
+          "Ocorreu um erro na validação " + JSON.stringify(erro)
+        );
+        resolve();
+      })
+      .then(() => {
+        resolve();
       });
-
-      listaURI = [];
-      projeto.projeto.forEach((item: ItemModel) => {
-        const fonte: Fonte = item.fonte;
-        const file = getUri(fonte.fonte);
-
-        listaURI.push(file);
-
-        //Atualiza as mensagens do colection
-        collection.set(file, errorVsCode(item.errors));
-      });
-      resolve();
-    });
   });
 
   window.withProgress(

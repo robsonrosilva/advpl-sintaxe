@@ -2,6 +2,11 @@
 
 ## Release Notes
 
+### 1.4.9
+
+- Correção de regex de quebra de linha em ON de JOIN.
+- Inclusão de resolve e mensagem de erro quando ocorrer problema na validação de projeto.
+
 ### 1.4.8
 
 - Pergunta de linguagem de query que deseja usar na formatação de queries.
