@@ -11,7 +11,12 @@ import {
   ProgressLocation,
 } from "vscode";
 import { MergeAdvpl } from "./merge";
-import { ValidaAdvpl, Fonte, ValidaProjeto } from "analise-advpl/lib/src";
+import {
+  ValidaAdvpl,
+  Fonte,
+  ValidaProjeto,
+  ProjectStatus,
+} from "analise-advpl/lib/src";
 import { ItemModel } from "analise-advpl/lib/src/models/ItemProject";
 import {
   formattingEditProvider,
@@ -293,7 +298,35 @@ function getUri(file: string): Uri {
 }
 
 function validaProjeto() {
-  const promise = new Promise((resolve) => {
+  const _status = new ProjectStatus();
+
+  window.withProgress(
+    {
+      location: ProgressLocation.Notification,
+      title: "Validando Projeto!",
+      cancellable: true,
+    },
+    (progress, token) => {
+      token.onCancellationRequested(() => {
+        console.log("Validação Cancelada!");
+      });
+      let increment = 0;
+      _status._changeEmmit = () => {
+        const _increment = Math.round((_status._atual / _status._total) * 100);
+        if (_increment !== increment) {
+          increment = _increment;
+          progress.report({
+            increment,
+          });
+        }
+      };
+      return _validaProjeto(_status);
+    }
+  );
+}
+
+function _validaProjeto(_status: ProjectStatus): Promise<any> {
+  return new Promise((resolve) => {
     // prepara o objeto de validação
     const projeto: ValidaProjeto = new ValidaProjeto(
       validaAdvpl.comentFontPad,
@@ -310,7 +343,7 @@ function validaProjeto() {
       pastas.push(path.uri.fsPath);
     });
     projeto
-      .validaProjeto(pastas)
+      .validaProjeto(pastas, _status)
       .finally(() => {
         // console.log('foi');
         // se for validar o projeto limpa todas as críticas dos arquivos
@@ -340,20 +373,6 @@ function validaProjeto() {
         resolve();
       });
   });
-
-  window.withProgress(
-    {
-      location: ProgressLocation.Notification,
-      title: "Validando Projeto!",
-      cancellable: false,
-    },
-    (progress, token) => {
-      token.onCancellationRequested(() => {
-        console.log("Validação Cancelada!");
-      });
-      return promise;
-    }
-  );
 }
 
 export function localize(key: string, text?: string): string {

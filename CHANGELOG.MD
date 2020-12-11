@@ -2,6 +2,11 @@
 
 ## Release Notes
 
+### 1.4.11
+
+- Permite o fechamento da tela que mostra que está ocorrendo análise.
+- Correção de travamento de análise de projeto.
+
 ### 1.4.9
 
 - Correção de regex de quebra de linha em ON de JOIN.
