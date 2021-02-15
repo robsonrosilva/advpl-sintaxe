@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.4.12
+
+- Correção de identação de query com COLUMN x AS no começo da query.
+
 ### 1.4.11
 
 - Permite o fechamento da tela que mostra que está ocorrendo análise.

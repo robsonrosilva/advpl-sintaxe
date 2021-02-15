@@ -188,6 +188,28 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
                   /((\s*)%noparser%)\s+/gim,
                   "$1\n\n$2"
                 );
+                //quebra linha no column x as  antes do primeiro select
+                if (queryResult.match(/(.*)(\n\s*select)/im)) {
+                  let columnsText: string = queryResult
+                    .match(/(.*)(\n\s*select)/im)[0]
+                    .replace(/(.*)(\n\s*select)/im, "$1");
+                  // pego tamnho de tabulação na linha
+                  const tabColumn = columnsText.replace(/column\s.*/gim, "");
+                  if (tabColumn) {
+                    // quebro cada column em uma linha
+                    columnsText = columnsText.replace(
+                      /(\s*)(column\s[0-z]*\sas\s[0-z]*)/gim,
+                      "\n" + tabColumn + "$2"
+                    );
+                    // remove a primeira quebra de linha
+                    columnsText = columnsText.replace(/\n/, "");
+                    // Troco o que tem antes do primeiro select pelo texto tratado
+                    queryResult = queryResult.replace(
+                      /(.*)(\n\s*select)/im,
+                      columnsText + "$2"
+                    );
+                  }
+                }
                 // remove espaços entre ->
                 queryResult = queryResult.replace(/\s*->\s*/gim, "->");
                 // remove espaços antes de colchetes

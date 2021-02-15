@@ -1,0 +1,127 @@
+{
+  "WebService": {
+    "prefix": "WebService",
+    "body": [
+      "/*//#########################################################################################",
+      "Projeto : ${project}",
+      "Modulo  : ${module}",
+      "Fonte   : ${TM_FILENAME_BASE}",
+      "Objetivo: ${objetivo}",
+      "*///#########################################################################################",
+      "",
+      "#INCLUDE 'TOTVS.CH'",
+      "#INCLUDE 'APWEBSRV.CH'",
+      "",
+      "/*/{Protheus.doc} ${TM_FILENAME_BASE}",
+      "\tWeb Service para o protheus",
+      "",
+      "\t@author  ${Nome}",
+      "\t@example ${Exemplos}",
+      "\t@param   [${Nome_do_Parametro}],${Tipo_do_Parametro},${Descricao_do_Parametro}",
+      "\t@return  ${Especifica_o_retorno}",
+      "\t@table   ${Tabelas}",
+      "\t@since   ${CURRENT_DATE}-${CURRENT_MONTH}-${CURRENT_YEAR}",
+      "/*/",
+      "",
+      "WSSERVICE ${TM_FILENAME_BASE} DESCRIPTION ${description_webservice}",
+      "",
+      "\t${WsData}",
+      "",
+      "\t${WsMethodDec}",
+      "",
+      "ENDWSSERVICE",
+      "",
+      "${WsMethod}"
+    ]
+  },
+  "WsMethodDec": {
+    "prefix": "WsMethodDec - Declara o Método.",
+    "body": [
+      "WSMethod ${methodName}            DESCRIPTION '${methodDescription}'"
+    ]
+  },
+  "WsMethod": {
+    "prefix": "WsMethod Gera o Método.",
+    "body": [
+      "",
+      "/*/{Protheus.doc} ${TM_FILENAME_BASE}",
+      "\t${methodDescription}",
+      "",
+      "\t@author  ${Nome}",
+      "\t@example ${Exemplos}",
+      "\t@param   [${Nome_do_Parametro}],${Tipo_do_Parametro},${Descricao_do_Parametro}",
+      "\t@return  ${Especifica_o_retorno}",
+      "\t@table   ${Tabelas}",
+      "\t@since   ${CURRENT_DATE}-${CURRENT_MONTH}-${CURRENT_YEAR}",
+      "/*/",
+      "WSMETHOD ${methodName} WSRECEIVE ${WsDataReceived} WSSEND ${WsDataReturn} WSSERVICE ${TM_FILENAME_BASE}",
+      "",
+      "Return ${returnBoolean}//O retorno indica se foi feito o processamento com sucesso ou não"
+    ]
+  },
+  "WsDSO": {
+    "prefix": "WsData String opcional",
+    "body": ["WSData         ${var}          AS STRING OPTIONAL"]
+  },
+  "WsDSR": {
+    "prefix": "WsData String obrigatório",
+    "body": ["WSData         ${var}          AS STRING"]
+  },
+  "WsDDO": {
+    "prefix": "WsData Data opcional",
+    "body": ["WSData         ${var}          AS DATE OPTIONAL"]
+  },
+  "WsDDR": {
+    "prefix": "WsData Data obrigatório",
+    "body": ["WSData         ${var}          AS DATE"]
+  },
+  "WsDNO": {
+    "prefix": "WsData Numérico opcional",
+    "body": ["WSData         ${var}          AS FLOAT OPTIONAL"]
+  },
+  "WsDNR": {
+    "prefix": "WsData Numérico obrigatório",
+    "body": ["WSData         ${var}          AS FLOAT"]
+  },
+  "WsDBR": {
+    "prefix": "WsData Booleano obrigatório",
+    "body": ["WSData         ${var}          AS BOOLEAN OPTIONAL"]
+  },
+  "WsDBO": {
+    "prefix": "WsData Booleano opcional",
+    "body": ["WSData         ${var}          AS BOOLEAN"]
+  },
+  "WsDAO": {
+    "prefix": "WsData Array opcional",
+    "body": [
+      "WSData         ${var}          AS ARRAY OF ${struct} OPTIONAL //Obrigatório criar WsStruct"
+    ]
+  },
+  "WsDAR": {
+    "prefix": "WsData Array obrigatório",
+    "body": [
+      "WSData         ${var}          AS ARRAY OF ${struct} //Obrigatório criar WsStruct"
+    ]
+  },
+  "WSStruct": {
+    "prefix": "WSStruct Estrutura para uso em WsData de ARRAY.",
+    "body": [
+      "/*/{Protheus.doc} ${struct}",
+      "\tEstrutura de dados para array.",
+      "",
+      "\t@author  ${Nome}",
+      "\t@example ${Exemplos}",
+      "\t@param   [${Nome_do_Parametro}],${Tipo_do_Parametro},${Descricao_do_Parametro}",
+      "\t@return  ${Especifica_o_retorno}",
+      "\t@table   ${Tabelas}",
+      "\t@since   ${CURRENT_DATE}-${CURRENT_MONTH}-${CURRENT_YEAR}",
+      "/*/",
+      "",
+      "WSStruct ${struct}",
+      "",
+      "${WsData}",
+      "",
+      "ENDWsStruct"
+    ]
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "merge.mergeError": "Error in Merge!",
+  "extension.activeMessage": "Active ADVPL Validation!",
+  "extension.noCritizeComment": "Do not critize coments!",
+  "extension.finish": "End of Project Review!",
+  "extension.functionDuplicate": "This function is duplicated in the project!"
+}

@@ -1,0 +1,133 @@
+{
+  "WebServiceREST": {
+    "prefix": "WebServiceREST - WebService REST.",
+    "body": [
+      "/*//#########################################################################################",
+      "Project  : ${project}",
+      "Module   : ${module}",
+      "Source   : ${TM_FILENAME_BASE}",
+      "Objective: ${objective}",
+      "*///#########################################################################################",
+      "",
+      "#INCLUDE 'TOTVS.CH'",
+      "#INCLUDE 'RESTFUL.CH'",
+      "",
+      "/*/{Protheus.doc} ${TM_FILENAME_BASE}",
+      "\tWeb Service para o protheus",
+      "",
+      "\t@author  ${Name}",
+      "\t@example ${Example}",
+      "\t@param   [${Parameter_Name}],${Parameter_type},${Parameter_Description}",
+      "\t@return  ${Return}",
+      "\t@table   ${Tables}",
+      "\t@since   ${CURRENT_DATE}-${CURRENT_MONTH}-${CURRENT_YEAR}",
+      "/*/",
+      "",
+      "WSSERVICE ${TM_FILENAME_BASE} DESCRIPTION ${description_webservice}",
+      "\t",
+      "\t${WsData}",
+      "",
+      "\t${WsMethodDec}",
+      "",
+      "ENDWSSERVICE",
+      "",
+      "${WsMethodREST}"
+    ],
+    "WsMethodGetREST": {
+      "prefix": "WsMethodGetREST Gera o Método para WebService REST.",
+      "body": [
+        "",
+        "/*/{Protheus.doc} ${TM_FILENAME_BASE}",
+        "\t${methodDescription}",
+        "",
+        "\t@author  ${Name}",
+        "\t@example ${Example}",
+        "\t@param   [${Parameter_Name}],${Parameter_type},${Parameter_Description}",
+        "\t@return  ${Return}",
+        "\t@table   ${Tables}",
+        "\t@since   ${CURRENT_DATE}-${CURRENT_MONTH}-${CURRENT_YEAR}",
+        "/*/",
+        "",
+        "WSMETHOD GET WSRECEIVE ${WsDataReceived} WSSERVICE ${TM_FILENAME_BASE} DESCRIPTION '${descricao}' WSSYNTAX '${sintaxe}'",
+        "",
+        "${WsResponseREST}",
+        "",
+        "Return ${returnBoolean}//O retorno indica se foi feito o processamento com sucesso ou não"
+      ]
+    },
+    "WsMethodPostREST": {
+      "prefix": "WsMethodPostREST Gera o Método para WebService REST.",
+      "body": [
+        "",
+        "/*/{Protheus.doc} ${TM_FILENAME_BASE}",
+        "\t${methodDescription}",
+        "",
+        "\t@author  ${Name}",
+        "\t@example ${Example}",
+        "\t@param   [${Parameter_Name}],${Parameter_type},${Parameter_Description}",
+        "\t@return  ${Return}",
+        "\t@table   ${Tables}",
+        "\t@since   ${CURRENT_DATE}-${CURRENT_MONTH}-${CURRENT_YEAR}",
+        "/*/",
+        "",
+        "WSMETHOD POST WSRECEIVE ${WsDataReceived} WSSERVICE ${TM_FILENAME_BASE} DESCRIPTION '${descricao}' WSSYNTAX '${sintaxe}'",
+        "",
+        "${WsResponseREST}",
+        "",
+        "Return ${returnBoolean}//O retorno indica se foi feito o processamento com sucesso ou não"
+      ]
+    },
+    "WsMethodPutREST": {
+      "prefix": "WsMethodPutREST Gera o Método para WebService REST.",
+      "body": [
+        "",
+        "/*/{Protheus.doc} ${TM_FILENAME_BASE}",
+        "\t${methodDescription}",
+        "",
+        "\t@author  ${Name}",
+        "\t@example ${Example}",
+        "\t@param   [${Parameter_Name}],${Parameter_type},${Parameter_Description}",
+        "\t@return  ${Return}",
+        "\t@table   ${Tables}",
+        "\t@since   ${CURRENT_DATE}-${CURRENT_MONTH}-${CURRENT_YEAR}",
+        "/*/",
+        "",
+        "WSMETHOD PUT WSRECEIVE ${WsDataReceived} WSSERVICE ${TM_FILENAME_BASE} DESCRIPTION '${descricao}' WSSYNTAX '${sintaxe}'",
+        "",
+        "${WsResponseREST}",
+        "",
+        "Return ${returnBoolean}//O retorno indica se foi feito o processamento com sucesso ou não"
+      ]
+    },
+    "WsMethodDeleteREST": {
+      "prefix": "WsMethodDeleteREST Gera o Método para WebService REST.",
+      "body": [
+        "",
+        "/*/{Protheus.doc} ${TM_FILENAME_BASE}",
+        "\t${methodDescription}",
+        "",
+        "\t@author  ${Name}",
+        "\t@example ${Example}",
+        "\t@param   [${Parameter_Name}],${Parameter_type},${Parameter_Description}",
+        "\t@return  ${Return}",
+        "\t@table   ${Tables}",
+        "\t@since   ${CURRENT_DATE}-${CURRENT_MONTH}-${CURRENT_YEAR}",
+        "/*/",
+        "",
+        "WSMETHOD DELETE WSRECEIVE ${WsDataReceived} WSSERVICE ${TM_FILENAME_BASE} DESCRIPTION '${descricao}' WSSYNTAX '${sintaxe}'",
+        "",
+        "${WsResponseREST}",
+        "",
+        "Return ${returnBoolean}//O retorno indica se foi feito o processamento com sucesso ou não"
+      ]
+    },
+    "WsResponseTrueREST": {
+      "prefix": "WsResponseTrueREST Seta resposta caso o Webservice retorne true.",
+      "body": [":SetResponse('$resposta')", "Return .T."]
+    },
+    "WsResponseFalseREST": {
+      "prefix": "WsResponseFalseREST Seta resposta caso o Webservice retorne false.",
+      "body": ["SetRestFault(${codigoErroWeb}, '$resposta')", "Return .F."]
+    }
+  }
+}

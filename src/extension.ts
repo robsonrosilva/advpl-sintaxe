@@ -361,16 +361,16 @@ function _validaProjeto(_status: ProjectStatus): Promise<any> {
           //Atualiza as mensagens do colection
           collection.set(file, errorVsCode(item.errors));
         });
-        resolve();
+        resolve(undefined);
       })
       .catch((erro) => {
         window.showErrorMessage(
           "Ocorreu um erro na validação " + JSON.stringify(erro)
         );
-        resolve();
+        resolve(undefined);
       })
       .then(() => {
-        resolve();
+        resolve(undefined);
       });
   });
 }

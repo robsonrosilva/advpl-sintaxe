@@ -1,0 +1,34 @@
+{
+  "docSource": {
+    "prefix": "Source Documentation",
+    "body": [
+      "/*//#########################################################################################",
+      "Project  : ${project}",
+      "Module   : ${module}",
+      "Source   : ${TM_FILENAME_BASE}",
+      "Objective: ${objective}",
+      "*///#########################################################################################",
+      "",
+      "#INCLUDE 'TOTVS.CH'",
+      ""
+    ]
+  },
+  "docFunction": {
+    "prefix": "Function Documentation",
+    "body": [
+      "",
+      "/*/{Protheus.doc} ${Function}",
+      "",
+      "\t${Description}",
+      "",
+      "\t@author  ${Name}",
+      "\t@example ${Example}",
+      "\t@param   [${Parameter_Name}],${Parameter_type},${Parameter_Description}",
+      "\t@return  ${Return}",
+      "\t@table   ${Tables}",
+      "\t@since   ${CURRENT_DATE}-${CURRENT_MONTH}-${CURRENT_YEAR}",
+      "/*/",
+      ""
+    ]
+  }
+}

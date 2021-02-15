@@ -1,0 +1,15 @@
+{
+  "merge.noBranchMerge": "This branch can not be used to merge!",
+  "merge.noPush": "Post your branche before you merge it!",
+  "merge.mergeFinish": "Merge of finalized ",
+  "merge.noCommited": "Merge not done, there are uncommitted files!",
+  "merge.success": "It worked ",
+  "merge.noBranch": "For merge configure branches in settings!",
+  "merge.atualizacaoFinish": "The branch has been updated successfully!",
+  "merge.cleanFinish": "The branches has been clean successfully!",
+  "merge.checkoutError": "Error in Checkout!",
+  "merge.mergeError": "Error in Merge!",
+  "merge.pullError": "Error in Pull!",
+  "merge.pushError": "Error in Push!",
+  "merge.tagError": "Tag creation error!"
+}
