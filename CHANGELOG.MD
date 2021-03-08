@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.4.13
+
+- Correção de identação de expressão que pega atributo de objeto em query.
+
 ### 1.4.12
 
 - Correção de identação de query com COLUMN x AS no começo da query.

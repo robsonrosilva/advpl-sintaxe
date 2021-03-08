@@ -168,8 +168,8 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
                   queryResult.replace(/\n/gim, "\n" + tab.repeat(cont + 1));
                 // Remove os espaçamentos dentro das expressões %%
                 queryResult = queryResult.replace(
-                  /(%)(\s+)(table|temp-table|exp|xfilial|order)(\s)*(:)((\w|\+|\\|\*|\(|\)|\[|\]|-|>|_|\s|,|\n|"|')*)(\s+)(%)/gim,
-                  "$1$3$5$6$9"
+                  /(%)\s+(table|temp-table|exp|xfilial|order)\s*(:)((\w|\+|\\|\*|\(|\)|\[|\]|-|>|_|\s|,|\n|"|')*)\s+(:*\w*)\s*(%)/gim,
+                  "$1$2$3$4$6$7"
                 );
                 // Como coloca quebras de linhas no orderby por conta da vírgula removo
                 queryResult = queryResult.replace(
