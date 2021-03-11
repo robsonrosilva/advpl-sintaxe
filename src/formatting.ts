@@ -47,6 +47,7 @@ class Formatting implements DocumentFormattingEditProvider {
 }
 
 class RangeFormatting implements DocumentRangeFormattingEditProvider {
+  //initial: Date = new Date();
   lineContinue = false;
   provideDocumentRangeFormattingEdits(
     document: TextDocument,
@@ -54,6 +55,7 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
     options: FormattingOptions,
     token: CancellationToken
   ): ProviderResult<TextEdit[]> {
+    //console.log(this.initial);
     let noQueryFormatter: boolean = workspace
       .getConfiguration()
       .get("advplformat.noQueryFormatter");
@@ -134,10 +136,12 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
           );
           // define o range que será substituído
           // usando o range inicial da primeira linha
-          // e o atual da ultima linha com a query
+          // e o atual da ultima linha com  a query
           query.range = new Range(query.range.start, line.range.end);
         } else {
-          result.push(TextEdit.replace(line.range, text));
+          if (document.lineAt(nl).text !== text) {
+            result.push(TextEdit.replace(line.range, text));
+          }
         }
       } else {
         if (
@@ -295,7 +299,9 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
           }
 
           const newLine: string = text.replace(/(\s*)?/, tab.repeat(cont));
-          result.push(TextEdit.replace(line.range, newLine));
+          if (document.lineAt(nl).text !== newLine) {
+            result.push(TextEdit.replace(line.range, newLine));
+          }
           this.lineContinue =
             newLine.split("//")[0].trim().endsWith(";") &&
             rulesIgnored.indexOf(ruleMatch.rule) === -1;
@@ -315,12 +321,20 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
               )
               .trimRight();
           }
-          result.push(TextEdit.replace(line.range, newLine));
+          if (document.lineAt(nl).text !== newLine) {
+            result.push(TextEdit.replace(line.range, newLine));
+          }
           this.lineContinue = newLine.split("//")[0].trim().endsWith(";");
         }
       }
     }
-    console.log("fim");
+    /*console.log(
+      "fim tempo gasto " +
+        new Date() +
+        " " +
+        Math.ceil(Math.abs(new Date().getTime() - this.initial.getTime())) +
+        " milisegundos."
+    );*/
     return result;
   }
 }

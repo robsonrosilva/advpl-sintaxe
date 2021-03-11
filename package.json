@@ -2,7 +2,7 @@
   "name": "advpl-sintaxe",
   "displayName": "ADVPL Análise, Snippets e GIT",
   "description": "Extensão de análise de qualidade e sintaxe e snippets ADVPL e que facilita a utilização do GIT.",
-  "version": "1.4.13",
+  "version": "1.4.14",
   "publisher": "robsonrosilva",
   "icon": "images/icone.png",
   "engines": {
@@ -176,6 +176,37 @@
           "default": {},
           "description": "%advpl-sintaxe.configuration.properties.description%",
           "properties": {
+            "flows": {
+              "type": "array",
+              "default": [],
+              "items": {
+                "type": "object",
+                "default": {},
+                "description": "%advpl-sintaxe.configuration.properties.ownerDb.items%",
+                "properties": {
+                  "sendOnClose": {
+                    "type": "array",
+                    "default": [],
+                    "description": "%advpl-sintaxe.configuration.properties.sendOnClose%",
+                    "items": {
+                      "type": "string",
+                      "default": "",
+                      "description": "%advpl-sintaxe.configuration.properties.sendOnCloseBranche%"
+                    }
+                  },
+                  "getOnStart": {
+                    "type": "string",
+                    "default": "",
+                    "description": "%advpl-sintaxe.configuration.properties.getOnStart%"
+                  },
+                  "prefixFlow": {
+                    "type": "string",
+                    "default": "",
+                    "description": "%advpl-sintaxe.configuration.properties.prefixFlow%"
+                  }
+                }
+              }
+            },
             "branchTeste": {
               "type": "string",
               "default": "",

@@ -2,6 +2,11 @@
 
 ## Release Notes
 
+### 1.4.14
+
+- Otimização de identação para enviar somente linhas modificadas.
+- Montagem inicial de fluxos para flows GIT.
+
 ### 1.4.13
 
 - Correção de identação de expressão que pega atributo de objeto em query.

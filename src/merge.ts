@@ -95,7 +95,7 @@ export class MergeAdvpl {
                                   tag +
                                   ")"
                               );
-                              resolve();
+                              resolve(undefined);
                             })
                             .catch((erro) => {
                               return reject(
@@ -111,7 +111,7 @@ export class MergeAdvpl {
                               " -> " +
                               branchDestino
                           );
-                          resolve();
+                          resolve(undefined);
                         }
                       })
                       .catch((erro) => {
@@ -126,7 +126,7 @@ export class MergeAdvpl {
                         " -> " +
                         branchDestino
                     );
-                    resolve();
+                    resolve(undefined);
                   }
                 })
                 .catch((erro) => {
@@ -331,7 +331,7 @@ export class MergeAdvpl {
                     this.repository
                       .push()
                       .then(() => {
-                        resolve();
+                        resolve(undefined);
                       })
                       .catch((erro) => {
                         return reject(
