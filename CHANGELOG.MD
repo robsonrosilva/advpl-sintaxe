@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.4.15
+
+- Remoção de espaços quando usado array em expressão de query.
+
 ### 1.4.14
 
 - Otimização de identação para enviar somente linhas modificadas.

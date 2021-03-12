@@ -175,6 +175,28 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
                   /(%)\s+(table|temp-table|exp|xfilial|order)\s*(:)((\w|\+|\\|\*|\(|\)|\[|\]|-|>|_|\s|,|\n|"|')*)\s+(:*\w*)\s*(%)/gim,
                   "$1$2$3$4$6$7"
                 );
+                // Remove espacos quando usar array dentro de expressões de query
+                while (
+                  queryResult.match(
+                    /(%(table|temp-table|exp|xfilial|order):.+)\s*\[\s+(.+%)/gim
+                  )
+                ) {
+                  queryResult = queryResult.replace(
+                    /(%(table|temp-table|exp|xfilial|order):.+)\s*\[\s+(.+%)/gim,
+                    "$1[$3"
+                  );
+                }
+                while (
+                  queryResult.match(
+                    /(%(table|temp-table|exp|xfilial|order):.+)\s+\]\s*(.*%)/gim
+                  )
+                ) {
+                  queryResult = queryResult.replace(
+                    /(%(table|temp-table|exp|xfilial|order):.+)\s+\]\s*(.*%)/gim,
+                    "$1]$3"
+                  );
+                }
+
                 // Como coloca quebras de linhas no orderby por conta da vírgula removo
                 queryResult = queryResult.replace(
                   /(%order:\w*)(,\n\s*)(\w%)/gim,
