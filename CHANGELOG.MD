@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.4.16
+
+- Melhoria de definição dos parâmetros no settings.
+
 ### 1.4.15
 
 - Remoção de espaços quando usado array em expressão de query.
