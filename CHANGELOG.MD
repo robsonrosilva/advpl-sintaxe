@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.4.17
+
+- Correção de validação de include do PUBLISH USER MODEL do MVC.
+
 ### 1.4.16
 
 - Melhoria de definição dos parâmetros no settings.
