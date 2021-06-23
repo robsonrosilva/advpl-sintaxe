@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.4.18
+
+- Tratamento de sintaxe de while terminado em "End While".
+
 ### 1.4.17
 
 - Correção de validação de include do PUBLISH USER MODEL do MVC.
