@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.4.19
+
+- Tratamento para não identar as expressões injetadas no fonte quando há conflito no GIT.
+
 ### 1.4.18
 
 - Tratamento de sintaxe de while terminado em "End While".

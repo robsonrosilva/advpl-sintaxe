@@ -117,6 +117,12 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
       const foundIgnore: StructureRule[] = rulesIgnored.filter((rule) => {
         return lastRule && lastRule.rule && rule.id === lastRule.rule.id;
       });
+
+      // Verifica se é uma linha de conflito do GIT ela não deixa identar
+      if (text.match(/(<{7}|>{7}|={7})/)) {
+        continue;
+      }
+
       // dentro do BeginSql não mexe na identação
       if (foundIgnore.length > 0 && !text.match(foundIgnore[0].end)) {
         // verifica se está em query
