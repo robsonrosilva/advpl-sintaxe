@@ -48,7 +48,12 @@ if (!comentFontPad) {
   );
 }
 
-const validaAdvpl = new ValidaAdvpl(comentFontPad, vscodeOptions, false);
+const validaAdvpl = new ValidaAdvpl(
+  comentFontPad,
+  vscodeOptions,
+  undefined,
+  false
+);
 validaAdvpl.ownerDb = workspace
   .getConfiguration("advpl-sintaxe")
   .get("ownerDb");
@@ -311,13 +316,18 @@ function validaProjeto() {
         console.log("Validação Cancelada!");
       });
       let increment = 0;
+
       _status._changeEmmit = () => {
-        const _increment = Math.round((_status._atual / _status._total) * 100);
-        if (_increment !== increment) {
-          increment = _increment;
-          progress.report({
-            increment,
-          });
+        if (_status._atual) {
+          let _increment = Math.round((_status._atual / _status._total) * 10);
+          _increment = _increment * 10;
+          if (_increment !== increment) {
+            progress.report({
+              increment: _increment - increment,
+            });
+
+            increment = _increment;
+          }
         }
       };
       return _validaProjeto(_status);

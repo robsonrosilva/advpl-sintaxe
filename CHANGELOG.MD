@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.4.20
+
+- Análise de funções de uso restrito conforme validação do appserver 12.1.33.
+
 ### 1.4.19
 
 - Tratamento para não identar as expressões injetadas no fonte quando há conflito no GIT.

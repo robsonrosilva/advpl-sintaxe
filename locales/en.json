@@ -18,7 +18,6 @@
   "merge.noRepository": "Repository Git not found!",
   "formatting.query.disable": "Disable",
   "formatting.query.question": "Do you want to enable query formatting for:",
-
   "validaAdvpl.finish": "End of Project Review!",
   "validaAdvpl.queryNoEmbedded": "Use of Query IMPROPER without Embedded SQL.! \n Use: BeginSQL ... EndSQL.",
   "validaAdvpl.deleteFrom": "Use not allowed use of DELETE FROM!",
@@ -40,6 +39,7 @@
   "validaAdvpl.functionNoCommented": "Function, Class, Method or WebService not commented!",
   "validaAdvpl.CommentNoFunction": "Function comment without function!",
   "validaAdvpl.foundFile": "Found errors in file",
+  "validaAdvpl.restrictUse": "This function has a restrict use to compile!",
   "includes.faltaTOTVS": "Missing TOTVS.CH !",
   "includes.oInclude": "The Include",
   "includes.SubstTOTVS": " is obsolete, it has been replaced by TOTVS.CH!",
