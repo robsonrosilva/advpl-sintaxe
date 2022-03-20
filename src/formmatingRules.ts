@@ -252,7 +252,7 @@ export class FormattingRules {
       {
         id: "for",
         begin: /^(\s*)(for)(\s+)(\w+)/i,
-        end: /^(\s*)(next|end)(\s*)/i,
+        end: /^(\s*)(next|end)(\s+|$)/i,
       },
       {
         id: "if",

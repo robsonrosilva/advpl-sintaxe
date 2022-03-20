@@ -2,6 +2,14 @@
 
 ## Release Notes
 
+### 1.4.23
+
+- Correção de análise de tabelas fixas nas queryes.
+
+### 1.4.21
+
+- Correção de fechamento de FOR estava fechando indevidamente.
+
 ### 1.4.20
 
 - Análise de funções de uso restrito conforme validação do appserver 12.1.33.
