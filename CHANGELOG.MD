@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.4.24
+
+- Identação correta de While Terminado em End Do.
+
 ### 1.4.23
 
 - Correção de análise de tabelas fixas nas queryes.

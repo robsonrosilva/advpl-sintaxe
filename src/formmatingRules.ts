@@ -272,7 +272,7 @@ export class FormattingRules {
       {
         id: "while",
         begin: /^(\s*)(do)?(\s*)(while)/i,
-        end: /^(\s*)(end)(do)?(\s*while)?$/i,
+        end: /^(\s*)(end)(\s*)(do)?(\s*while)?$/i,
       },
       {
         id: "wsrestful",
