@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.4.25
+
+- Adição de crítica na análise de uso de funções restritas para adição de BeginTran e EndTran.
+
 ### 1.4.24
 
 - Identação correta de While Terminado em End Do.
