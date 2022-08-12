@@ -2,6 +2,14 @@
 
 ## Release Notes
 
+### 1.4.28
+
+- Correção de tradução.
+
+### 1.4.27
+
+- Ajuste de espaços em query.
+
 ### 1.4.25
 
 - Adição de crítica na análise de uso de funções restritas para adição de BeginTran e EndTran.

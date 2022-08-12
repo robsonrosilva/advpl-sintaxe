@@ -177,10 +177,16 @@ class RangeFormatting implements DocumentRangeFormattingEditProvider {
                   tab.repeat(cont + 1) +
                   queryResult.replace(/\n/gim, "\n" + tab.repeat(cont + 1));
                 // Remove os espaçamentos dentro das expressões %%
-                queryResult = queryResult.replace(
-                  /(%)\s+(table|temp-table|exp|xfilial|order)\s*(:)((\w|\+|\\|\*|\(|\)|\[|\]|-|>|_|\s|,|\n|"|')*)\s+(:*\w*)\s*(%)/gim,
-                  "$1$2$3$4$6$7"
-                );
+                while (
+                  queryResult.match(
+                    /(%)\s+(table|temp-table|exp|xfilial|order)\s*(:)((\w|\+|\\|\*|\(|\)|\[|\]|-|>|_|\s|,|\n|"|')*)\s+(:*\w*)\s*(%)/gim
+                  )
+                ) {
+                  queryResult = queryResult.replace(
+                    /(%)\s+(table|temp-table|exp|xfilial|order)\s*(:)((\w|\+|\\|\*|\(|\)|\[|\]|-|>|_|\s|,|\n|"|')*)\s+(:*\w*)\s*(%)/gim,
+                    "$1$2$3$4$6$7"
+                  );
+                }
                 // Remove espacos quando usar array dentro de expressões de query
                 while (
                   queryResult.match(
