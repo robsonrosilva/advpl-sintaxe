@@ -272,7 +272,12 @@ function errorVsCode(aErros: any) {
   aErros.forEach((erro) => {
     vsErros.push(
       new Diagnostic(
-        new Range(erro.startLine, 0, erro.endLine, 0),
+        new Range(
+          erro.startLine,
+          erro.columnStart ? erro.columnStart : 0,
+          erro.endLine,
+          erro.columnEnd ? erro.columnEnd : 0
+        ),
         erro.message,
         erro.severity
       )
@@ -355,21 +360,33 @@ function _validaProjeto(_status: ProjectStatus): Promise<any> {
     projeto
       .validaProjeto(pastas, _status)
       .finally(() => {
-        // console.log('foi');
-        // se for validar o projeto limpa todas as críticas dos arquivos
-        listaURI.forEach((uri: Uri) => {
-          collection.delete(uri);
-        });
-
+        try {
+          // console.log('foi');
+          // se for validar o projeto limpa todas as críticas dos arquivos
+          listaURI.forEach((uri: Uri) => {
+            collection.delete(uri);
+          });
+        } catch (e) {
+          window.showErrorMessage(
+            "Ocorreu um erro na limpeza de críticas!\n" + JSON.stringify(e)
+          );
+        }
         listaURI = [];
         projeto.projeto.forEach((item: ItemModel) => {
-          const fonte: Fonte = item.fonte;
-          const file = getUri(fonte.fonte);
+          try {
+            const fonte: Fonte = item.fonte;
+            const file = getUri(fonte.fonte);
 
-          listaURI.push(file);
+            listaURI.push(file);
 
-          //Atualiza as mensagens do colection
-          collection.set(file, errorVsCode(item.errors));
+            //Atualiza as mensagens do colection
+            collection.set(file, errorVsCode(item.errors));
+          } catch (e) {
+            window.showErrorMessage(
+              `Ocorreu um erro na adição de erros do fonte ${item.fonte.fonte} !\n` +
+                JSON.stringify(e)
+            );
+          }
         });
         resolve(undefined);
       })

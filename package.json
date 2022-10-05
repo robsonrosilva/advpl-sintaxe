@@ -2,7 +2,7 @@
   "name": "advpl-sintaxe",
   "displayName": "ADVPL Análise, Snippets e GIT",
   "description": "Extensão de análise de qualidade e sintaxe e snippets ADVPL e que facilita a utilização do GIT.",
-  "version": "1.4.28",
+  "version": "1.4.29",
   "publisher": "robsonrosilva",
   "icon": "images/icone.png",
   "engines": {
@@ -282,23 +282,23 @@
     "snippets": [
       {
         "language": "advpl",
-        "path": "%advpl-sintaxe.configuration.snippets.advpl.mvc%"
+        "path": "./i18n/pt-br/snippets/advpl.mvc.json"
       },
       {
         "language": "advpl",
-        "path": "%advpl-sintaxe.configuration.snippets.advpl.treport%"
+        "path": "./i18n/pt-br/snippets/advpl.treport.json"
       },
       {
         "language": "advpl",
-        "path": "%advpl-sintaxe.configuration.snippets.advpl.webservices%"
+        "path": "./i18n/pt-br/snippets/advpl.webservices.json"
       },
       {
         "language": "advpl",
-        "path": "%advpl-sintaxe.configuration.snippets.advpl.webservicesrest%"
+        "path": "./i18n/pt-br/snippets/advpl.webservicesrest.json"
       },
       {
         "language": "advpl",
-        "path": "%advpl-sintaxe.configuration.snippets.advpl.comentarios%"
+        "path": ".\\i18n\\pt-br\\snippets\\advpl.comentarios.json"
       },
       {
         "language": "advpl",
@@ -318,19 +318,18 @@
   },
   "devDependencies": {
     "@types/mocha": "^5.2.7",
-    "@types/node": "^13.13.24",
+    "@types/node": "^13.13.52",
     "@types/vscode": "^1.52.0",
-    "@types/webpack": "^4.41.22",
-    "@types/webpack-dev-server": "^3.11.0",
-    "@typescript-eslint/eslint-plugin": "^4.7.0",
-    "@typescript-eslint/parser": "^4.7.0",
-    "analise-advpl": "^6.1.5",
+    "@types/webpack": "^4.41.32",
+    "@types/webpack-dev-server": "^3.11.6",
+    "@typescript-eslint/eslint-plugin": "^4.33.0",
+    "@typescript-eslint/parser": "^4.33.0",
+    "analise-advpl": "^6.1.9",
     "del": "^5.1.0",
-    "eslint": "^7.13.0",
+    "eslint": "^7.32.0",
     "eslint-config-google": "^0.14.0",
     "event-stream": "^4.0.1",
     "git": "^0.1.5",
-    "globby": "^11.0.1",
     "gulp": "^4.0.2",
     "gulp-filter": "^6.0.0",
     "gulp-sourcemaps": "^2.6.5",
@@ -339,12 +338,11 @@
     "sql-formatter-plus": "^1.3.6",
     "ts-loader": "^6.2.2",
     "ts-node": "^8.10.2",
-    "tslint": "^5.20.1",
-    "typescript": "^3.9.7",
-    "vsce": "^1.96.1",
+    "typescript": "^3.9.10",
+    "vsce": "^1.103.1",
     "vscode-nls": "^4.1.2",
     "vscode-nls-dev": "^3.3.2",
-    "webpack": "^4.44.2",
+    "webpack": "^4.46.0",
     "webpack-cli": "^3.3.12"
   }
 }

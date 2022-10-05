@@ -40,6 +40,8 @@
   "validaAdvpl.CommentNoFunction": "Comentário de função sem função!",
   "validaAdvpl.foundFile": "Erros encontrados no arquivo",
   "validaAdvpl.restrictUse": "Esta função tem um uso restrito para compilar!",
+  "validaAdvpl.deprecated": "Esta função está obsoleta!",
+  "validaAdvpl.newfunction": "Ela foi substituída por ",
   "includes.faltaTOTVS": "Falta o include TOTVS.CH !",
   "includes.oInclude": "O Include",
   "includes.SubstTOTVS": " é obsoleto, o mesmo foi substituído pelo TOTVS.CH!",

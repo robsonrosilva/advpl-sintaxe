@@ -2,6 +2,11 @@
 
 ## Release Notes
 
+### 1.4.29
+
+- Fixação de snnipets para corrigir pela mudança na forma de tradução do package.json.
+- Atualização de bibliotecas para receber a melhoria na análise de fontes incorporando as críticas das funções obsoletas e das descontinuadas na versão 12.1.2210.
+
 ### 1.4.28
 
 - Correção de tradução.
