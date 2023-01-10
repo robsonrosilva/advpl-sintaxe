@@ -23,6 +23,7 @@ import {
   rangeFormattingEditProvider,
 } from "./formatting";
 import * as i18n from "i18n";
+import { Cache } from "analise-advpl/lib/src/cache";
 
 const vscodeOptions = JSON.parse(
   process.env.VSCODE_NLS_CONFIG
@@ -35,6 +36,8 @@ i18n.configure({
 
 //Cria um colection para os erros ADVPL
 const collection = languages.createDiagnosticCollection("advpl");
+
+let runningFiles: string[] = [];
 
 let projeto: ValidaProjeto;
 let listaURI: Uri[] = [];
@@ -202,13 +205,7 @@ export function activate(context: ExtensionContext): any {
 }
 function validaFonte(editor: any) {
   return new Promise(() => {
-    let time: number = workspace
-      .getConfiguration("advpl-sintaxe")
-      .get("tempoValidacao") as number;
     let document: TextDocument;
-    if (!time || time === 0) {
-      time = 5000;
-    }
 
     //trata quando recebe o documento
     if (editor.languageId) {
@@ -219,9 +216,49 @@ function validaFonte(editor: any) {
 
     //verifica se a linguagem é ADVPL
     if (document && document.languageId === "advpl" && document.getText()) {
+      let time: number = workspace
+        .getConfiguration("advpl-sintaxe")
+        .get("tempoValidacao") as number;
+      if (!time || time === 0) {
+        time = 5000;
+      }
+
+      // verifica se já está analisando esse fonte
+      if (
+        runningFiles.find((x) => {
+          return document.uri.fsPath === x;
+        })
+      ) {
+        return console.log("Validação desse arquivo está em execução");
+      } else {
+        runningFiles.push(document.uri.fsPath);
+      }
+
+      // verifica se tem algum cache
+      const pastas: string[] = [];
+      const workspaceFolders = workspace["workspaceFolders"];
+      workspaceFolders.forEach((path) => {
+        pastas.push(path.uri.fsPath);
+      });
+
+      const pathProjectFile = pastas.find((x) => {
+        return document.uri.fsPath.indexOf(x) >= 0;
+      });
+
+      if (pathProjectFile) {
+        validaAdvpl.cache = new Cache(pathProjectFile);
+      } else {
+        validaAdvpl.cache = undefined;
+      }
+
       validaAdvpl
         .validacao(document.getText(), document.uri.fsPath)
         .finally(() => {
+          // remove o arquivo
+          runningFiles = runningFiles.filter((x) => {
+            return document.uri.fsPath !== x;
+          });
+
           // se valida projeto faz a validação se não somente atualiza o fonte atual
           if (
             workspace.getConfiguration("advpl-sintaxe").get("validaProjeto") !==
@@ -234,7 +271,7 @@ function validaFonte(editor: any) {
             });
             const posicao = pos.indexOf(document.uri.fsPath);
             const itemProjeto = new ItemModel();
-            itemProjeto.content = validaAdvpl.conteudoFonte;
+            itemProjeto.hash = validaAdvpl.hash;
             itemProjeto.errors = validaAdvpl.aErros;
             itemProjeto.fonte = validaAdvpl.fonte;
 
@@ -262,6 +299,18 @@ function validaFonte(editor: any) {
             collection.delete(file);
             collection.set(file, errorVsCode(validaAdvpl.aErros));
           }
+        })
+        .catch(() => {
+          // remove o arquivo
+          runningFiles = runningFiles.filter((x) => {
+            return document.uri.fsPath !== x;
+          });
+        })
+        .then(() => {
+          // remove o arquivo
+          runningFiles = runningFiles.filter((x) => {
+            return document.uri.fsPath !== x;
+          });
         });
     }
   });

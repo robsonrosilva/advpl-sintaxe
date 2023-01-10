@@ -2,6 +2,10 @@
 
 ## Release Notes
 
+### 1.5.00
+
+- Implementação de cache com hash para otimização da gravação.
+
 ### 1.4.29
 
 - Fixação de snnipets para corrigir pela mudança na forma de tradução do package.json.
