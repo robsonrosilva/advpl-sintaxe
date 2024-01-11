@@ -101,7 +101,7 @@
     "workspaceContains:*.pak",
     "workspaceContains:servers.json"
   ],
-  "main": "out/src/extension.js",
+  "main": "./out/src/extension",
   "contributes": {
     "languages": [
       {
@@ -311,11 +311,13 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "tsc -p ./ && gulp build",
+    "vscode:prepublish": "tsc -p ./ && gulp build && npm run locale && npm run locale2",
     "resources": "gulp build",
     "clean": "gulp clean",
     "compile": "tsc -p ./",
-    "watch": "gulp build && robocopy \".\\locales\" \".\\out\\locales\" & exit 0 && webpack --mode none --watch",
+    "locale": "robocopy \".\\locales\" \".\\out\\src\\locales\" & exit 0",
+    "locale2": "robocopy \".\\locales\" \".\\out\\locales\" & exit 0",
+    "watch": "gulp build && npm run locale && npm run locale2 && webpack --mode none --watch",
     "watchWebPack": "webpack --mode none --watch",
     "test": "tsc -p ./ && node ./node_modules/vscode/bin/test",
     "lint": "eslint . --ext .ts,.tsx"
@@ -331,7 +333,6 @@
     "@types/webpack-dev-server": "^4.7.2",
     "@typescript-eslint/eslint-plugin": "^6.7.0",
     "@typescript-eslint/parser": "^6.7.0",
-    "advpl-lint": "^6.2.3",
     "del": "^5.1.0",
     "eslint": "^8.49.0",
     "eslint-config-google": "^0.14.0",
@@ -342,7 +343,6 @@
     "gulp-sourcemaps": "^3.0.0",
     "gulp-typescript": "6.0.0-alpha.1",
     "run-sequence": "^2.2.1",
-    "sql-formatter-plus": "^1.3.6",
     "ts-loader": "^9.4.4",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2",
@@ -353,7 +353,9 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
+    "advpl-lint": "^6.2.4",
     "gulp4-run-sequence": "^1.0.2",
-    "source-map": "^0.7.4"
+    "source-map": "^0.7.4",
+    "sql-formatter-plus": "^1.3.6"
   }
 }

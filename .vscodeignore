@@ -8,13 +8,5 @@ tsconfig.json
 vsc-extension-quickstart.md
 tslint.json
 .vscode
-node_modules
 src/
 webpack.config.json
-node_modules/**
-.space
-package.lock.json
-webpack.config.js
-**/*.vsix
-.git/**
-.github/**

@@ -29,10 +29,10 @@ const vscodeOptions = JSON.parse(
   process.env.VSCODE_NLS_CONFIG
 ).locale.toLowerCase();
 const locales = ["en", "pt-br"];
-i18n.configure({
+const i18nConfig = {
   locales: locales,
   directory: __dirname + "\\locales",
-});
+};
 
 //Cria um colection para os erros ADVPL
 const collection = languages.createDiagnosticCollection("advpl");
@@ -457,6 +457,11 @@ function _validaProjeto(_status: ProjectStatus): Promise<any> {
 }
 
 export function localize(key: string, text?: string): string {
+  i18n.configure(i18nConfig);
   i18n.setLocale(locales.indexOf(vscodeOptions) + 1 ? vscodeOptions : "en");
+  console.log(vscodeOptions);
+  console.log(text);
+  console.log(key);
+  console.log(i18n.__(key));
   return i18n.__(key) ? i18n.__(key) : text;
 }
