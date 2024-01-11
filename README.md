@@ -128,9 +128,11 @@ Foram montados snippets para facilitar o desenvolvimento de funcionalidades ADVP
     "empresas": ["01", "02"],
     "ownerDb": ["PROTHEUS", "PROTHEUS12"],
     "validaProjeto": true,
+    "cache": true,
     "tempoValidacao": 5000
   },
   "advplformat.noQueryFormatter": false,
+  "advplformat.updateComment": false,
   "advplformat.queryLanguage": "sql"
 }
 ```

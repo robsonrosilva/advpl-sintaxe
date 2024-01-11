@@ -2,7 +2,7 @@
 
 'use strict';
 
-const path = require('path');
+import path from 'path';
 
 /**@type {import('webpack').Configuration}*/
 const config = {

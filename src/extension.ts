@@ -16,14 +16,14 @@ import {
   Fonte,
   ValidaProjeto,
   ProjectStatus,
-} from "analise-advpl/lib/src";
-import { ItemModel } from "analise-advpl/lib/src/models/ItemProject";
+} from "advpl-lint/lib/src";
+import { ItemModel } from "advpl-lint/lib/src/models/ItemProject";
 import {
   formattingEditProvider,
   rangeFormattingEditProvider,
 } from "./formatting";
 import * as i18n from "i18n";
-import { Cache } from "analise-advpl/lib/src/cache";
+import { Cache } from "advpl-lint/lib/src/cache";
 
 const vscodeOptions = JSON.parse(
   process.env.VSCODE_NLS_CONFIG
@@ -245,7 +245,10 @@ function validaFonte(editor: any) {
         return document.uri.fsPath.indexOf(x) >= 0;
       });
 
-      if (pathProjectFile) {
+      if (
+        pathProjectFile &&
+        workspace.getConfiguration("advpl-sintaxe").get("cache") === true
+      ) {
         validaAdvpl.cache = new Cache(pathProjectFile);
       } else {
         validaAdvpl.cache = undefined;
@@ -394,7 +397,9 @@ function _validaProjeto(_status: ProjectStatus): Promise<any> {
     // prepara o objeto de validação
     const projeto: ValidaProjeto = new ValidaProjeto(
       validaAdvpl.comentFontPad,
-      vscodeOptions
+      vscodeOptions,
+      undefined,
+      workspace.getConfiguration("advpl-sintaxe").get("cache") === true
     );
 
     projeto.empresas = validaAdvpl.empresas;

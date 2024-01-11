@@ -208,11 +208,6 @@ export class FormattingRules {
         assincStruct: true,
       },
       {
-        id: "begin report query",
-        begin: /^(\s*)(begin)(\s+)(report)(\s+)(query)/i,
-        end: /^(\s*)(end)(\s+)(report)(\s+)(query)/i,
-      },
-      {
         id: "begin transaction",
         begin: /^(\s*)(begin)(\s+)(transaction)/i,
         end: /^(\s*)(end)(\s+)(transaction)?/i,
@@ -252,7 +247,7 @@ export class FormattingRules {
       {
         id: "for",
         begin: /^(\s*)(for)(\s+)(\w+)/i,
-        end: /^(\s*)(next|end)(\s+|$)/i,
+        end: /^(\s*)(next|end)(\s+|$|\()/i,
       },
       {
         id: "if",
