@@ -9,7 +9,12 @@ vsc-extension-quickstart.md
 tslint.json
 .vscode
 node_modules
-out/
 src/
-tsconfig.json
 webpack.config.json
+node_modules/**
+.space
+package.lock.json
+webpack.config.js
+**/*.vsix
+.git/**
+.github/**

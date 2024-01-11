@@ -1,4 +1,4 @@
-![Version](https://vsmarketplacebadge.apphb.com/version/robsonrosilva.advpl-sintaxe.svg) ![Installs](https://vsmarketplacebadge.apphb.com/installs/robsonrosilva.advpl-sintaxe.svg) ![Rating](https://vsmarketplacebadge.apphb.com/rating-short/robsonrosilva.advpl-sintaxe.svg)
+![Version](https://vsmarketplacebadges.dev/version/robsonrosilva.advpl-sintaxe.svg) ![Installs](https://vsmarketplacebadges.dev/installs/robsonrosilva.advpl-sintaxe.svg) ![Rating](https://vsmarketplacebadges.dev/rating-star/robsonrosilva.advpl-sintaxe.svg)
 
 # Leia-me
 
@@ -15,7 +15,7 @@ Caso você encontre algum problema ou queira dar alguma sugestão de melhoria, p
 
 # Instalação
 
-1. Intalação Visual Studio Code 0.10.1 ou superior
+1. Intalação Visual Studio Code 1.85.0 ou superior
 2. Iniciar o Visual Studio Code
 3. Na aba de pompt de comando `Ctrl-Shift-P` (Windows, Linux) ou `Cmd-Shift-P` (OSX)
 4. Selecione Extensão

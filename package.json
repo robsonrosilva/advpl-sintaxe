@@ -7,7 +7,7 @@
   "icon": "images/icone.png",
   "type": "commonjs",
   "engines": {
-    "vscode": "^1.52.0"
+    "vscode": "^1.85.0"
   },
   "repository": {
     "type": "git",
@@ -101,7 +101,7 @@
     "workspaceContains:*.pak",
     "workspaceContains:servers.json"
   ],
-  "main": "./out/src/extension",
+  "main": "out/src/extension.js",
   "contributes": {
     "languages": [
       {
@@ -326,13 +326,13 @@
   "devDependencies": {
     "@types/mocha": "^10.0.1",
     "@types/node": "^20.6.0",
-    "@types/vscode": "^1.82.0",
+    "@types/vscode": "^1.85.0",
     "@types/webpack": "^5.28.2",
     "@types/webpack-dev-server": "^4.7.2",
     "@typescript-eslint/eslint-plugin": "^6.7.0",
     "@typescript-eslint/parser": "^6.7.0",
     "advpl-lint": "^6.2.3",
-    "del": "^7.1.0",
+    "del": "^5.1.0",
     "eslint": "^8.49.0",
     "eslint-config-google": "^0.14.0",
     "event-stream": "^4.0.1",
@@ -353,6 +353,7 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
+    "gulp4-run-sequence": "^1.0.2",
     "source-map": "^0.7.4"
   }
 }

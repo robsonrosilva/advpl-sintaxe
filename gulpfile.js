@@ -11,7 +11,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 const gulp = require('gulp');
-const path = require('path');
 const ts = require('gulp-typescript');
 const typescript = require('typescript');
 const sourcemaps = require('gulp-sourcemaps');
