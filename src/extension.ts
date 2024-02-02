@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Uri,
   languages,
@@ -9,6 +10,13 @@ import {
   Range,
   TextDocument,
   ProgressLocation,
+  CodeActionContext,
+  CancellationToken,
+  CodeActionProvider,
+  CodeActionKind,
+  CodeAction,
+  WorkspaceEdit,
+  Selection,
 } from "vscode";
 import { MergeAdvpl } from "./merge";
 import {
@@ -194,6 +202,14 @@ export function activate(context: ExtensionContext): any {
         });
     })
   );
+
+  /*
+  context.subscriptions.push(
+    languages.registerCodeActionsProvider("advpl", new ErrorFix(), {
+      providedCodeActionKinds: ErrorFix.providedCodeActionKinds,
+    })
+  );
+  */
 
   if (
     workspace.getConfiguration("advpl-sintaxe").get("validaProjeto") !== false
@@ -456,12 +472,69 @@ function _validaProjeto(_status: ProjectStatus): Promise<any> {
   });
 }
 
+/**
+ * Provides code actions for converting :) to a smiley emoji.
+ */
+export class ErrorFix implements CodeActionProvider {
+  public static readonly providedCodeActionKinds = [CodeActionKind.QuickFix];
+  document: TextDocument;
+  range: Range | Selection;
+  context: CodeActionContext;
+  token: CancellationToken;
+
+  public provideCodeActions(
+    document: TextDocument,
+    range: Range | Selection,
+    context: CodeActionContext,
+    token: CancellationToken
+  ): CodeAction[] | undefined {
+    this.document = document;
+    this.range = range;
+    this.context = context;
+    this.token = token;
+
+    const opcoes = [];
+    // trata cado tipo de erro
+    //validaAdvpl.deprecated
+    if (
+      context.diagnostics.find((x) => {
+        return x.message === "validaAdvpl.deprecated";
+      })
+    ) {
+      opcoes.push(this.createFix("Trocar por nova função", "TESTE"));
+    }
+
+    //validaAdvpl.conout
+    if (
+      context.diagnostics.find((x) => {
+        return x.message === "validaAdvpl.conout";
+      })
+    ) {
+      opcoes.push(this.createFix("Trocar por nova função", "TESTE"));
+    }
+
+    return opcoes;
+  }
+
+  private createFix(message, newValue: string): CodeAction {
+    // trata cada forma de correção
+    const fix = new CodeAction(message, CodeActionKind.QuickFix);
+    fix.edit = new WorkspaceEdit();
+    fix.edit.replace(
+      this.document.uri,
+      new Range(this.range.start, this.range.end),
+      newValue
+    );
+    return fix;
+  }
+}
+
 export function localize(key: string, text?: string): string {
   i18n.configure(i18nConfig);
   i18n.setLocale(locales.indexOf(vscodeOptions) + 1 ? vscodeOptions : "en");
-  console.log(vscodeOptions);
-  console.log(text);
-  console.log(key);
-  console.log(i18n.__(key));
+  //console.log(vscodeOptions);
+  //console.log(text);
+  //console.log(key);
+  //console.log(i18n.__(key));
   return i18n.__(key) ? i18n.__(key) : text;
 }

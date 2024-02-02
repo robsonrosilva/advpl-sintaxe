@@ -2,6 +2,14 @@
 
 ## Release Notes
 
+### 1.5.04
+
+- Desativação da correção de erros ainda em desenvolvimento.
+
+### 1.5.03
+
+- Atualização de analise de fonte, foi corrigida a sintaxe de algumas sentenças do REGEX.
+
 ### 1.5.01
 
 - Remoção de identação de begin report ele não tem que ser estruturada pode estar de de IF's e funciona.
